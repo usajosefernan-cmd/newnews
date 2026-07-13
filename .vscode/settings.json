@@ -1,0 +1,6 @@
+{
+  "git.autoRepositoryDetection": "subFolders",
+  "git.ignoredRepositories": [
+    "c:\\Users\\yo\\Desktop\\WORKSPACE"
+  ]
+}

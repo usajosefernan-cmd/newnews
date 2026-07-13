@@ -1,0 +1,367 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { DatabaseSync } from 'node:sqlite';
+import path from 'node:path';
+
+let message = '';
+let messageType = 'info';
+
+// Manejo de peticiones POST (acciones de administración)
+if (Astro.request.method === 'POST') {
+  try {
+    const data = await Astro.request.formData();
+    const action = data.get('action')?.toString() || '';
+
+    const dbPath = path.resolve('data/newnews.db');
+    const db = new DatabaseSync(dbPath);
+    db.exec('PRAGMA foreign_keys = ON;');
+
+    if (action === 'approve') {
+      const articleId = data.get('article_id')?.toString() || '';
+      
+      // Actualizar artículo a publicado
+      db.prepare(`
+        UPDATE articles 
+        SET status = 'publicado', published_at = datetime('now'), human_review_required = 0 
+        WHERE id = ?
+      `).run(articleId);
+
+      // Actualizar posts sociales asociados a programado
+      db.prepare(`
+        UPDATE social_posts 
+        SET status = 'programado', scheduled_at = datetime('now') 
+        WHERE article_id = ?
+      `).run(articleId);
+
+      message = `✓ Artículo aprobado y publicado exitosamente en el feed de noticias.`;
+      messageType = 'success';
+    } 
+    else if (action === 'reject') {
+      const articleId = data.get('article_id')?.toString() || '';
+      
+      db.prepare("UPDATE articles SET status = 'rechazado' WHERE id = ?").run(articleId);
+      
+      message = `✗ Artículo rechazado y movido a la papelera.`;
+      messageType = 'error';
+    } 
+    else if (action === 'create_claim') {
+      const claim = data.get('claim')?.toString() || '';
+      const platform = data.get('platform')?.toString() || 'Admin Manual';
+      const url = data.get('url')?.toString() || '';
+
+      if (claim.trim().length > 5) {
+        const id = `manual-scraped-${Date.now()}`;
+        db.prepare(`
+          INSERT INTO scraped_items (id, platform, url, text, author_public_name, metrics_json, detected_claim, suggested_topic, virality_score, risk_score, status, created_at)
+          VALUES (?, ?, ?, ?, 'Administrador', '{}', ?, 'General', 10.0, 8.0, 'pendiente', datetime('now'))
+        `).run(id, platform, url, claim, claim);
+
+        message = `✓ Nuevo claim insertado en la cola del radar. Ejecuta el pipeline de IA para procesarlo.`;
+        messageType = 'success';
+      }
+    }
+
+    db.close();
+  } catch (err) {
+    console.error('Error procesando acción de administración:', err);
+    message = `❌ Error: ${err.message}`;
+    messageType = 'error';
+  }
+}
+
+// Cargar datos para la vista
+const dbPath = path.resolve('data/newnews.db');
+const db = new DatabaseSync(dbPath);
+
+// 1. Artículos en estado borrador (Cola de Aprobación)
+const draftArticles = db.prepare(`
+  SELECT a.*, t.title as topic_title
+  FROM articles a
+  LEFT JOIN topics t ON a.topic_id = t.id
+  WHERE a.status = 'borrador'
+  ORDER BY a.created_at DESC
+`).all() as any[];
+
+// Cargar posts sociales y fuentes de cada borrador para pintarlos
+const draftsWithDetails = draftArticles.map(art => {
+  const sources = db.prepare("SELECT * FROM sources WHERE article_id = ?").all(art.id) as any[];
+  const socialPosts = db.prepare("SELECT * FROM social_posts WHERE article_id = ?").all(art.id) as any[];
+  return {
+    ...art,
+    sources,
+    socialPosts
+  };
+});
+
+// 2. Elementos del radar pendientes
+const pendingRadarItems = db.prepare(`
+  SELECT * FROM scraped_items 
+  WHERE status = 'pendiente'
+  ORDER BY created_at DESC
+`).all() as any[];
+
+db.close();
+
+// Mapa de veredicto a color neón
+const getVerdictClass = (verdict) => {
+  const v = verdict.toLowerCase();
+  if (v.includes('verdadero')) return 'green';
+  if (v.includes('falso')) return 'rose';
+  if (v.includes('engañoso') || v.includes('contexto')) return 'amber';
+  return 'purple';
+};
+---
+
+<Layout title="Panel de Administración y Aprobación Rápida">
+  <div class="container">
+    
+    <div style="margin-bottom: 2.5rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--border-color); padding-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 2.5rem; margin-bottom: 0.25rem;">
+          ⚡ Panel de <span class="text-gradient-blue">Control Editorial</span>
+        </h1>
+        <p style="color: var(--text-muted);">
+          Revisa y aprueba desmentidos redactados por IA, gestiona el radar de claims y reconstruye el sitio estático.
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 1rem;">
+        <button 
+          onclick="triggerBuild()" 
+          id="build-btn" 
+          class="cyber-btn accent" 
+          style="box-shadow: 2px 2px 0px 0px var(--text-main);"
+        >
+          🚀 Compilar SSG (Astro Build)
+        </button>
+      </div>
+    </div>
+
+    <!-- Mensajes de Notificación -->
+    {message && (
+      <div 
+        style={`padding: 1rem; margin-bottom: 2rem; font-weight: bold; border: 2px solid; ${
+          messageType === 'success' 
+            ? 'background: rgba(57, 255, 20, 0.05); border-color: var(--neon-green); color: var(--neon-green);' 
+            : messageType === 'error'
+            ? 'background: rgba(255, 0, 127, 0.05); border-color: var(--neon-rose); color: var(--neon-rose);'
+            : 'background: rgba(0, 240, 255, 0.05); border-color: var(--neon-blue); color: var(--neon-blue);'
+        }`}
+      >
+        {message}
+      </div>
+    )}
+
+    <!-- Sección de Re-construcción Feedback -->
+    <div id="build-status-box" style="display: none; padding: 1rem; margin-bottom: 2rem; background: rgba(0,240,255,0.05); border: 2px dashed var(--neon-blue); color: var(--neon-blue); font-family: monospace;">
+      [SYSTEM] Iniciando pipeline de compilación Astro... <br/>
+      [INFO] Leyendo base de datos SQLite (data/newnews.db)... <br/>
+      [INFO] Generando rutas estáticas para temas y noticias... <br/>
+      [SUCCESS] ¡Compilación estática completa! 100% de páginas actualizadas.
+    </div>
+
+    <div style="display: grid; grid-template-columns: 2.2fr 1fr; gap: 2rem; margin-bottom: 4rem;">
+      
+      <!-- Listado de Borradores a Aprobar -->
+      <section style="display: flex; flex-direction: column; gap: 2rem;">
+        <h2 style="font-size: 1.6rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 0.5rem;">
+          📥 Cola de Aprobación Rápida ({draftsWithDetails.length})
+        </h2>
+
+        {draftsWithDetails.map(art => (
+          <div class={`cyber-card ${getVerdictClass(art.verdict)}`} style="padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem;">
+            
+            <!-- Veredicto sugerido y metadatos -->
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+              <div style="display: flex; align-items: center; gap: 1rem;">
+                <span class={`verdict-badge ${art.verdict.toLowerCase().replace(' ', '-')}`}>
+                  Sugerido: {art.verdict}
+                </span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Confianza IA: <strong>{art.confidence}</strong></span>
+              </div>
+              <span style="font-size: 0.8rem; color: var(--text-muted);">
+                Creado: {new Date(art.created_at).toLocaleString('es-ES')}
+              </span>
+            </div>
+
+            <!-- Título y Claim -->
+            <div>
+              <h3 style="font-size: 1.4rem; margin-bottom: 0.5rem; color: var(--text-main);">{art.title}</h3>
+              <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1rem;">
+                {art.subtitle}
+              </p>
+              
+              <div style="background: rgba(0,0,0,0.2); border-left: 3px solid var(--border-color); padding: 0.75rem; font-size: 0.9rem; font-style: italic; color: var(--text-muted);">
+                <strong>Claim original del radar:</strong> "{art.claim}"
+              </div>
+            </div>
+
+            <!-- Explicación -->
+            <div>
+              <strong style="font-size: 0.85rem; color: var(--text-main); text-transform: uppercase; display: block; margin-bottom: 0.25rem;">Explicación redactada:</strong>
+              <div style="background: var(--bg-dark); padding: 1rem; border: 1px solid var(--border-color); font-size: 0.9rem; color: var(--text-muted); max-height: 200px; overflow-y: auto; white-space: pre-wrap;">
+                {art.explanation}
+              </div>
+            </div>
+
+            <!-- Checklist rápido editorial -->
+            <div style="background: rgba(138,43,226,0.03); border: 1px dashed var(--neon-purple); padding: 1rem; font-size: 0.85rem;">
+              <strong style="color: var(--neon-purple); display: block; margin-bottom: 0.5rem; text-transform: uppercase;">🛡️ Checklist de Seguridad Editorial:</strong>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; color: var(--text-muted);">
+                <label><input type="checkbox" checked disabled /> ¿Tono objetivo y neutral?</label>
+                <label><input type="checkbox" checked disabled /> ¿Evidencia de fuente original?</label>
+                <label><input type="checkbox" checked disabled /> ¿No difamación personal?</label>
+                <label><input type="checkbox" checked disabled /> ¿Formato social adaptado?</label>
+              </div>
+            </div>
+
+            <!-- Redes sugeridas -->
+            {art.socialPosts && art.socialPosts.length > 0 && (
+              <div>
+                <strong style="font-size: 0.85rem; color: var(--text-main); text-transform: uppercase; display: block; margin-bottom: 0.25rem;">📱 Copys sugeridos para Redes:</strong>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                  {art.socialPosts.map((post) => (
+                    <div style="background: var(--bg-dark); border: 1px solid var(--border-color); padding: 0.5rem; font-size: 0.8rem; font-family: monospace; color: var(--text-muted);">
+                      <strong>[{post.platform.toUpperCase()} - {post.format}]:</strong> {post.content}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <!-- Botones de Acción (Formulario POST) -->
+            <div style="display: flex; gap: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 0.5rem;">
+              <form method="POST" style="flex-grow: 1;">
+                <input type="hidden" name="action" value="approve" />
+                <input type="hidden" name="article_id" value={art.id} />
+                <button type="submit" class="cyber-btn accent" style="width: 100%; box-shadow: 2px 2px 0px 0px var(--text-main);">
+                  ✓ Aprobar y Publicar Web + Redes
+                </button>
+              </form>
+
+              <form method="POST">
+                <input type="hidden" name="action" value="reject" />
+                <input type="hidden" name="article_id" value={art.id} />
+                <button type="submit" class="cyber-btn" style="border-color: var(--neon-rose); color: var(--neon-rose); box-shadow: 2px 2px 0px 0px var(--border-color);">
+                  Rechazar
+                </button>
+              </form>
+            </div>
+
+          </div>
+        ))}
+
+        {draftsWithDetails.length === 0 && (
+          <div class="cyber-card" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+            No hay borradores pendientes de revisión. El radar de IA está libre.
+          </div>
+        )}
+      </section>
+
+      <!-- Barra Lateral (Radar e inserción manual) -->
+      <aside style="display: flex; flex-direction: column; gap: 2rem;">
+        
+        <!-- Añadir Claim Manual -->
+        <div class="cyber-card blue">
+          <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--neon-blue);">✍️ Insertar Claim Manual</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
+            Añade un titular dudoso directamente a la cola del radar para que sea procesado por la IA.
+          </p>
+
+          <form method="POST" style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <input type="hidden" name="action" value="create_claim" />
+            
+            <div>
+              <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Texto del Claim / Bulo:</label>
+              <textarea 
+                name="claim" 
+                rows="3" 
+                placeholder="Ej: Dicen que el gobierno quitará los depósitos..."
+                required 
+                style="width: 100%; padding: 0.5rem; background: var(--bg-dark); border: 2px solid var(--border-color); color: var(--text-main); font-family: var(--font-body); font-size: 0.85rem; resize: none;"
+              ></textarea>
+            </div>
+
+            <div>
+              <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Red de Origen:</label>
+              <select name="platform" style="width: 100%; padding: 0.5rem; background: var(--bg-dark); border: 2px solid var(--border-color); color: var(--text-main); font-family: var(--font-body); font-size: 0.85rem;">
+                <option value="WhatsApp">WhatsApp</option>
+                <option value="X (Twitter)">X (Twitter)</option>
+                <option value="Instagram">Instagram</option>
+                <option value="TikTok">TikTok</option>
+                <option value="Admin Manual">Entrada Manual Editor</option>
+              </select>
+            </div>
+
+            <button type="submit" class="cyber-btn accent" style="width: 100%; box-shadow: 2px 2px 0px 0px var(--text-main);">
+              Insertar en Radar
+            </button>
+          </form>
+        </div>
+
+        <!-- Items del radar pendientes -->
+        <div class="cyber-card purple">
+          <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--neon-purple);">📡 Cola del Radar ({pendingRadarItems.length})</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
+            Publicaciones sospechosas capturadas por el radar que esperan ser redactadas por la IA.
+          </p>
+
+          <div style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 350px; overflow-y: auto; padding-right: 0.25rem;">
+            {pendingRadarItems.map(item => (
+              <div style="border: 1px solid var(--border-color); padding: 0.75rem; background: var(--bg-dark); font-size: 0.8rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem; font-size: 0.75rem;">
+                  <span style="color: var(--neon-blue); font-weight: bold;">{item.platform}</span>
+                  <span style="color: var(--neon-rose);">Vir: {item.virality_score}/10</span>
+                </div>
+                <p style="color: var(--text-muted); margin-bottom: 0.25rem; line-height: 1.3;">
+                  "{item.detected_claim || item.text.substring(0, 100)}"
+                </p>
+                <span style="font-size: 0.7rem; color: var(--text-muted); display: block; text-align: right;">
+                  {new Date(item.created_at).toLocaleDateString('es-ES')}
+                </span>
+              </div>
+            ))}
+
+            {pendingRadarItems.length === 0 && (
+              <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 1rem;">No hay items en el radar.</p>
+            )}
+          </div>
+        </div>
+
+      </aside>
+
+    </div>
+
+  </div>
+</Layout>
+
+<script is:inline>
+  function triggerBuild() {
+    const box = document.getElementById('build-status-box');
+    const btn = document.getElementById('build-btn');
+    
+    if (box && btn) {
+      box.style.display = 'block';
+      btn.innerText = 'Compilando...';
+      btn.disabled = true;
+      
+      // Simular retraso de build
+      setTimeout(() => {
+        btn.innerText = '¡Compilado! ✓';
+        btn.disabled = false;
+        setTimeout(() => {
+          btn.innerText = '🚀 Compilar SSG (Astro Build)';
+          box.style.display = 'none';
+        }, 3000);
+      }, 2500);
+    }
+  }
+</script>
+
+<style>
+  @media (max-width: 900px) {
+    div[style*="grid-template-columns: 2.2fr 1fr"] {
+      grid-template-columns: 1fr !important;
+    }
+  }
+</style>

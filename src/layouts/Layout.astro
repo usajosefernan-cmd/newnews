@@ -1,0 +1,142 @@
+---
+import '../styles/global.css';
+
+const { 
+  title, 
+  description = "NEWNEWS - Web de noticias, desmentidos y contrastación con fuentes oficiales de España.",
+  category
+} = Astro.props;
+
+const categories = [
+  { name: 'Política', path: '/programas-politicos' },
+  { name: 'Historia', path: '/tema/franco' },
+  { name: 'Economía', path: '/tema/economia-espanola' },
+  { name: 'Sociedad', path: '/tema/menores-extranjeros-no-acompanados' },
+  { name: 'Vivienda', path: '/tema/vivienda-y-okupacion' }
+];
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title} | NEWNEWS</title>
+    <meta name="description" content={description} />
+    
+    <!-- Meta tags SEO -->
+    <meta property="og:title" content={`${title} | NEWNEWS`} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={`${title} | NEWNEWS`} />
+    <meta name="twitter:description" content={description} />
+  </head>
+  <body>
+    <header style="border-bottom: 2px solid var(--border-color); background: rgba(11, 14, 20, 0.9); backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 100;">
+      <div class="container" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem;">
+        
+        <!-- Logo -->
+        <a href="/" style="display: flex; align-items: center; gap: 0.5rem;">
+          <span style="font-family: var(--font-title); font-weight: 800; font-size: 1.8rem; letter-spacing: -0.05em; display: inline-flex; align-items: center;">
+            NEW<span class="text-gradient-blue" style="background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">NEWS</span>
+          </span>
+          <span style="background: var(--neon-rose); color: var(--bg-dark); font-size: 0.65rem; font-weight: 800; padding: 0.1rem 0.3rem; text-transform: uppercase; border-radius: 2px; margin-top: -0.5rem;">
+            RADAR-IA
+          </span>
+        </a>
+
+        <!-- Navigation Links -->
+        <nav style="display: flex; align-items: center; gap: 1.5rem;">
+          <a href="/temas" class="nav-link">Temas</a>
+          <a href="/programas-politicos" class="nav-link">Programas Políticos</a>
+          <a href="/comparador-politico" class="nav-link">Comparador</a>
+          <a href="/bienes-declarados" class="nav-link">Bienes Públicos</a>
+          {categories.map(cat => (
+            <a href={cat.path} class="nav-link category-link" style="display: none;">{cat.name}</a>
+          ))}
+        </nav>
+
+        <!-- Right Elements -->
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <a href="/buscador" class="cyber-btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; box-shadow: 2px 2px 0px 0px var(--border-color);">
+            🔍 Buscador
+          </a>
+          <a href="/admin" class="cyber-btn accent" style="padding: 0.5rem 1rem; font-size: 0.85rem; box-shadow: 2px 2px 0px 0px var(--text-main);">
+            ⚡ Panel Admin
+          </a>
+        </div>
+
+      </div>
+    </header>
+
+    <main style="padding: 2rem 0; min-height: calc(100vh - 200px);">
+      <slot />
+    </main>
+
+    <footer style="border-top: 2px solid var(--border-color); background: #07090D; padding: 3rem 0; font-size: 0.9rem; color: var(--text-muted);">
+      <div class="container" style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 2rem;">
+        
+        <div>
+          <h3 style="color: var(--text-main); font-size: 1.2rem; margin-bottom: 1rem;">NEWNEWS</h3>
+          <p style="margin-bottom: 1rem; max-width: 400px;">
+            Una iniciativa no partidista, automatizada y auditada por humanos para diseccionar bulos virales, contrastar promesas políticas y explicar la actualidad social de España con datos oficiales.
+          </p>
+          <p>© {new Date().getFullYear()} NEWNEWS - Transparencia y datos contrastados.</p>
+        </div>
+
+        <div>
+          <h4 style="color: var(--text-main); font-size: 1rem; margin-bottom: 1rem; font-family: var(--font-title);">Metodología</h4>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem;" class="footer-links">
+            <li><a href="/temas">Expedientes Vivos</a></li>
+            <li><a href="/programas-politicos">Programas Electorales</a></li>
+            <li><a href="/comparador-politico">Comparador de Hechos</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style="color: var(--text-main); font-size: 1rem; margin-bottom: 1rem; font-family: var(--font-title);">Fuentes Oficiales</h4>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem;">
+            <li><a href="https://www.ine.es" target="_blank" rel="noopener noreferrer">INE (Estadísticas)</a></li>
+            <li><a href="https://www.boe.es" target="_blank" rel="noopener noreferrer">BOE (Leyes y Normas)</a></li>
+            <li><a href="https://www.congreso.es" target="_blank" rel="noopener noreferrer">Congreso de los Diputados</a></li>
+          </ul>
+        </div>
+
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style>
+  .nav-link {
+    font-family: var(--font-title);
+    font-weight: 600;
+    transition: color 0.2s ease;
+    padding: 0.25rem 0;
+    border-bottom: 2px solid transparent;
+  }
+  
+  .nav-link:hover {
+    color: var(--neon-blue);
+    border-bottom-color: var(--neon-blue);
+  }
+
+  .footer-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .footer-links a:hover {
+    color: var(--neon-blue) !important;
+  }
+
+  @media (max-width: 900px) {
+    nav {
+      display: none !important;
+    }
+  }
+</style>

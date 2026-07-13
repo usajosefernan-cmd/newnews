@@ -1,0 +1,193 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { DatabaseSync } from 'node:sqlite';
+import path from 'node:path';
+
+export async function getStaticPaths() {
+  const dbPath = path.resolve('data/newnews.db');
+  const db = new DatabaseSync(dbPath);
+  const topics = db.prepare("SELECT slug FROM topics WHERE status = 'activo'").all() as any[];
+  db.close();
+
+  return topics.map(topic => ({
+    params: { slug: topic.slug }
+  }));
+}
+
+const { slug } = Astro.params;
+
+const dbPath = path.resolve('data/newnews.db');
+const db = new DatabaseSync(dbPath);
+
+// Cargar información del tema
+const topic = db.prepare("SELECT * FROM topics WHERE slug = ?").get(slug) as any;
+
+// Cargar artículos relacionados publicados
+const articles = db.prepare(`
+  SELECT * FROM articles 
+  WHERE topic_id = ? AND status = 'publicado' 
+  ORDER BY published_at DESC
+`).all(topic.id) as any[];
+
+db.close();
+
+// Mapa de veredicto a color neón
+const getVerdictClass = (verdict) => {
+  const v = verdict.toLowerCase();
+  if (v.includes('verdadero')) return 'green';
+  if (v.includes('falso')) return 'rose';
+  if (v.includes('engañoso') || v.includes('contexto')) return 'amber';
+  return 'purple';
+};
+---
+
+<Layout title={topic.title} description={topic.description}>
+  <div class="container">
+    
+    <!-- Miga de Pan -->
+    <div style="margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
+      <a href="/" class="nav-link">Portada</a> / <a href="/temas" class="nav-link">Expedientes</a> / <span style="color: var(--neon-blue);">{topic.title}</span>
+    </div>
+
+    <!-- Cabecera Viva del Tema -->
+    <section style="margin-bottom: 3rem;">
+      <div class="cyber-card blue" style="padding: 2.5rem; background: linear-gradient(135deg, var(--bg-card), #0d1b2e);">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+          <span style="background: var(--border-color); color: var(--text-muted); font-size: 0.8rem; font-weight: 800; padding: 0.25rem 0.75rem; text-transform: uppercase;">
+            Expediente Vivo: {topic.category}
+          </span>
+          <span style="color: var(--neon-blue); font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;" class="pulse-animation">
+            ● ACTUALIZÁNDOSE EN VIVO
+          </span>
+        </div>
+
+        <h1 style="font-size: 2.5rem; line-height: 1.1; margin-bottom: 1rem;">
+          {topic.title}
+        </h1>
+
+        <p style="font-size: 1.2rem; color: var(--text-muted); max-width: 900px; margin-bottom: 1.5rem;">
+          {topic.description}
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; border-top: 2px solid var(--border-color); padding-top: 1.5rem; margin-top: 1.5rem;">
+          <div>
+            <h3 style="color: var(--neon-amber); font-size: 1.1rem; margin-bottom: 0.5rem; font-family: var(--font-title);">⚠️ Estado General del Debate</h3>
+            <p style="font-size: 0.95rem; color: var(--text-muted);">
+              {topic.header_summary}
+            </p>
+          </div>
+          <div>
+            <h3 style="color: var(--neon-green); font-size: 1.1rem; margin-bottom: 0.5rem; font-family: var(--font-title);">💡 Conclusión de los Datos</h3>
+            <p style="font-size: 0.95rem; color: var(--text-muted);">
+              {topic.verdict_summary}
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cuerpo de la Página (Lista de noticias de este tema) -->
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+      
+      <!-- Listado de Desmentidos específicos -->
+      <section style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <h2 style="font-size: 1.6rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem;">
+          📌 Casos y Claims Verificados
+        </h2>
+
+        {articles.map(art => (
+          <div class={`cyber-card ${getVerdictClass(art.verdict)}`} style="padding: 1.75rem; display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <span class={`verdict-badge ${art.verdict.toLowerCase().replace(' ', '-')}`}>
+                {art.verdict}
+              </span>
+              <span style="color: var(--text-muted); font-size: 0.85rem;">
+                Detección: {new Date(art.published_at).toLocaleDateString('es-ES')}
+              </span>
+            </div>
+
+            <div>
+              <h3 style="font-size: 1.35rem; margin-bottom: 0.25rem;">
+                <a href={`/noticia/${art.slug}`} class="article-link">{art.title}</a>
+              </h3>
+              <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 0.75rem;">
+                {art.subtitle}
+              </p>
+              <div style="background: rgba(0,0,0,0.15); border-left: 3px solid var(--border-color); padding: 0.5rem 0.75rem; font-size: 0.85rem; font-style: italic; color: var(--text-muted);">
+                <strong>Claim viral:</strong> "{art.claim}"
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 0.75rem; font-size: 0.85rem; color: var(--text-muted);">
+              <span>Compartido en: <strong>{art.origin_platform}</strong></span>
+              <a href={`/noticia/${art.slug}`} class="read-more-link" style="color: var(--neon-blue); font-weight: 800;">
+                Auditar Datos →
+              </a>
+            </div>
+          </div>
+        ))}
+
+        {articles.length === 0 && (
+          <div class="cyber-card" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+            No se han publicado desmentidos para este tema todavía.
+          </div>
+        )}
+      </section>
+
+      <!-- Barra Lateral Informativa del Tema -->
+      <aside style="display: flex; flex-direction: column; gap: 2rem;">
+        
+        <!-- Preguntas Frecuentes del Tema -->
+        <div class="cyber-card purple">
+          <h3 style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--neon-purple);">❓ Preguntas Frecuentes</h3>
+          
+          <div style="display: flex; flex-direction: column; gap: 1rem; font-size: 0.9rem;">
+            <div>
+              <strong style="color: var(--text-main); display: block; margin-bottom: 0.25rem;">¿Por qué se viraliza esto ahora?</strong>
+              <p style="color: var(--text-muted);">
+                Suele dispararse en períodos pre-electorales o tras debates parlamentarios acalorados sobre memoria democrática o migración.
+              </p>
+            </div>
+            <div>
+              <strong style="color: var(--text-main); display: block; margin-bottom: 0.25rem;">¿Hay fuentes oficiales fiables?</strong>
+              <p style="color: var(--text-muted);">
+                Sí, los registros del Boletín Oficial del Estado (BOE), el Instituto Nacional de Estadística (INE) y bases de datos históricas académicas.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Radar de Búsqueda Rápida -->
+        <div class="cyber-card">
+          <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem;">🚨 ¿Has detectado otro bulo?</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
+            Si tienes capturas o links sobre este tema que no estén en la lista, envíanoslos para auditar con IA.
+          </p>
+          <a href="/buscador" class="cyber-btn accent" style="width: 100%; text-align: center; box-shadow: 2px 2px 0px 0px var(--text-main);">
+            Enviar al Radar
+          </a>
+        </div>
+
+      </aside>
+
+    </div>
+
+  </div>
+</Layout>
+
+<style>
+  .nav-link:hover, .article-link:hover {
+    color: var(--neon-blue) !important;
+  }
+  .read-more-link:hover {
+    text-decoration: underline !important;
+  }
+</style>
+
+<style>
+  @media (max-width: 900px) {
+    div[style*="grid-template-columns: 2fr 1fr"] {
+      grid-template-columns: 1fr !important;
+    }
+  }
+</style>

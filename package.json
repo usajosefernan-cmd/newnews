@@ -1,0 +1,29 @@
+{
+  "name": "newnews",
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "astro dev --host 0.0.0.0 --port 4321",
+    "build": "astro build",
+    "preview": "astro preview --host 0.0.0.0 --port 4322",
+    "db:migrate": "node scripts/migrate.js",
+    "db:seed": "node scripts/import-political.js",
+    "radar": "node scripts/radar-cron.js",
+    "ai:pipeline": "node scripts/ai-pipeline.js",
+    "sync": "npm run radar && npm run ai:pipeline && npm run build"
+  },
+  "dependencies": {
+    "@astrojs/react": "^6.0.0",
+    "astro": "^4.16.0",
+    "date-fns": "^3.6.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.5.0"
+  }
+}

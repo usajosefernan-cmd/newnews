@@ -1,0 +1,79 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { DatabaseSync } from 'node:sqlite';
+import path from 'node:path';
+
+const dbPath = path.resolve('data/newnews.db');
+const db = new DatabaseSync(dbPath);
+
+// Obtener todos los temas activos con el conteo de artículos publicados en cada uno
+const topics = db.prepare(`
+  SELECT t.*, COUNT(a.id) as articles_count
+  FROM topics t
+  LEFT JOIN articles a ON a.topic_id = t.id AND a.status = 'publicado'
+  WHERE t.status = 'activo'
+  GROUP BY t.id
+  ORDER BY t.category, t.title
+`).all() as any[];
+
+db.close();
+---
+
+<Layout title="Expedientes Vivos - Lista de Temas" description="Navega por los grandes temas de debate social y confusión informativa en España. Expedientes vivos con desmentidos.">
+  <div class="container">
+    
+    <div style="margin-bottom: 2.5rem; text-align: center; max-width: 700px; margin-left: auto; margin-right: auto;">
+      <span style="background: var(--neon-blue); color: var(--bg-dark); font-weight: 800; font-size: 0.8rem; padding: 0.2rem 0.6rem; text-transform: uppercase; border-radius: 2px;">
+        ÍNDICE GENERAL
+      </span>
+      <h1 style="font-size: 2.8rem; line-height: 1.1; margin-top: 0.5rem; margin-bottom: 1rem;">
+        Expedientes <span class="text-gradient-blue">Vivos</span>
+      </h1>
+      <p style="color: var(--text-muted); font-size: 1.1rem;">
+        Agrupamos los temas que generan confusión social, desinformación o bulos recurrentes en España. Cada cabecera se actualiza de forma permanente y contiene artículos que desmontan afirmaciones virales concretas.
+      </p>
+    </div>
+
+    <div class="grid-cols-2">
+      {topics.map(topic => (
+        <div class="cyber-card" style="display: flex; flex-direction: column; justify-content: space-between; gap: 1.5rem; padding: 2rem;">
+          <div>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+              <span style="background: var(--border-color); color: var(--text-muted); font-size: 0.75rem; font-weight: 800; padding: 0.2rem 0.5rem; text-transform: uppercase;">
+                {topic.category}
+              </span>
+              <span style="color: var(--neon-blue); font-weight: 800; font-size: 0.85rem; border: 1px solid var(--neon-blue); padding: 0.1rem 0.5rem; border-radius: 4px;">
+                {topic.articles_count} {topic.articles_count === 1 ? 'Desmentido' : 'Desmentidos'}
+              </span>
+            </div>
+            <h2 style="font-size: 1.6rem; margin-bottom: 0.75rem;">
+              <a href={`/tema/${topic.slug}`} class="topic-link">{topic.title}</a>
+            </h2>
+            <p style="color: var(--text-muted); font-size: 1rem; margin-bottom: 1.2rem;">
+              {topic.description}
+            </p>
+            
+            <div style="background: rgba(138, 43, 226, 0.05); border: 1px solid rgba(138, 43, 226, 0.15); padding: 1rem; border-radius: 4px; font-size: 0.9rem;">
+              <strong style="color: var(--neon-purple); display: block; margin-bottom: 0.25rem;">Estado del expediente:</strong>
+              <p style="color: var(--text-muted);">{topic.header_summary}</p>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 0.5rem;">
+            <span style="font-size: 0.85rem; color: var(--text-muted);">Confianza en fuentes: <strong style="color: var(--neon-green);">{topic.confidence}</strong></span>
+            <a href={`/tema/${topic.slug}`} class="cyber-btn accent" style="box-shadow: 2px 2px 0px 0px var(--text-main);">
+              Abrir Expediente →
+            </a>
+          </div>
+        </div>
+      ))}
+    </div>
+
+  </div>
+</Layout>
+
+<style>
+  .topic-link:hover {
+    color: var(--neon-blue) !important;
+  }
+</style>
