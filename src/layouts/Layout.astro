@@ -35,56 +35,76 @@ const categories = [
     <meta name="twitter:description" content={description} />
   </head>
   <body>
-    <header style="border-bottom: 2px solid var(--border-color); background: rgba(11, 14, 20, 0.9); backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 100;">
-      <div class="container" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem;">
+    <header style="border-bottom: 1px solid var(--border-color); background: rgba(7, 9, 19, 0.75); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); position: sticky; top: 0; z-index: 100;">
+      <div class="container" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; max-width: 680px;">
         
         <!-- Logo -->
         <a href="/" style="display: flex; align-items: center; gap: 0.5rem;">
-          <span style="font-family: var(--font-title); font-weight: 800; font-size: 1.8rem; letter-spacing: -0.05em; display: inline-flex; align-items: center;">
-            NEW<span class="text-gradient-blue" style="background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">NEWS</span>
+          <span style="font-family: var(--font-title); font-weight: 800; font-size: 1.5rem; letter-spacing: -0.04em; display: inline-flex; align-items: center;">
+            NEW<span style="color: var(--neon-blue);">NEWS</span>
           </span>
-          <span style="background: var(--neon-rose); color: var(--bg-dark); font-size: 0.65rem; font-weight: 800; padding: 0.1rem 0.3rem; text-transform: uppercase; border-radius: 2px; margin-top: -0.5rem;">
-            RADAR-IA
+          <span style="background: rgba(0, 240, 255, 0.1); color: var(--neon-blue); font-size: 0.55rem; font-weight: 800; padding: 0.15rem 0.4rem; text-transform: uppercase; border-radius: 4px; letter-spacing: 0.05em; border: 1px solid rgba(0, 240, 255, 0.2);">
+            RADAR
           </span>
         </a>
 
-        <!-- Navigation Links -->
-        <nav style="display: flex; align-items: center; gap: 1.5rem;">
-          <a href="/temas" class="nav-link">Temas</a>
-          <a href="/programas-politicos" class="nav-link">Programas Políticos</a>
-          <a href="/comparador-politico" class="nav-link">Comparador</a>
-          <a href="/bienes-declarados" class="nav-link">Bienes Públicos</a>
-          {categories.map(cat => (
-            <a href={cat.path} class="nav-link category-link" style="display: none;">{cat.name}</a>
-          ))}
+        <!-- Desktop Navigation Links -->
+        <nav class="desktop-nav" style="display: flex; align-items: center; gap: 1.5rem;">
+          <a href="/temas" class="nav-link" style="font-size: 0.85rem; color: var(--text-muted);">Temas</a>
+          <a href="/programas-politicos" class="nav-link" style="font-size: 0.85rem; color: var(--text-muted);">Programas</a>
+          <a href="/comparador-politico" class="nav-link" style="font-size: 0.85rem; color: var(--text-muted);">Comparador</a>
+          <a href="/bienes-declarados" class="nav-link" style="font-size: 0.85rem; color: var(--text-muted);">Bienes</a>
         </nav>
 
         <!-- Right Elements -->
-        <div style="display: flex; align-items: center; gap: 1rem;">
-          <a href="/buscador" class="cyber-btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; box-shadow: 2px 2px 0px 0px var(--border-color);">
-            🔍 Buscador
-          </a>
-          <a href="/admin" class="cyber-btn accent" style="padding: 0.5rem 1rem; font-size: 0.85rem; box-shadow: 2px 2px 0px 0px var(--text-main);">
-            ⚡ Panel Admin
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <a href="/buscador" class="cyber-btn" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; border-radius: 20px; border-color: rgba(255, 255, 255, 0.1); background: transparent;">
+            Buscar
           </a>
         </div>
 
       </div>
     </header>
 
-    <main style="padding: 2rem 0; min-height: calc(100vh - 200px);">
+    <!-- Bottom Navigation Bar para Móviles (Fija abajo) -->
+    <div class="bottom-nav-container">
+      <nav class="bottom-nav">
+        <a href="/" class="bottom-nav-item active">
+          <span style="font-size: 1.1rem; display: block;">●</span>
+          <span>Radar</span>
+        </a>
+        <a href="/temas" class="bottom-nav-item">
+          <span style="font-size: 1.1rem; display: block;">■</span>
+          <span>Temas</span>
+        </a>
+        <a href="/comparador-politico" class="bottom-nav-item">
+          <span style="font-size: 1.1rem; display: block;">▲</span>
+          <span>Votos</span>
+        </a>
+        <a href="/bienes-declarados" class="bottom-nav-item">
+          <span style="font-size: 1.1rem; display: block;">◆</span>
+          <span>Bienes</span>
+        </a>
+        <a href="/admin" class="bottom-nav-item">
+          <span style="font-size: 1.1rem; display: block;">★</span>
+          <span>Editor</span>
+        </a>
+      </nav>
+    </div>
+
+    <main style="min-height: calc(100vh - 150px);">
       <slot />
     </main>
 
-    <footer style="border-top: 2px solid var(--border-color); background: #07090D; padding: 3rem 0; font-size: 0.9rem; color: var(--text-muted);">
-      <div class="container" style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 2rem;">
+    <footer style="border-top: 1px solid var(--border-color); background: rgba(7, 9, 19, 0.8); backdrop-filter: blur(12px); padding: 4rem 0; font-size: 0.85rem; color: var(--text-muted);">
+      <div class="container" style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 4rem; max-width: 680px;">
         
         <div>
-          <h3 style="color: var(--text-main); font-size: 1.2rem; margin-bottom: 1rem;">NEWNEWS</h3>
-          <p style="margin-bottom: 1rem; max-width: 400px;">
-            Una iniciativa no partidista, automatizada y auditada por humanos para diseccionar bulos virales, contrastar promesas políticas y explicar la actualidad social de España con datos oficiales.
+          <h3 style="color: var(--text-main); font-size: 1.25rem; margin-bottom: 0.75rem; letter-spacing: -0.03em;">NEW<span style="color: var(--neon-blue);">NEWS</span></h3>
+          <p style="margin-bottom: 1.5rem; max-width: 400px; font-size: 0.9rem; line-height: 1.5;">
+            Iniciativa neutral para analizar bulos virales, contrastar promesas políticas y explicar la actualidad de España con datos oficiales.
           </p>
-          <p>© {new Date().getFullYear()} NEWNEWS - Transparencia y datos contrastados.</p>
+          <p style="font-size: 0.8rem;">© {new Date().getFullYear()} NEWNEWS.</p>
         </div>
 
         <div>
@@ -134,9 +154,27 @@ const categories = [
     color: var(--neon-blue) !important;
   }
 
-  @media (max-width: 900px) {
-    nav {
+  /* Bottom Nav visible en móvil, oculta en Desktop */
+  .bottom-nav-container {
+    display: block;
+  }
+
+  @media (min-width: 900px) {
+    .bottom-nav-container {
       display: none !important;
+    }
+    #header-admin-btn {
+      display: inline-flex !important;
+    }
+  }
+
+  /* Desktop Nav oculta en móvil, visible en Desktop */
+  @media (max-width: 900px) {
+    .desktop-nav {
+      display: none !important;
+    }
+    footer {
+      display: none !important; /* En móviles ocultamos el footer completo estilo App */
     }
   }
 </style>

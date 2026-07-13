@@ -6,7 +6,7 @@ import path from 'node:path';
 export async function getStaticPaths() {
   const dbPath = path.resolve('data/newnews.db');
   const db = new DatabaseSync(dbPath);
-  const articles = db.prepare("SELECT slug FROM articles WHERE status = 'publicado'").all() as any[];
+  const articles = db.prepare("SELECT slug FROM articles WHERE status = 'publicado'").all();
   db.close();
 
   return articles.map(art => ({
@@ -25,13 +25,13 @@ const article = db.prepare(`
   FROM articles a
   LEFT JOIN topics t ON a.topic_id = t.id
   WHERE a.slug = ? AND a.status = 'publicado'
-`).get(slug) as any;
+`).get(slug);
 
 // Cargar fuentes
-const sources = db.prepare("SELECT * FROM sources WHERE article_id = ?").all(article.id) as any[];
+const sources = db.prepare("SELECT * FROM sources WHERE article_id = ?").all(article.id);
 
 // Cargar posts sociales
-const socialPosts = db.prepare("SELECT * FROM social_posts WHERE article_id = ?").all(article.id) as any[];
+const socialPosts = db.prepare("SELECT * FROM social_posts WHERE article_id = ?").all(article.id);
 
 db.close();
 
@@ -46,41 +46,46 @@ const getVerdictClass = (verdict) => {
 ---
 
 <Layout title={article.title} description={article.subtitle} category={article.category}>
-  <div class="container">
+  <div class="container" style="padding-top: 1.5rem; padding-bottom: 5rem;">
     
     <!-- Miga de Pan -->
-    <div style="margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
-      <a href="/" class="nav-link">Portada</a> / <a href="/temas" class="nav-link">Expedientes</a> / <a href={`/tema/${article.topic_slug}`} class="nav-link">{article.topic_title}</a> / <span style="color: var(--neon-blue);">{article.title}</span>
+    <div style="margin-bottom: 1.5rem; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
+      <a href="/" style="text-decoration: none;">Radar</a> / <a href="/temas" style="text-decoration: none;">Expedientes</a> / <a href={`/tema/${article.topic_slug}`} style="text-decoration: none;">{article.topic_title.split(' ')[0]}</a> / <span style="color: var(--neon-blue);">{article.title.substring(0, 20)}...</span>
     </div>
 
     <!-- Título y Veredicto Principal -->
     <section style="margin-bottom: 2.5rem;">
-      <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;">
-        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-          <span style="background: var(--border-color); color: var(--text-muted); font-size: 0.8rem; font-weight: 800; padding: 0.25rem 0.75rem; text-transform: uppercase;">
+      <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+          <span style="background: rgba(255,255,255,0.04); color: var(--text-muted); font-size: 0.7rem; font-weight: 800; padding: 0.25rem 0.6rem; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em;">
             {article.category}
           </span>
-          <span style="color: var(--text-muted); font-size: 0.85rem;">
+          <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 500;">
             Publicado el {new Date(article.published_at).toLocaleDateString('es-ES')}
           </span>
         </div>
-        <h1 style="font-size: 2.5rem; line-height: 1.1;">{article.title}</h1>
-        <p style="font-size: 1.25rem; color: var(--text-muted); line-height: 1.4;">{article.subtitle}</p>
+        <h1 style="font-size: 2.2rem; line-height: 1.2; font-weight: 800; letter-spacing: -0.03em; color: var(--text-main);">
+          {article.title}
+        </h1>
+        <p style="font-size: 1.05rem; color: var(--text-muted); line-height: 1.5;">
+          {article.subtitle}
+        </p>
       </div>
 
       <!-- Veredicto Box Cyberpunk -->
-      <div class={`cyber-card ${getVerdictClass(article.verdict)}`} style="display: grid; grid-template-columns: 1fr 3fr; gap: 2rem; align-items: center; padding: 2rem; background: linear-gradient(135deg, var(--bg-card), #161c2b);">
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem; border-right: 2px solid var(--border-color); padding-right: 2rem; text-align: center;">
-          <span style="font-family: var(--font-title); font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted);">Veredicto NEWNEWS</span>
-          <span class={`verdict-badge ${article.verdict.toLowerCase().replace(' ', '-')}`} style="font-size: 1.4rem; padding: 0.5rem 1rem;">
+      <div class={`cyber-card ${getVerdictClass(article.verdict)}`} style="padding: 1.75rem; background: linear-gradient(180deg, rgba(18, 22, 41, 0.8) 0%, rgba(7, 9, 19, 0.95) 100%); display: flex; flex-direction: column; gap: 1.25rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+          <span style="font-family: var(--font-title); font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">
+            Veredicto Oficial
+          </span>
+          <span class={`verdict-badge ${article.verdict.toLowerCase().replace(' ', '-')}`} style="font-size: 0.95rem; padding: 0.4rem 1rem;">
             {article.verdict}
           </span>
-          <span style="font-size: 0.8rem; color: var(--text-muted);">Confianza: <strong style="color: var(--neon-green);">{article.confidence || 'Alta'}</strong></span>
         </div>
 
         <div>
-          <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; font-family: var(--font-title);">Resumen del Análisis:</h3>
-          <p style="font-size: 1.05rem; color: var(--text-main);">
+          <span style="font-weight: 800; text-transform: uppercase; color: var(--text-main); font-size: 0.75rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.35rem;">Conclusión de la Auditoría</span>
+          <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.5;">
             {article.summary}
           </p>
         </div>
@@ -88,193 +93,188 @@ const getVerdictClass = (verdict) => {
     </section>
 
     <!-- Ficha del Claim y el Origen -->
-    <section style="margin-bottom: 3rem; display: grid; grid-template-columns: 3fr 2fr; gap: 2rem;">
+    <section style="margin-bottom: 2.5rem; display: flex; flex-direction: column; gap: 1.5rem;">
       
       <!-- Detalle Técnico de la Afirmación -->
-      <div class="cyber-card">
-        <h3 style="font-size: 1.2rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-          📢 Afirmación Detectada
-        </h3>
-        <p style="font-size: 1.15rem; font-style: italic; color: var(--text-main); margin-bottom: 1.5rem; border-left: 4px solid var(--neon-blue); padding-left: 1rem;">
+      <div class="cyber-card" style="padding: 1.5rem; background: rgba(18, 22, 41, 0.45);">
+        <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-rose); font-size: 0.7rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">Afirmación Detectada</span>
+        <p style="font-style: italic; color: var(--text-main); font-size: 1rem; font-weight: 500; line-height: 1.4; margin-bottom: 1.25rem; border-left: 2px solid var(--neon-rose); padding-left: 0.75rem;">
           "{article.claim}"
         </p>
         
-        <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--text-muted);">Origen viral:</h4>
-        <p style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1rem;">
+        <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.7rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">Origen del bulo:</span>
+        <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 1rem;">
           {article.origin_summary}
         </p>
 
-        <div style="display: flex; align-items: center; gap: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
-          <span>Plataforma: <strong>{article.origin_platform}</strong></span>
+        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
+          <span>Plataforma: <strong style="color: var(--text-main);">{article.origin_platform}</strong></span>
           {article.origin_url && (
-            <a href={article.origin_url} target="_blank" rel="noopener noreferrer" style="color: var(--neon-blue); text-decoration: underline;">
-              Ver publicación original ↗
+            <a href={article.origin_url} target="_blank" rel="noopener noreferrer" style="color: var(--neon-blue); text-decoration: none; font-weight: 700;">
+              Ver post original &rarr;
             </a>
           )}
         </div>
       </div>
 
-      <!-- Termómetro/Ficha del Bulómetro -->
-      <div class="cyber-card purple">
-        <h3 style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--neon-purple);">⚖️ Auditoría del Bulómetro</h3>
+      <!-- Auditoría del Bulómetro -->
+      <div class="cyber-card" style="padding: 1.5rem; background: rgba(18, 22, 41, 0.25);">
+        <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-purple); font-size: 0.7rem; letter-spacing: 0.05em; display: block; margin-bottom: 1rem;">Métricas de Auditoría</span>
         
-        <div style="display: flex; flex-direction: column; gap: 1rem; font-size: 0.9rem;">
+        <div style="display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.85rem;">
           <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
             <span style="color: var(--text-muted);">Revisión Humana:</span>
-            <span style="color: var(--neon-green); font-weight: bold;">Verificada ✓</span>
+            <span style="color: var(--neon-green); font-weight: 700;">Verificada</span>
           </div>
           <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-            <span style="color: var(--text-muted);">Nivel de Riesgo Social:</span>
-            <span style="color: var(--neon-rose); font-weight: bold;">Alto</span>
+            <span style="color: var(--text-muted);">Riesgo de Desinformación:</span>
+            <span style="color: var(--neon-rose); font-weight: 700;">Alto</span>
           </div>
-          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-            <span style="color: var(--text-muted);">Fuentes Originales:</span>
-            <span>{sources.length} documentadas</span>
-          </div>
-          <div>
-            <span style="color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Rango del Bulo:</span>
-            <span style="color: var(--text-main);">Se recicla periódicamente en España, especialmente en épocas de crispación.</span>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">Fuentes Indexadas:</span>
+            <span style="color: var(--text-main); font-weight: 700;">{sources.length} oficiales</span>
           </div>
         </div>
       </div>
 
     </section>
 
-    <!-- Caja de Bloques Estructurados (Qué es cierto/falso) -->
+    <!-- Caja de Datos Desglosados -->
     <section style="margin-bottom: 3rem;">
-      <h2 style="font-size: 1.6rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1.5rem;">
-        🔍 Datos Desglosados
-      </h2>
+      <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.1em; display: block; padding-left: 0.25rem; margin-bottom: 1rem;">Desglose de Hechos</span>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+      <div style="display: flex; flex-direction: column; gap: 1.25rem;">
         
-        <div class="cyber-card green" style="padding: 1.5rem;">
-          <h3 style="color: var(--neon-green); font-size: 1.1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-            ✓ Qué es CIERTO
-          </h3>
-          <p style="color: var(--text-muted); font-size: 0.95rem;">
+        <div class="cyber-card" style="padding: 1.25rem; border-color: rgba(0, 245, 160, 0.15); background: rgba(0, 245, 160, 0.01);">
+          <span style="color: var(--neon-green); font-weight: 800; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.4rem;">Qué es real</span>
+          <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.45;">
             {article.what_is_true || "No hay hechos ciertos en la afirmación."}
           </p>
         </div>
 
-        <div class="cyber-card rose" style="padding: 1.5rem;">
-          <h3 style="color: var(--neon-rose); font-size: 1.1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-            ✗ Qué es FALSO
-          </h3>
-          <p style="color: var(--text-muted); font-size: 0.95rem;">
+        <div class="cyber-card" style="padding: 1.25rem; border-color: rgba(255, 51, 102, 0.15); background: rgba(255, 51, 102, 0.01);">
+          <span style="color: var(--neon-rose); font-weight: 800; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.4rem;">Qué es falso</span>
+          <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.45;">
             {article.what_is_false || "No se han detectado falsedades explícitas."}
           </p>
         </div>
 
-        <div class="cyber-card amber" style="padding: 1.5rem;">
-          <h3 style="color: var(--neon-amber); font-size: 1.1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-            ⚠️ Qué falta de CONTEXTO
-          </h3>
-          <p style="color: var(--text-muted); font-size: 0.95rem;">
-            {article.what_lacks_context || "No se requiere contexto adicional para el veredicto."}
-          </p>
-        </div>
-
-        <div class="cyber-card purple" style="padding: 1.5rem;">
-          <h3 style="color: var(--neon-purple); font-size: 1.1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-            ❓ Qué NO ESTÁ PROBADO
-          </h3>
-          <p style="color: var(--text-muted); font-size: 0.95rem;">
-            {article.what_is_not_proven || "Todos los hechos del análisis han sido contrastados."}
+        <div class="cyber-card" style="padding: 1.25rem; border-color: rgba(255, 176, 32, 0.15); background: rgba(255, 176, 32, 0.01);">
+          <span style="color: var(--neon-amber); font-weight: 800; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.4rem;">Falta de contexto</span>
+          <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.45;">
+            {article.what_lacks_context || "No se requiere contexto adicional."}
           </p>
         </div>
 
       </div>
     </section>
 
-    <!-- Explicación Detallada (Cuerpo del Artículo) -->
-    <section style="margin-bottom: 4rem;">
-      <h2 style="font-size: 1.6rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1.5rem;">
-        📝 Explicación de los Hechos
-      </h2>
-      <div style="font-size: 1.1rem; line-height: 1.8; color: #E2E8F0; white-space: pre-wrap;" class="cyber-card">
+    <!-- Explicación de los Hechos (Cuerpo del Artículo) -->
+    <section style="margin-bottom: 3rem;">
+      <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.1em; display: block; padding-left: 0.25rem; margin-bottom: 1rem;">Análisis Detallado</span>
+      <div style="font-size: 0.95rem; line-height: 1.7; color: #E2E8F0; white-space: pre-wrap; background: rgba(18, 22, 41, 0.45);" class="cyber-card">
         {article.explanation}
       </div>
     </section>
 
-    <!-- Fuentes Utilizadas y Compartir Redes -->
-    <div style="display: grid; grid-template-columns: 2fr 1.2fr; gap: 2rem; margin-bottom: 4rem;">
-      
-      <!-- Fuentes Oficiales -->
-      <section class="cyber-card green">
-        <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--neon-green);">📚 Fuentes Originales Indexadas</h3>
-        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">
-          Respaldamos cada verificación en registros primarios oficiales y públicos. Puedes pulsar en el enlace para auditar el documento tú mismo.
-        </p>
+    <!-- Fuentes Oficiales Indexadas -->
+    <section class="cyber-card" style="padding: 1.75rem; border-color: rgba(0, 245, 160, 0.15); background: rgba(18, 22, 41, 0.3); margin-bottom: 2.5rem;">
+      <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-green); font-size: 0.75rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">Fuentes Originales</span>
+      <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.5rem; line-height: 1.4;">
+        Respaldamos esta verificación en registros primarios oficiales y públicos. Pulsa en el enlace para auditar el documento tú mismo.
+      </p>
 
-        <div style="display: flex; flex-direction: column; gap: 1rem;">
-          {sources.map(src => (
-            <div style="border: 1px solid var(--border-color); padding: 1rem; background: var(--bg-dark);">
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.25rem;">
-                <strong style="color: var(--text-main); font-size: 0.95rem;">{src.title}</strong>
-                <span style="background: rgba(0, 240, 255, 0.1); color: var(--neon-blue); font-size: 0.7rem; font-weight: 800; padding: 0.1rem 0.4rem; text-transform: uppercase;">
-                  Aut: {src.authority_level}
-                </span>
-              </div>
-              <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.5rem;">
-                {src.quote_or_summary}
-              </p>
-              <a href={src.url} target="_blank" rel="noopener noreferrer" style="color: var(--neon-blue); font-size: 0.8rem; font-weight: bold; text-decoration: underline;">
-                Acceder a la fuente original ↗
-              </a>
+      <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+        {sources.map(src => (
+          <div style="border: 1px solid var(--border-color); padding: 1rem; background: rgba(7, 9, 19, 0.5); border-radius: 12px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem; flex-wrap: wrap; gap: 0.5rem;">
+              <strong style="color: var(--text-main); font-size: 0.9rem;">{src.title}</strong>
+              <span style="background: rgba(0, 240, 255, 0.08); color: var(--neon-blue); font-size: 0.6rem; font-weight: 800; padding: 0.15rem 0.5rem; text-transform: uppercase; border-radius: 4px; border: 1px solid rgba(0,240,255,0.15);">
+                Rango: {src.authority_level}
+              </span>
             </div>
-          ))}
-
-          {sources.length === 0 && (
-            <p style="color: var(--text-muted); font-size: 0.9rem;">No se han indexado fuentes en la base de datos para este artículo.</p>
-          )}
-        </div>
-      </section>
-
-      <!-- Panel Social y Compartir -->
-      <section class="cyber-card blue" style="display: flex; flex-direction: column; justify-content: space-between;">
-        <div>
-          <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--neon-blue);">📱 Contracampaña en Redes</h3>
-          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">
-            Copia respuestas o hilos generados automáticamente para desmontar el bulo en redes sociales cuando veas que la gente lo comparte.
-          </p>
-
-          <div style="display: flex; flex-direction: column; gap: 1.25rem;">
-            {socialPosts.map(post => (
-              <div>
-                <strong style="color: var(--text-main); font-size: 0.85rem; text-transform: uppercase; display: block; margin-bottom: 0.25rem;">
-                  Formato: {post.platform} ({post.format})
-                </strong>
-                <div style="background: var(--bg-dark); border: 1px solid var(--border-color); padding: 0.75rem; font-size: 0.85rem; color: var(--text-muted); font-family: monospace; white-space: pre-wrap; max-height: 150px; overflow-y: auto;">
-                  {post.content}
-                </div>
-                <button 
-                  onclick={`navigator.clipboard.writeText(\`${post.content.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`); alert('¡Copiado al portapapeles!');`} 
-                  class="cyber-btn" 
-                  style="width: 100%; padding: 0.25rem 0.5rem; font-size: 0.75rem; margin-top: 0.25rem; box-shadow: 1px 1px 0px 0px var(--border-color);"
-                >
-                  📋 Copiar Texto
-                </button>
-              </div>
-            ))}
-
-            {socialPosts.length === 0 && (
-              <p style="color: var(--text-muted); font-size: 0.9rem;">No hay borradores sociales generados.</p>
-            )}
+            <p style="color: var(--text-muted); font-size: 0.8rem; line-height: 1.4; margin-bottom: 0.75rem;">
+              {src.quote_or_summary}
+            </p>
+            <a href={src.url} target="_blank" rel="noopener noreferrer" style="color: var(--neon-blue); font-size: 0.75rem; font-weight: 700; text-decoration: none;">
+              Acceder al documento oficial &rarr;
+            </a>
           </div>
-        </div>
+        ))}
 
-        <div style="margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
-          <a href="/buscador" class="cyber-btn" style="width: 100%; text-align: center; box-shadow: 2px 2px 0px 0px var(--border-color);">
-            ← Volver al Buscador
-          </a>
-        </div>
-      </section>
+        {sources.length === 0 && (
+          <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center;">No se han indexado fuentes en la base de datos.</p>
+        )}
+      </div>
+    </section>
 
-    </div>
+    <!-- Compartir en Redes (Contracampaña) -->
+    <section class="cyber-card" style="padding: 1.75rem; border-color: rgba(0, 240, 255, 0.15); background: rgba(18, 22, 41, 0.3); margin-bottom: 3rem;">
+      <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-blue); font-size: 0.75rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">Compartir en Redes</span>
+      <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.5rem; line-height: 1.4;">
+        Copia respuestas o hilos generados automáticamente para desmontar el bulo en redes sociales cuando lo veas en canales públicos.
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        {socialPosts.map((post, idx) => (
+          <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <strong style="color: var(--text-main); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
+              Formato: {post.platform} ({post.format})
+            </strong>
+            <div 
+              id={`social-content-${idx}`} 
+              style="background: rgba(7, 9, 19, 0.6); border: 1px solid var(--border-color); padding: 1rem; font-size: 0.8rem; color: var(--text-muted); font-family: monospace; white-space: pre-wrap; max-height: 150px; overflow-y: auto; border-radius: 12px; line-height: 1.45;"
+            >{post.content}</div>
+            
+            <button 
+              class="cyber-btn copy-btn" 
+              data-target={`social-content-${idx}`}
+              style="width: 100%; padding: 0.6rem; font-size: 0.75rem; border-radius: 12px; text-transform: uppercase; font-weight: 800;"
+            >
+              Copiar Mensaje
+            </button>
+          </div>
+        ))}
+
+        {socialPosts.length === 0 && (
+          <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center;">No hay copys sociales sugeridos para este artículo.</p>
+        )}
+      </div>
+
+      <div style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+        <a href="/" class="cyber-btn" style="width: 100%; text-align: center; border-radius: 12px; padding: 0.75rem;">
+          Volver al Radar
+        </a>
+      </div>
+    </section>
 
   </div>
 </Layout>
+
+<!-- Script interactivo de copiado rápido al portapapeles con feedback visual en el botón -->
+<script is:inline>
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-target');
+      const text = document.getElementById(targetId).innerText;
+      
+      navigator.clipboard.writeText(text).then(() => {
+        const originalText = btn.innerText;
+        btn.innerText = '¡Copiado con éxito!';
+        btn.style.borderColor = 'var(--neon-green)';
+        btn.style.color = 'var(--neon-green)';
+        
+        setTimeout(() => {
+          btn.innerText = originalText;
+          btn.style.borderColor = 'var(--border-color)';
+          btn.style.color = 'var(--text-main)';
+        }, 1500);
+      }).catch(err => {
+        console.error('Error al copiar al portapapeles:', err);
+      });
+    });
+  });
+</script>
 
 <style>
   .nav-link:hover {

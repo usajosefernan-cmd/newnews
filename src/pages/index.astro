@@ -1,11 +1,23 @@
 ---
 import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
+import Layout from '../layouts/Layout.astro';
 
 const dbPath = path.resolve('data/newnews.db');
 const db = new DatabaseSync(dbPath);
+
+// Obtener todos los temas activos
 const topics = db.prepare("SELECT * FROM topics WHERE status = 'activo' LIMIT 4").all();
-const articles = db.prepare("SELECT a.*, t.title as topic_title, t.slug as topic_slug FROM articles a LEFT JOIN topics t ON a.topic_id = t.id WHERE a.status = 'publicado' ORDER BY a.published_at DESC").all();
+
+// Obtener todas las piezas publicadas ordenadas por fecha
+const articles = db.prepare(`
+  SELECT a.*, t.title as topic_title, t.slug as topic_slug 
+  FROM articles a
+  LEFT JOIN topics t ON a.topic_id = t.id
+  WHERE a.status = 'publicado'
+  ORDER BY a.published_at DESC
+`).all();
+
 db.close();
 
 const featuredArticle = articles.length > 0 ? articles[0] : null;
@@ -18,262 +30,232 @@ function getVerdictClass(verdict) {
   if (v.includes('engañoso') || v.includes('contexto')) return 'amber';
   return 'purple';
 }
+
+// Iniciales ilustrativas de categoría para avatares minimalistas
+function getCategoryInitials(category) {
+  const c = (category || '').toLowerCase();
+  if (c.includes('migr') || c.includes('socied')) return 'MG';
+  if (c.includes('vivien') || c.includes('okupa')) return 'VV';
+  if (c.includes('impues') || c.includes('ahorr') || c.includes('econ')) return 'EC';
+  if (c.includes('polit') || c.includes('parti')) return 'PL';
+  return 'EX';
+}
 ---
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NEWNEWS — Radar de Bulos y Desmentidos</title>
-  <meta name="description" content="NEWNEWS - Web de noticias moderna, automatizada, especializada en temas candentes y verificación de bulos con fuentes originales." />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
-  <style>
-    @import '../styles/global.css';
-
-    .main-grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 2rem;
-      margin-bottom: 4rem;
-    }
-    @media (max-width: 900px) {
-      .main-grid { grid-template-columns: 1fr !important; }
-    }
-    .featured-title:hover,
-    .topic-link:hover,
-    .article-link:hover { color: var(--neon-blue) !important; }
-    .read-more-link:hover { text-decoration: underline !important; }
-    .footer-links a { color: var(--text-muted); text-decoration: none; transition: color 0.2s ease; }
-    .footer-links a:hover { color: var(--neon-blue) !important; }
-  </style>
-</head>
-<body>
-
-<!-- Radar Ticker -->
-<div class="radar-ticker">
-  <div class="radar-content">
-    <span class="pulse-icon"></span>
-    <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-rose); margin-right: 10px;">RADAR EN VIVO:</span>
-    <div class="ticker-wrapper">
-      <div class="ticker-track">
-        <span>[Bulo Detectado] El impuesto del 5% a las cuentas de más de 10k...</span>
-        <span>&bull;</span>
-        <span>[Desmentido] La policía no tiene prohibido detener a MENAS...</span>
-        <span>&bull;</span>
-        <span>[Dato Histórico] La paga extra de Navidad no la inventó Franco...</span>
-        <span>&bull;</span>
-        <span>[Seguimiento] Ley de Vivienda y okupaciones en primera residencia...</span>
+<Layout title="Radar de Desinformación - España">
+  <!-- Radar Ticker de Noticias -->
+  <div class="radar-ticker">
+    <div class="radar-content">
+      <span class="pulse-icon"></span>
+      <div class="ticker-wrapper" style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
+        <div class="ticker-track">
+          <span>RADAR: El bulo sobre el impuesto a cuentas bancarias...</span>
+          <span>&bull;</span>
+          <span>DESMENTIDO: Prestaciones de 4.200€ al mes para menores extranjeros tutelados es falso...</span>
+          <span>&bull;</span>
+          <span>VIVIENDA: Diferencias legales entre usurpación y allanamiento explicadas con datos...</span>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Cabecera -->
-<header class="header">
-  <div class="container" style="display: flex; align-items: center; justify-content: space-between; padding: 1.5rem 1rem;">
-    <a href="/" class="logo">
-      NEW<span class="logo-accent">NEWS</span>
-    </a>
-    <nav class="nav">
-      <a href="/" class="nav-link active">Radar</a>
-      <a href="/temas" class="nav-link">Expedientes</a>
-      <a href="/programas-politicos" class="nav-link">Partidos</a>
-      <a href="/comparador-politico" class="nav-link">Comparador</a>
-      <a href="/bienes-declarados" class="nav-link">Bienes Líderes</a>
-      <a href="/buscador" class="nav-link">Buscador</a>
-      <a href="/admin" class="admin-badge">EDITOR PANEL</a>
-    </nav>
-  </div>
-</header>
-
-<!-- Contenido Principal -->
-<main style="flex: 1; padding: 2rem 0;">
-  <div class="container">
-
-    <!-- Hero Destacado -->
-    {featuredArticle && (
-      <section style="margin-bottom: 3rem;">
-        <div class="cyber-card rose" style="padding: 2.5rem; display: flex; flex-direction: column; gap: 1.5rem; background: linear-gradient(135deg, var(--bg-card), #171E2E);">
-          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="verdict-badge falso">{featuredArticle.verdict}</span>
-              <span style="color: var(--text-muted); font-size: 0.9rem;">
-                Tema: <a href={"/tema/" + featuredArticle.topic_slug} style="color: var(--neon-blue); text-decoration: underline;">{featuredArticle.topic_title}</a>
-              </span>
-            </div>
-            <span style="color: var(--neon-rose); font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em;" class="pulse-animation">
-              🚨 Bulo Destacado del Día
-            </span>
-          </div>
-
-          <a href={"/noticia/" + featuredArticle.slug}>
-            <h1 class="featured-title" style="font-size: 2.5rem; line-height: 1.2; margin-bottom: 0.5rem; transition: color 0.2s;">
-              {featuredArticle.title}
-            </h1>
-          </a>
-          <p style="font-size: 1.2rem; color: var(--text-muted); max-width: 800px;">
-            {featuredArticle.subtitle}
-          </p>
-
-          <div style="border-left: 4px solid var(--border-color); padding-left: 1rem; margin: 0.5rem 0;">
-            <span style="font-weight: bold; color: var(--text-main); display: block; margin-bottom: 0.25rem;">Afirmación viral:</span>
-            <p style="font-style: italic; color: var(--text-muted); font-size: 1.1rem;">"{featuredArticle.claim}"</p>
-          </div>
-
-          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-top: 1rem;">
-            <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted);">
-              <span>Origen: <strong>{featuredArticle.origin_platform}</strong></span>
-              <span>&bull;</span>
-              <span>Detección: {new Date(featuredArticle.published_at).toLocaleDateString('es-ES')}</span>
-            </div>
-            <a href={"/noticia/" + featuredArticle.slug} class="cyber-btn accent">
-              Ver Análisis Completo
-            </a>
-          </div>
-        </div>
-      </section>
-    )}
-
-    <!-- Expedientes Vivos -->
-    <section style="margin-bottom: 4rem;">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
-        <h2 style="font-size: 1.8rem; display: flex; align-items: center; gap: 0.5rem;">
-          📁 Expedientes <span class="text-gradient-blue">Vivos</span>
-        </h2>
-        <a href="/temas" class="read-more-link" style="color: var(--neon-blue); font-weight: bold;">Ver todos los temas →</a>
-      </div>
-
-      <div class="grid-cols-2">
+  <div class="container" style="padding-top: 1.5rem; padding-bottom: 5rem;">
+    
+    <!-- Instagram Stories Bar (Expedientes Rápidos) -->
+    <section style="margin-bottom: 2rem;">
+      <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.1em; display: block; margin-bottom: 0.75rem; padding-left: 0.25rem;">Expedientes Activos</span>
+      <div class="no-scrollbar" style="display: flex; gap: 1.25rem; overflow-x: auto; padding: 0.25rem; scroll-behavior: smooth; -webkit-overflow-scrolling: touch;">
+        
         {topics.map(topic => (
-          <div class="cyber-card" style="display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
-            <div>
-              <span style="background: var(--border-color); color: var(--text-muted); font-size: 0.75rem; font-weight: 800; padding: 0.2rem 0.5rem; text-transform: uppercase;">
-                {topic.category}
-              </span>
-              <h3 style="font-size: 1.4rem; margin-top: 0.5rem; margin-bottom: 0.5rem;">
-                <a href={"/tema/" + topic.slug} class="topic-link">{topic.title}</a>
-              </h3>
-              <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1rem;">
-                {topic.description}
-              </p>
-              <div style="background: rgba(0,240,255,0.02); border: 1px dashed var(--border-color); padding: 0.75rem; font-size: 0.85rem; color: var(--text-muted);">
-                <strong>Resumen de Veredictos:</strong> {topic.verdict_summary || "Bulos recurrentes y análisis institucional."}
+          <a href={"/tema/" + topic.slug} style="display: flex; flex-direction: column; align-items: center; gap: 0.4rem; min-width: 72px;">
+            <div class="story-circle">
+              <div class="story-inner" style="font-size: 0.85rem; letter-spacing: 0.05em; font-weight: 800;">
+                {getCategoryInitials(topic.category)}
               </div>
             </div>
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
-              <span style="font-size: 0.8rem; color: var(--text-muted);">Confianza general: <strong style="color: var(--neon-green);">{topic.confidence || "Alta"}</strong></span>
-              <a href={"/tema/" + topic.slug} class="cyber-btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; box-shadow: 2px 2px 0px 0px var(--border-color);">
-                Abrir Expediente
-              </a>
+            <span style="font-size: 0.7rem; font-weight: 700; color: var(--text-main); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 75px;">
+              {topic.title.split(' ')[0]}
+            </span>
+          </a>
+        ))}
+
+        <a href="/temas" style="display: flex; flex-direction: column; align-items: center; gap: 0.4rem; min-width: 72px;">
+          <div class="story-circle" style="background: linear-gradient(135deg, var(--border-color), rgba(255,255,255,0.2));">
+            <div class="story-inner" style="color: var(--text-muted); font-size: 0.85rem; font-weight: 800;">
+              ALL
             </div>
           </div>
-        ))}
+          <span style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-align: center; white-space: nowrap;">
+            Ver Todos
+          </span>
+        </a>
+
       </div>
     </section>
 
-    <!-- Últimas Verificaciones + Sidebar -->
-    <div class="main-grid">
-      <section>
-        <div style="margin-bottom: 1.5rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
-          <h2 style="font-size: 1.8rem;">
-            🔍 Últimas <span class="text-gradient-green">Verificaciones</span>
-          </h2>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-          {remainingArticles.map(art => (
-            <div class="cyber-card" style="display: grid; grid-template-columns: 1fr; gap: 1rem; padding: 1.5rem;">
-              <div style="display: flex; align-items: center; justify-content: space-between;">
-                <span class="verdict-badge falso">{art.verdict}</span>
-                <span style="color: var(--text-muted); font-size: 0.8rem;">
-                  {new Date(art.published_at).toLocaleDateString('es-ES')}
-                </span>
-              </div>
-              <div>
-                <h3 style="font-size: 1.3rem; margin-bottom: 0.25rem;">
-                  <a href={"/noticia/" + art.slug} class="article-link">{art.title}</a>
-                </h3>
-                <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 0.75rem;">
-                  {art.subtitle}
-                </p>
-                <div style="font-size: 0.85rem; font-style: italic; color: var(--text-muted); background: rgba(0,0,0,0.1); padding: 0.5rem; border-left: 3px solid var(--border-color);">
-                  <strong>Afirmación:</strong> "{art.claim}"
+    <!-- Fichas Móviles / Feed Principal (Tipo Instagram/TikTok) -->
+    <div style="display: flex; flex-direction: column; gap: 2rem;">
+      
+      <!-- Ficha Destacada (Hero Post) -->
+      {featuredArticle && (
+        <section>
+          <div class={"cyber-card " + getVerdictClass(featuredArticle.verdict)} style="padding: 1.75rem; background: linear-gradient(180deg, rgba(18, 22, 41, 0.8) 0%, rgba(7, 9, 19, 0.95) 100%);">
+            
+            <!-- Cabecera de la Ficha (Estilo Red Social) -->
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(0, 240, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.25); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; color: var(--neon-blue);">
+                  {getCategoryInitials(featuredArticle.category)}
+                </div>
+                <div>
+                  <a href={"/tema/" + featuredArticle.topic_slug} style="font-size: 0.85rem; font-weight: 700; color: var(--text-main); display: block;">
+                    {featuredArticle.topic_title}
+                  </a>
+                  <span style="font-size: 0.7rem; color: var(--text-muted); display: block;">
+                    Radar &bull; {new Date(featuredArticle.published_at).toLocaleDateString('es-ES')}
+                  </span>
                 </div>
               </div>
-              <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted);">
-                <span>Vía: {art.origin_platform}</span>
-                <a href={"/noticia/" + art.slug} class="read-more-link" style="color: var(--neon-blue); font-weight: bold;">Leer análisis →</a>
-              </div>
+              <span class={"verdict-badge " + getVerdictClass(featuredArticle.verdict)}>
+                {featuredArticle.verdict}
+              </span>
             </div>
+
+            <!-- Titular de la Ficha -->
+            <div style="margin-bottom: 1.5rem;">
+              <a href={"/noticia/" + featuredArticle.slug}>
+                <h2 style="font-size: 1.75rem; line-height: 1.2; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.75rem; color: var(--text-main);">
+                  {featuredArticle.title}
+                </h2>
+              </a>
+              <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.5;">
+                {featuredArticle.subtitle}
+              </p>
+            </div>
+
+            <!-- Ficha de la Reclamación (El bulo) -->
+            <div style="background: rgba(255, 51, 102, 0.02); border-left: 2px solid var(--neon-rose); padding: 1rem 1.25rem; border-radius: 0 12px 12px 0; margin-bottom: 1.5rem;">
+              <span style="font-weight: 800; color: var(--neon-rose); text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">Declaración viral:</span>
+              <p style="font-style: italic; color: var(--text-main); font-size: 0.95rem; font-weight: 500; line-height: 1.4;">
+                "{featuredArticle.claim}"
+              </p>
+            </div>
+
+            <!-- Footer de la Ficha -->
+            <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+              <span style="font-size: 0.75rem; color: var(--text-muted);">
+                Origen: <strong style="color: var(--text-main);">{featuredArticle.origin_platform}</strong>
+              </span>
+              <a href={"/noticia/" + featuredArticle.slug} class="cyber-btn accent" style="padding: 0.5rem 1.25rem; font-size: 0.75rem; border-radius: 12px;">
+                Verificar &rarr;
+              </a>
+            </div>
+
+          </div>
+        </section>
+      )}
+
+      <!-- Selector Deslizante de Píldoras Rápidas (Interactivo) -->
+      <section style="margin: 0.5rem 0;">
+        <div class="no-scrollbar" style="display: flex; gap: 0.5rem; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 0.25rem;">
+          <a href="/temas" class="cyber-btn" style="padding: 0.4rem 1rem; font-size: 0.75rem; border-radius: 30px; background: rgba(0, 240, 255, 0.06); border-color: rgba(0,240,255,0.2); color: var(--neon-blue); white-space: nowrap;">Todos los Expedientes</a>
+          {topics.map(t => (
+            <a href={"/tema/" + t.slug} class="cyber-btn" style="padding: 0.4rem 1rem; font-size: 0.75rem; border-radius: 30px; white-space: nowrap;">
+              {t.category}
+            </a>
           ))}
-          {remainingArticles.length === 0 && (
-            <p style="color: var(--text-muted); text-align: center; padding: 2rem;">No hay más artículos publicados.</p>
-          )}
         </div>
       </section>
 
-      <aside style="display: flex; flex-direction: column; gap: 2rem;">
-        <!-- Buscador -->
-        <div class="cyber-card blue" style="background: linear-gradient(180deg, var(--bg-card), #0d1624);">
-          <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--neon-blue);">🔍 Radar de Búsqueda</h3>
-          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
-            ¿Has visto un titular sospechoso? Pégalo aquí para ver si ya lo hemos verificado.
-          </p>
-          <form action="/buscador" method="GET" style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <input type="text" name="q" placeholder="Ej: Franco creó la seguridad social..." required style="width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 2px solid var(--border-color); color: var(--text-main); font-family: var(--font-body); font-size: 0.9rem;" />
-            <button type="submit" class="cyber-btn accent" style="width: 100%; box-shadow: 2px 2px 0px 0px var(--text-main);">Buscar Claim</button>
-          </form>
-        </div>
+      <!-- Feed de Verificaciones (Posts Secundarios) -->
+      <section style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.1em; display: block; padding-left: 0.25rem; margin-bottom: -0.5rem;">Radar de Última Hora</span>
+        
+        {remainingArticles.map(art => (
+          <div class={"cyber-card " + getVerdictClass(art.verdict)} style="padding: 1.5rem; background: rgba(18, 22, 41, 0.45);">
+            
+            <!-- Cabecera Corta del Post -->
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div style="width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; color: var(--text-muted);">
+                  {getCategoryInitials(art.category)}
+                </div>
+                <a href={"/tema/" + art.topic_slug} style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">
+                  {art.topic_title}
+                </a>
+              </div>
+              <span class={"verdict-badge " + getVerdictClass(art.verdict)} style="padding: 0.25rem 0.6rem; font-size: 0.65rem;">
+                {art.verdict}
+              </span>
+            </div>
 
-        <!-- Confusión del Día -->
-        <div class="cyber-card purple">
-          <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--neon-purple);">📈 Confusión del Día</h3>
-          <div style="margin: 1rem 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 0.5rem;">
-            <div style="font-size: 3rem; font-weight: 800; font-family: var(--font-title); color: var(--neon-rose);" class="pulse-animation">78%</div>
-            <span style="font-size: 0.8rem; font-weight: bold; text-transform: uppercase; color: var(--text-muted);">Nivel de Ruido en Redes</span>
-          </div>
-          <p style="color: var(--text-muted); font-size: 0.85rem;">
-            Hoy se registra un nivel alto de confusión social en España motivado por vídeos antiguos recortados sobre inmigración y pensiones.
-          </p>
-          <div style="background: var(--bg-dark); height: 8px; border: 1px solid var(--border-color); margin-top: 1rem; position: relative;">
-            <div style="background: var(--neon-rose); width: 78%; height: 100%;"></div>
-          </div>
-        </div>
+            <!-- Contenido del Post -->
+            <div style="margin-bottom: 1.25rem;">
+              <a href={"/noticia/" + art.slug}>
+                <h3 style="font-size: 1.35rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.5rem; color: var(--text-main);">
+                  {art.title}
+                </h3>
+              </a>
+              <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 0.75rem;">
+                {art.subtitle}
+              </p>
+              <div style="font-size: 0.8rem; font-style: italic; color: var(--text-muted); background: rgba(255,255,255,0.015); padding: 0.75rem; border-left: 2px solid var(--border-color); border-radius: 0 6px 6px 0;">
+                "{art.claim}"
+              </div>
+            </div>
 
-        <!-- Comparador -->
-        <div class="cyber-card">
-          <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem;">🗳️ ¿Votas Informado?</h3>
-          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
-            ¿Sabes qué proponen los partidos sobre vivienda, impuestos o sanidad?
+            <!-- Footer del Post -->
+            <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
+              <span style="font-size: 0.7rem; color: var(--text-muted);">
+                Vía: <strong style="color: var(--text-main);">{art.origin_platform}</strong>
+              </span>
+              <a href={"/noticia/" + art.slug} class="cyber-btn" style="padding: 0.35rem 0.85rem; font-size: 0.7rem; border-radius: 10px; color: var(--neon-blue); border-color: rgba(0, 240, 255, 0.15);">
+                Verificar &rarr;
+              </a>
+            </div>
+
+          </div>
+        ))}
+
+        {remainingArticles.length === 0 && (
+          <p style="color: var(--text-muted); text-align: center; padding: 2.5rem; background: var(--bg-card); border-radius: 20px; border: 1px dashed var(--border-color); font-size: 0.9rem;">
+            No hay más desmentidos registrados hoy.
           </p>
-          <a href="/comparador-politico" class="cyber-btn" style="width: 100%; text-align: center; box-shadow: 2px 2px 0px 0px var(--border-color);">Comparar Programas</a>
+        )}
+      </section>
+
+      <!-- Ruido en Redes (Widget Móvil Estilizado) -->
+      <section class="cyber-card" style="padding: 1.5rem; background: linear-gradient(135deg, rgba(157, 78, 221, 0.05) 0%, rgba(7, 9, 19, 0.95) 100%); margin-top: 1rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+          <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--neon-purple);">Ruido en Redes</h3>
+          <span style="font-size: 1.75rem; font-weight: 800; color: var(--neon-rose);" class="pulse-animation">78%</span>
         </div>
-      </aside>
+        <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.4; margin-bottom: 1rem;">
+          Nivel de desinformación por videos descontextualizados en el territorio español.
+        </p>
+        <div style="background: rgba(7, 9, 19, 0.6); height: 8px; border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden;">
+          <div style="background: linear-gradient(90deg, var(--neon-purple), var(--neon-rose)); width: 78%; height: 100%;"></div>
+        </div>
+      </section>
+
+      <!-- Comparador Político Móvil Promo -->
+      <section class="cyber-card" style="padding: 1.5rem; background: rgba(18, 22, 41, 0.3); text-align: center; border-style: dashed;">
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--neon-green);">Comparador de Programas</h3>
+        <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.4; margin-bottom: 1rem; max-width: 400px; margin-left: auto; margin-right: auto;">
+          Contrasta de forma objetiva lo que prometen los partidos políticos frente a los datos reales y leyes vigentes.
+        </p>
+        <a href="/comparador-politico" class="cyber-btn accent" style="width: 100%; max-width: 250px; border-radius: 12px; font-size: 0.75rem;">
+          Comparar Programas
+        </a>
+      </section>
+
     </div>
 
   </div>
-</main>
+</Layout>
 
-<!-- Footer -->
-<footer class="footer">
-  <div class="container" style="padding: 2rem 1rem; display: flex; flex-direction: column; gap: 1.5rem;">
-    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; border-bottom: 2px solid var(--border-color); padding-bottom: 1rem;">
-      <a href="/" class="logo" style="font-size: 1.5rem;">NEW<span class="logo-accent">NEWS</span></a>
-      <span style="color: var(--text-muted); font-size: 0.85rem;">&copy; 2026 NEWNEWS. Auditoría Ciudadana de Datos y Desmentidos.</span>
-    </div>
-    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; font-size: 0.85rem; color: var(--text-muted);">
-      <p>Herramienta pedagógica neutral sin adscripción política.</p>
-      <div style="display: flex; gap: 1.5rem;" class="footer-links">
-        <a href="/temas">Expedientes</a>
-        <a href="/buscador">Buscador</a>
-        <a href="/admin">Editor Panel</a>
-      </div>
-    </div>
-  </div>
-</footer>
-
-</body>
-</html>
+<style>
+  .featured-title:hover, .article-link:hover {
+    color: var(--neon-blue) !important;
+  }
+</style>
