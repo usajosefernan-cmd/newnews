@@ -1,68 +1,116 @@
 ---
-import Layout from '../layouts/Layout.astro';
 import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 
 const dbPath = path.resolve('data/newnews.db');
 const db = new DatabaseSync(dbPath);
-
-// Obtener todos los temas activos
 const topics = db.prepare("SELECT * FROM topics WHERE status = 'activo' LIMIT 4").all();
-
-// Obtener todas las piezas publicadas ordenadas por fecha
-const articles = db.prepare(`
-  SELECT a.*, t.title as topic_title, t.slug as topic_slug 
-  FROM articles a
-  LEFT JOIN topics t ON a.topic_id = t.id
-  WHERE a.status = 'publicado'
-  ORDER BY a.published_at DESC
-`).all();
-
+const articles = db.prepare("SELECT a.*, t.title as topic_title, t.slug as topic_slug FROM articles a LEFT JOIN topics t ON a.topic_id = t.id WHERE a.status = 'publicado' ORDER BY a.published_at DESC").all();
 db.close();
 
-// Destacar el artículo más relevante para la cabecera
-let featuredArticle = null;
-if (articles && articles.length > 0) {
-  featuredArticle = articles[0];
-}
+const featuredArticle = articles.length > 0 ? articles[0] : null;
+const remainingArticles = articles.length > 1 ? articles.slice(1) : [];
 
-let remainingArticles = [];
-if (articles && articles.length > 1) {
-  remainingArticles = articles.slice(1);
-}
-
-// Mapa de veredicto a color neón
-const getVerdictClass = (verdict) => {
-  const v = verdict.toLowerCase();
+function getVerdictClass(verdict) {
+  const v = (verdict || '').toLowerCase();
   if (v.includes('verdadero')) return 'green';
   if (v.includes('falso')) return 'rose';
   if (v.includes('engañoso') || v.includes('contexto')) return 'amber';
   return 'purple';
-};
+}
 ---
 
-<Layout title="Portada - Radar de Bulos y Desmentidos">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEWNEWS — Radar de Bulos y Desmentidos</title>
+  <meta name="description" content="NEWNEWS - Web de noticias moderna, automatizada, especializada en temas candentes y verificación de bulos con fuentes originales." />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    @import '../styles/global.css';
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 2rem;
+      margin-bottom: 4rem;
+    }
+    @media (max-width: 900px) {
+      .main-grid { grid-template-columns: 1fr !important; }
+    }
+    .featured-title:hover,
+    .topic-link:hover,
+    .article-link:hover { color: var(--neon-blue) !important; }
+    .read-more-link:hover { text-decoration: underline !important; }
+    .footer-links a { color: var(--text-muted); text-decoration: none; transition: color 0.2s ease; }
+    .footer-links a:hover { color: var(--neon-blue) !important; }
+  </style>
+</head>
+<body>
+
+<!-- Radar Ticker -->
+<div class="radar-ticker">
+  <div class="radar-content">
+    <span class="pulse-icon"></span>
+    <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-rose); margin-right: 10px;">RADAR EN VIVO:</span>
+    <div class="ticker-wrapper">
+      <div class="ticker-track">
+        <span>[Bulo Detectado] El impuesto del 5% a las cuentas de más de 10k...</span>
+        <span>&bull;</span>
+        <span>[Desmentido] La policía no tiene prohibido detener a MENAS...</span>
+        <span>&bull;</span>
+        <span>[Dato Histórico] La paga extra de Navidad no la inventó Franco...</span>
+        <span>&bull;</span>
+        <span>[Seguimiento] Ley de Vivienda y okupaciones en primera residencia...</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cabecera -->
+<header class="header">
+  <div class="container" style="display: flex; align-items: center; justify-content: space-between; padding: 1.5rem 1rem;">
+    <a href="/" class="logo">
+      NEW<span class="logo-accent">NEWS</span>
+    </a>
+    <nav class="nav">
+      <a href="/" class="nav-link active">Radar</a>
+      <a href="/temas" class="nav-link">Expedientes</a>
+      <a href="/programas-politicos" class="nav-link">Partidos</a>
+      <a href="/comparador-politico" class="nav-link">Comparador</a>
+      <a href="/bienes-declarados" class="nav-link">Bienes Líderes</a>
+      <a href="/buscador" class="nav-link">Buscador</a>
+      <a href="/admin" class="admin-badge">EDITOR PANEL</a>
+    </nav>
+  </div>
+</header>
+
+<!-- Contenido Principal -->
+<main style="flex: 1; padding: 2rem 0;">
   <div class="container">
-    
-    <!-- Hero Banner Cyberpunk (Destacado) -->
+
+    <!-- Hero Destacado -->
     {featuredArticle && (
       <section style="margin-bottom: 3rem;">
-        <div class={`cyber-card ${getVerdictClass(featuredArticle.verdict)}`} style="padding: 2.5rem; display: flex; flex-direction: column; gap: 1.5rem; background: linear-gradient(135deg, var(--bg-card), #171E2E);">
+        <div class="cyber-card rose" style="padding: 2.5rem; display: flex; flex-direction: column; gap: 1.5rem; background: linear-gradient(135deg, var(--bg-card), #171E2E);">
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
             <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class={`verdict-badge ${featuredArticle.verdict.toLowerCase().replace(' ', '-')}`}>
-                {featuredArticle.verdict}
-              </span>
+              <span class="verdict-badge falso">{featuredArticle.verdict}</span>
               <span style="color: var(--text-muted); font-size: 0.9rem;">
-                Tema: <a href={`/tema/${featuredArticle.topic_slug}`} style="color: var(--neon-blue); text-decoration: underline;">{featuredArticle.topic_title}</a>
+                Tema: <a href={"/tema/" + featuredArticle.topic_slug} style="color: var(--neon-blue); text-decoration: underline;">{featuredArticle.topic_title}</a>
               </span>
             </div>
-            <span style="color: var(--neon-rose); font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; display: inline-flex; align-items: center; gap: 0.5rem;" class="pulse-animation">
+            <span style="color: var(--neon-rose); font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em;" class="pulse-animation">
               🚨 Bulo Destacado del Día
             </span>
           </div>
 
-          <a href={`/noticia/${featuredArticle.slug}`}>
+          <a href={"/noticia/" + featuredArticle.slug}>
             <h1 class="featured-title" style="font-size: 2.5rem; line-height: 1.2; margin-bottom: 0.5rem; transition: color 0.2s;">
               {featuredArticle.title}
             </h1>
@@ -79,10 +127,10 @@ const getVerdictClass = (verdict) => {
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-top: 1rem;">
             <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted);">
               <span>Origen: <strong>{featuredArticle.origin_platform}</strong></span>
-              <span>•</span>
+              <span>&bull;</span>
               <span>Detección: {new Date(featuredArticle.published_at).toLocaleDateString('es-ES')}</span>
             </div>
-            <a href={`/noticia/${featuredArticle.slug}`} class="cyber-btn accent">
+            <a href={"/noticia/" + featuredArticle.slug} class="cyber-btn accent">
               Ver Análisis Completo
             </a>
           </div>
@@ -90,7 +138,7 @@ const getVerdictClass = (verdict) => {
       </section>
     )}
 
-    <!-- Sección de Temas Candentes (Expedientes Vivos) -->
+    <!-- Expedientes Vivos -->
     <section style="margin-bottom: 4rem;">
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
         <h2 style="font-size: 1.8rem; display: flex; align-items: center; gap: 0.5rem;">
@@ -107,19 +155,18 @@ const getVerdictClass = (verdict) => {
                 {topic.category}
               </span>
               <h3 style="font-size: 1.4rem; margin-top: 0.5rem; margin-bottom: 0.5rem;">
-                <a href={`/tema/${topic.slug}`} class="topic-link">{topic.title}</a>
+                <a href={"/tema/" + topic.slug} class="topic-link">{topic.title}</a>
               </h3>
               <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1rem;">
                 {topic.description}
               </p>
-              <div style="background: rgba(0, 240, 255, 0.02); border: 1px dashed var(--border-color); padding: 0.75rem; font-size: 0.85rem; color: var(--text-muted);">
+              <div style="background: rgba(0,240,255,0.02); border: 1px dashed var(--border-color); padding: 0.75rem; font-size: 0.85rem; color: var(--text-muted);">
                 <strong>Resumen de Veredictos:</strong> {topic.verdict_summary || "Bulos recurrentes y análisis institucional."}
               </div>
             </div>
-
             <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
               <span style="font-size: 0.8rem; color: var(--text-muted);">Confianza general: <strong style="color: var(--neon-green);">{topic.confidence || "Alta"}</strong></span>
-              <a href={`/tema/${topic.slug}`} class="cyber-btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; box-shadow: 2px 2px 0px 0px var(--border-color);">
+              <a href={"/tema/" + topic.slug} class="cyber-btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; box-shadow: 2px 2px 0px 0px var(--border-color);">
                 Abrir Expediente
               </a>
             </div>
@@ -128,31 +175,26 @@ const getVerdictClass = (verdict) => {
       </div>
     </section>
 
-    <!-- Grill de Últimas Verificaciones e Widget Lateral -->
+    <!-- Últimas Verificaciones + Sidebar -->
     <div class="main-grid">
-      
-      <!-- Listado de Noticias -->
       <section>
         <div style="margin-bottom: 1.5rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
           <h2 style="font-size: 1.8rem;">
             🔍 Últimas <span class="text-gradient-green">Verificaciones</span>
           </h2>
         </div>
-
         <div style="display: flex; flex-direction: column; gap: 1.5rem;">
           {remainingArticles.map(art => (
-            <div class={`cyber-card ${getVerdictClass(art.verdict)}`} style="display: grid; grid-template-columns: 1fr; gap: 1rem; padding: 1.5rem;">
+            <div class="cyber-card" style="display: grid; grid-template-columns: 1fr; gap: 1rem; padding: 1.5rem;">
               <div style="display: flex; align-items: center; justify-content: space-between;">
-                <span class={`verdict-badge ${art.verdict.toLowerCase().replace(' ', '-')}`}>
-                  {art.verdict}
-                </span>
+                <span class="verdict-badge falso">{art.verdict}</span>
                 <span style="color: var(--text-muted); font-size: 0.8rem;">
                   {new Date(art.published_at).toLocaleDateString('es-ES')}
                 </span>
               </div>
               <div>
                 <h3 style="font-size: 1.3rem; margin-bottom: 0.25rem;">
-                  <a href={`/noticia/${art.slug}`} class="article-link">{art.title}</a>
+                  <a href={"/noticia/" + art.slug} class="article-link">{art.title}</a>
                 </h3>
                 <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 0.75rem;">
                   {art.subtitle}
@@ -163,96 +205,75 @@ const getVerdictClass = (verdict) => {
               </div>
               <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted);">
                 <span>Vía: {art.origin_platform}</span>
-                <a href={`/noticia/${art.slug}`} class="read-more-link" style="color: var(--neon-blue); font-weight: bold;">Leer análisis →</a>
+                <a href={"/noticia/" + art.slug} class="read-more-link" style="color: var(--neon-blue); font-weight: bold;">Leer análisis →</a>
               </div>
             </div>
           ))}
-
           {remainingArticles.length === 0 && (
-            <p style="color: var(--text-muted); text-align: center; padding: 2rem;">No hay más artículos publicados en esta versión.</p>
+            <p style="color: var(--text-muted); text-align: center; padding: 2rem;">No hay más artículos publicados.</p>
           )}
         </div>
       </section>
 
-      <!-- Barra Lateral / Widgets -->
       <aside style="display: flex; flex-direction: column; gap: 2rem;">
-        
-        <!-- Buscador Rápido -->
+        <!-- Buscador -->
         <div class="cyber-card blue" style="background: linear-gradient(180deg, var(--bg-card), #0d1624);">
           <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--neon-blue);">🔍 Radar de Búsqueda</h3>
           <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
-            ¿Has visto un titular, tweet o cadena de WhatsApp sospechosa? Pégala aquí para ver si ya la hemos verificado.
+            ¿Has visto un titular sospechoso? Pégalo aquí para ver si ya lo hemos verificado.
           </p>
           <form action="/buscador" method="GET" style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <input 
-              type="text" 
-              name="q" 
-              placeholder="Ej: Franco creó la seguridad social..." 
-              required 
-              style="width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 2px solid var(--border-color); color: var(--text-main); font-family: var(--font-body); font-size: 0.9rem;"
-            />
-            <button type="submit" class="cyber-btn accent" style="width: 100%; box-shadow: 2px 2px 0px 0px var(--text-main);">
-              Buscar Claim
-            </button>
+            <input type="text" name="q" placeholder="Ej: Franco creó la seguridad social..." required style="width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 2px solid var(--border-color); color: var(--text-main); font-family: var(--font-body); font-size: 0.9rem;" />
+            <button type="submit" class="cyber-btn accent" style="width: 100%; box-shadow: 2px 2px 0px 0px var(--text-main);">Buscar Claim</button>
           </form>
         </div>
 
-        <!-- Termómetro de Confusión del Día -->
+        <!-- Confusión del Día -->
         <div class="cyber-card purple">
           <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--neon-purple);">📈 Confusión del Día</h3>
           <div style="margin: 1rem 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 0.5rem;">
-            <div style="font-size: 3rem; font-weight: 800; font-family: var(--font-title); color: var(--neon-rose);" class="pulse-animation">
-              78%
-            </div>
-            <span style="font-size: 0.8rem; font-weight: bold; text-transform: uppercase; color: var(--text-muted);">
-              Nivel de Ruido en Redes
-            </span>
+            <div style="font-size: 3rem; font-weight: 800; font-family: var(--font-title); color: var(--neon-rose);" class="pulse-animation">78%</div>
+            <span style="font-size: 0.8rem; font-weight: bold; text-transform: uppercase; color: var(--text-muted);">Nivel de Ruido en Redes</span>
           </div>
           <p style="color: var(--text-muted); font-size: 0.85rem;">
-            Hoy se registra un nivel alto de confusión social en España motivado por la difusión de vídeos antiguos recortados sobre inmigración y debates históricos sobre pensiones.
+            Hoy se registra un nivel alto de confusión social en España motivado por vídeos antiguos recortados sobre inmigración y pensiones.
           </p>
           <div style="background: var(--bg-dark); height: 8px; border: 1px solid var(--border-color); margin-top: 1rem; position: relative;">
             <div style="background: var(--neon-rose); width: 78%; height: 100%;"></div>
           </div>
         </div>
 
-        <!-- Comparador Político Promo -->
+        <!-- Comparador -->
         <div class="cyber-card">
           <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem;">🗳️ ¿Votas Informado?</h3>
           <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
-            ¿Sabes qué proponen realmente los partidos sobre vivienda, impuestos o sanidad y qué votaron en el Parlamento?
+            ¿Sabes qué proponen los partidos sobre vivienda, impuestos o sanidad?
           </p>
-          <a href="/comparador-politico" class="cyber-btn" style="width: 100%; text-align: center; box-shadow: 2px 2px 0px 0px var(--border-color);">
-            Comparar Programas
-          </a>
+          <a href="/comparador-politico" class="cyber-btn" style="width: 100%; text-align: center; box-shadow: 2px 2px 0px 0px var(--border-color);">Comparar Programas</a>
         </div>
-
       </aside>
-
     </div>
 
   </div>
-</Layout>
+</main>
 
-<style>
-  .main-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 2rem;
-    margin-bottom: 4rem;
-  }
+<!-- Footer -->
+<footer class="footer">
+  <div class="container" style="padding: 2rem 1rem; display: flex; flex-direction: column; gap: 1.5rem;">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; border-bottom: 2px solid var(--border-color); padding-bottom: 1rem;">
+      <a href="/" class="logo" style="font-size: 1.5rem;">NEW<span class="logo-accent">NEWS</span></a>
+      <span style="color: var(--text-muted); font-size: 0.85rem;">&copy; 2026 NEWNEWS. Auditoría Ciudadana de Datos y Desmentidos.</span>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; font-size: 0.85rem; color: var(--text-muted);">
+      <p>Herramienta pedagógica neutral sin adscripción política.</p>
+      <div style="display: flex; gap: 1.5rem;" class="footer-links">
+        <a href="/temas">Expedientes</a>
+        <a href="/buscador">Buscador</a>
+        <a href="/admin">Editor Panel</a>
+      </div>
+    </div>
+  </div>
+</footer>
 
-  @media (max-width: 900px) {
-    .main-grid {
-      grid-template-columns: 1fr !important;
-    }
-  }
-
-  .featured-title:hover, .topic-link:hover, .article-link:hover {
-    color: var(--neon-blue) !important;
-  }
-
-  .read-more-link:hover {
-    text-decoration: underline !important;
-  }
-</style>
+</body>
+</html>
