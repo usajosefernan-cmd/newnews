@@ -51,7 +51,25 @@ export async function POST({ request }) {
 
     db.close();
 
-    return new Response(JSON.stringify({ success: true, message: '¡Gracias! El bulo ha sido reportado en la cola del radar. Nuestros verificadores auditarán los hechos en BOE/INE.' }), {
+    // Si supera los cortafuegos de algo realmente viral (viralityScore >= 7.5), procesar inmediatamente en caliente
+    if (viralityScore >= 7.5) {
+      import('node:child_process').then(({ execSync }) => {
+        try {
+          console.log(`[Radar Hot-Trigger] Reporte viral detectado (${views} visualizaciones). Iniciando procesamiento en caliente...`);
+          execSync('node scripts/ai-pipeline.js', { env: process.env });
+          execSync('node scripts/sync.js', { env: process.env });
+          execSync('npm run build', { env: process.env });
+          if (process.platform !== 'win32') {
+            execSync('pm2 reload newnews --update-env', { env: process.env });
+          }
+          console.log('[Radar Hot-Trigger] Procesamiento en caliente completado y servidor recargado.');
+        } catch (e) {
+          console.error('[Radar Hot-Trigger] Error en pipeline en caliente:', e.message);
+        }
+      });
+    }
+
+    return new Response(JSON.stringify({ success: true, message: '¡Gracias! El bulo ha sido reportado en la cola del radar. Al superar el umbral de viralidad, el motor de Hermes ha iniciado su auditoría en caliente.' }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });
