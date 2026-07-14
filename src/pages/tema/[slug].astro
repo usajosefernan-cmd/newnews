@@ -820,10 +820,10 @@ const info = infographicData[slug];
                     <div style="display: flex; flex-direction: column; gap: 0.4rem;">
                       <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
                         <span style="color: var(--text-main); font-weight: 700;">{bar.label}</span>
-                        <strong style={`color: ${bar.color};`}>{bar.percentage}</strong>
+                        <strong style={{ color: bar.color }}>{bar.percentage}</strong>
                       </div>
                       <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; border: 1px solid rgba(255,255,255,0.02);">
-                        <div style={`width: ${bar.percentage}; height: 100%; background: ${bar.color}; border-radius: 4px;`}></div>
+                        <div style={{ width: bar.percentage, height: '100%', background: bar.color, borderRadius: '4px' }}></div>
                       </div>
                       <span style="font-size: 0.7rem; color: var(--text-muted);">{bar.desc}</span>
                     </div>

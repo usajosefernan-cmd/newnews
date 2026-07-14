@@ -11,7 +11,7 @@
     "db:seed": "node scripts/import-political.js",
     "radar": "node scripts/radar-cron.js",
     "ai:pipeline": "node scripts/ai-pipeline.js",
-    "sync": "npm run radar && npm run ai:pipeline && npm run build"
+    "sync": "node scripts/sync.js"
   },
   "dependencies": {
     "@astrojs/react": "^6.0.0",

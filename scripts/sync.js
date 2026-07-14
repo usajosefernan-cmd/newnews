@@ -1,0 +1,50 @@
+import { execSync } from 'node:child_process';
+import path from 'node:path';
+import fs from 'node:fs';
+
+console.log('╔══════════════════════════════════════════════════════╗');
+console.log('║ ⚡ NEWNEWS: INICIANDO PIPELINE DE SINCRONIZACIÓN ⚡  ║');
+console.log('╚══════════════════════════════════════════════════════╝');
+
+function runCommand(command, description) {
+  console.log(`\n🔹 [PROCESO] ${description}...`);
+  console.log(`$ ${command}`);
+  try {
+    execSync(command, { stdio: 'inherit', env: process.env });
+    console.log(`✅ [EXITO] ${description} completado.`);
+    return true;
+  } catch (error) {
+    console.error(`❌ [ERROR] ${description} falló.`);
+    console.error(error.message);
+    return false;
+  }
+}
+
+// 1. Ejecutar Radar Cron para capturar tendencias y debates
+const radarSuccess = runCommand('node scripts/radar-cron.js', 'Ejecutando Radar Cron (Escaneo de feeds RSS, Reddit, Telegram)');
+
+if (!radarSuccess) {
+  console.error('⚠️ Deteniendo pipeline debido a un fallo en el Radar.');
+  process.exit(1);
+}
+
+// 2. Ejecutar Pipeline de IA para procesar claims y generar borradores o artículos
+const aiSuccess = runCommand('node scripts/ai-pipeline.js', 'Ejecutando Pipeline de IA (Procesado de claims con Gemini)');
+
+if (!aiSuccess) {
+  console.error('⚠️ Deteniendo pipeline debido a un fallo en el Pipeline de IA.');
+  process.exit(1);
+}
+
+// 3. Ejecutar Build de Astro para actualizar el portal estático
+const buildSuccess = runCommand('npm run build', 'Reconstruyendo Portal Estático (Astro Build)');
+
+if (!buildSuccess) {
+  console.error('⚠️ El build de Astro ha fallado. Revisa los errores del compilador.');
+  process.exit(1);
+}
+
+console.log('\n========================================================');
+console.log('🎉 ¡Sincronización y Reconstrucción Completada con Éxito!');
+console.log('========================================================');
+process.exit(0);

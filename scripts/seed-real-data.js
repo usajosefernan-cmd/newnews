@@ -65,6 +65,33 @@ const topicsData = [
     category: 'Corrupción Pública',
     confidence: 'Alta',
     verdict_summary: 'Detalles de la sentencia firme del Tribunal Supremo de junio de 2026 y la auditoría que detectó el incremento injustificado de compras de material sanitario.'
+  },
+  {
+    id: 't-inflacion',
+    slug: 'inflacion-y-coste-de-vida',
+    title: 'Inflación y Coste de Vida',
+    description: 'Explicaciones sobre el IPC, precio de los alimentos de la cesta de la compra y estadísticas reales del INE.',
+    category: 'Economía e Impuestos',
+    confidence: 'Alta',
+    verdict_summary: 'Desmentido de la manipulación sistemática del IPC y desglose de las subidas reales registradas por el INE.'
+  },
+  {
+    id: 't-empleo',
+    slug: 'empleo-y-cifras-de-paro',
+    title: 'Paro y Trabajo',
+    description: 'Metodología de las cifras del paro, contratos fijos discontinuos y encuestas de la EPA del INE.',
+    category: 'Economía e Impuestos',
+    confidence: 'Alta',
+    verdict_summary: 'Explicación técnica de la inclusión de los fijos discontinuos en los registros y contraste de la EPA.'
+  },
+  {
+    id: 't-autonomos',
+    slug: 'autonomos-y-fiscalidad',
+    title: 'Autónomos y Fiscalidad',
+    description: 'Análisis de la cuota de autónomos de la Seguridad Social por ingresos reales y fiscalidad general.',
+    category: 'Economía e Impuestos',
+    confidence: 'Alta',
+    verdict_summary: 'Desglose de las nuevas tablas de cotización del sistema de ingresos reales frente a falsedades de cuotas fijas excesivas.'
   }
 ];
 
@@ -201,6 +228,66 @@ const articlesData = [
     what_is_false: 'No hay afirmaciones falsas en este claim; el fallo judicial es firme y definitivo, ratificando las acusaciones de la Fiscalía Anticorrupción.',
     what_lacks_context: 'Las defensas alegaron persecución política e invalidez de la auditoría interna del Ministerio de Transportes, la cual no fue anulada por el tribunal sentenciador.',
     what_is_not_proven: 'La implicación penal de otros miembros del Consejo de Ministros que firmaron las autorizaciones generales del estado de alarma fue descartada al no haber indicios de cohecho o dolo en su actuación.'
+  },
+  {
+    id: 'art-inflacion-cesta',
+    topic_id: 't-inflacion',
+    slug: 'bulo-inflacion-cesta-compra-datos-oficiales-ine',
+    title: '¿Es la inflación real de la cesta de la compra superior al 50% como se difunde en redes?',
+    subtitle: 'Contrastamos la evolución real de los precios de los alimentos publicada mensualmente por el INE.',
+    claim: 'Hacienda y el INE manipulan el IPC para ocultar que la cesta de la compra ha subido un 50% de media en el último año.',
+    origin_platform: 'X (Twitter) / YouTube',
+    origin_url: 'https://youtube.com/watch?v=precios_espania',
+    origin_summary: 'Vídeos virales donde se muestran tickets de compra antiguos comparados con actuales afirmando un incremento general del 50%.',
+    category: 'Economía e Impuestos',
+    verdict: 'Falso',
+    confidence: 'Alta',
+    summary: 'El INE reporta incrementos mensuales detallados del IPC. Si bien ciertos productos como el aceite de oliva han subido más del 50% debido a la sequía, la media general ponderada de alimentos se sitúa muy por debajo de esa cifra (entre un 4% y un 12% según el período), siguiendo estándares de Eurostat.',
+    explanation: 'La tasa de variación anual del IPC de los alimentos y bebidas no alcohólicas se mide mediante una muestra masiva en más de 29.000 establecimientos de toda España. Es cierto que el aceite de oliva virgen extra subió un 56% interanual en 2024 debido a las malas cosechas, pero otros alimentos básicos como la leche, el pan o la carne registraron incrementos de un dígito o incluso ligeras bajadas. La cesta de la compra del INE pondera el peso real de cada alimento en el presupuesto familiar medio, evitando que la subida extrema de un solo producto distorsione el índice general. La Eurostat audita periódicamente la metodología del INE para asegurar que cumple con el Reglamento (UE) 2016/792.',
+    what_is_true: 'Determinados productos básicos concretos (especialmente grasas y aceites) han sufrido incrementos cercanos o superiores al 50% en los últimos años debido a factores climáticos y de producción.',
+    what_is_false: 'Es totalmente falso que el índice medio general de la cesta de la compra de alimentos en España registre una subida del 50% anual, o que el INE altere de forma ilegal los registros.',
+    what_lacks_context: 'Las comparaciones virales de tickets de compra suelen comparar ofertas específicas de hace años con precios estándar actuales de establecimientos diferentes sin control metodológico.',
+    what_is_not_proven: 'No se ha presentado ninguna auditoría independiente que demuestre desviación sistemática en la recogida de precios del INE frente a la realidad del mercado comercial.'
+  },
+  {
+    id: 'art-empleo-fijos',
+    topic_id: 't-empleo',
+    slug: 'bulo-fijos-discontinuos-ocultacion-cifras-paro',
+    title: '¿Oculta el Gobierno parados a través de los contratos fijos discontinuos?',
+    subtitle: 'Analizamos la diferencia técnica entre los datos del SEPE y la Encuesta de Población Activa (EPA) del INE.',
+    claim: 'Las cifras de paro oficiales de España están falsificadas porque los trabajadores fijos discontinuos inactivos se computan como empleados.',
+    origin_platform: 'X (Twitter) / Prensa',
+    origin_url: 'https://www.elmundo.es/economia/paro-fijos',
+    origin_summary: 'Artículos de opinión y mensajes en redes que afirman que hay más de 500.000 parados ocultos no contabilizados en las estadísticas del Ministerio.',
+    category: 'Economía e Impuestos',
+    verdict: 'Falso',
+    confidence: 'Alta',
+    summary: 'Los fijos discontinuos en período de inactividad no se cuentan como parados registrados (SEPE) porque mantienen un contrato laboral en vigor (no están desempleados administrativamente, sino suspendidos), una clasificación vigente desde 1985. Sin embargo, el INE, en la EPA (que sigue las directrices internacionales de la OIT), sí clasifica a los fijos discontinuos inactivos que buscan empleo como "parados", por lo que no hay ocultación real de datos.',
+    explanation: 'La polémica surge por la convivencia de dos fuentes estadísticas:\n1. Paro Registrado (Ministerio de Trabajo): Mide las demandas de empleo pendientes en las oficinas públicas (SEPE). Desde la Orden Ministerial de 11 de marzo de 1985 (gobierno de Felipe González), los fijos discontinuos en período de inactividad figuran en la categoría de "demandantes de empleo no ocupados" (DENOS) pero no como parados registrados, dado que el vínculo con la empresa no se ha roto.\n2. EPA (INE): Mide la situación laboral de forma estadística e independiente mediante entrevistas. La EPA sigue la metodología internacional de la Organización Internacional del Trabajo (OIT) y Eurostat: si un fijo discontinuo inactivo declara no estar trabajando y está buscando empleo activamente, la EPA lo clasifica automáticamente como parado/desempleado. Por tanto, las estadísticas del INE reflejan fielmente el volumen de personas sin trabajo, impidiendo cualquier ocultación gubernamental.',
+    what_is_true: 'Los trabajadores fijos discontinuos inactivos no se suman a la cifra mensual de "Paro Registrado" del SEPE debido a una normativa de clasificación que data de 1985.',
+    what_is_false: 'Es falso que se "maquillen" los datos para la Unión Europea, ya que los organismos comunitarios (Eurostat) se guían por la EPA del INE, que sí computa a los fijos discontinuos inactivos sin empleo como parados.',
+    what_lacks_context: 'Se suele omitir que el incremento de fijos discontinuos es consecuencia directa de la reforma laboral de 2021, que prohibió la mayoría de los contratos temporales de obra y servicio, convirtiéndolos en fijos discontinuos.',
+    what_is_not_proven: 'No se ha demostrado la existencia de instrucciones técnicas para alterar la recogida de datos en las oficinas de empleo autónomas.'
+  },
+  {
+    id: 'art-autonomos-cuotas',
+    topic_id: 't-autonomos',
+    slug: 'bulo-cuotas-autonomos-sistema-ingresos-reales-seguridad-social',
+    title: '¿Es la nueva cuota mínima de autónomos en España confiscatoria y superior a 500€?',
+    subtitle: 'Desglosamos las tablas de cotización oficiales por ingresos reales aplicables desde 2023.',
+    claim: 'La nueva reforma de autónomos obliga a todos los trabajadores por cuenta propia a pagar una cuota fija de más de 500€ al mes independientemente de lo que ganen.',
+    origin_platform: 'Facebook / X (Twitter)',
+    origin_url: 'https://facebook.com/autonomos_unidos/posts/192',
+    origin_summary: 'Mensajes de colectivos de autónomos que critican el nuevo sistema afirmando que la cuota mínima ahogará a quienes facturan cantidades bajas.',
+    category: 'Economía e Impuestos',
+    verdict: 'Falso',
+    confidence: 'Alta',
+    summary: 'El nuevo sistema de cotización por ingresos reales, iniciado en 2023 y con proyección hasta 2025, establece una cuota progresiva basada en los rendimientos netos reales. Aquellos autónomos con rendimientos inferiores a 670€ al mes pagan una cuota mínima de 225€, mientras que la cuota máxima de 530€ se aplica solo a quienes tengan rendimientos netos superiores a 6.000€ mensuales.',
+    explanation: 'El Real Decreto-ley 13/2022 reformó el sistema de cotización para que los autónomos coticen en función de sus rendimientos netos reales (ingresos menos gastos deducibles). Se establecieron 15 tramos de cotización:\n- Tramo 1 (Rendimientos < 670€/mes): Cuota mínima reducida de 225€ al mes.\n- Tramos medios (Rendimientos entre 1.300€ y 1.700€/mes): Cuota en torno a los 290€ al mes (similar a la antigua base mínima).\n- Tramo 15 (Rendimientos > 6.000€/mes): Cuota máxima de 530€ al mes.\n\nAdicionalmente, se mantiene la "Tarifa Plana" de 80€ mensuales para nuevos autónomos durante el primer año, ampliable a un segundo año si los ingresos no superan el Salario Mínimo Interprofesional (SMI). Por tanto, la afirmación de una cuota mínima obligatoria superior a 500€ para todos los autónomos no se corresponde con las tablas legislativas vigentes.',
+    what_is_true: 'La cuota máxima del sistema progresivo sí supera los 500€ al mes (530€), pero solo para el tramo superior de rendimientos más altos (más de 6.000€ netos al mes).',
+    what_is_false: 'Es falso que todos los autónomos paguen cuotas de 500€ o más de forma uniforme o que el sistema no proteja a quienes tienen bajos ingresos con cuotas reducidas.',
+    what_lacks_context: 'Se oculta que el cálculo se realiza a final de año basándose en la declaración de la renta y que el autónomo puede ajustar su tramo de cotización hasta 6 veces al año según sus estimaciones previsionales.',
+    what_is_not_proven: 'No se ha acreditado que la Seguridad Social esté aplicando cobros de tramos superiores de forma unilateral sin previa regularización fiscal.'
   }
 ];
 
@@ -314,6 +401,42 @@ const sourcesData = [
     source_type: 'oficial',
     authority_level: 'Máxima',
     quote_or_summary: 'Auditoría interna que expone las anomalías e incrementos arbitrarios en los pedidos de mascarillas Soluciones de Gestión.'
+  },
+  {
+    id: 'src-ine-ipc',
+    article_id: 'art-inflacion-cesta',
+    title: 'INE - Índice de Precios de Consumo (IPC) de Alimentos',
+    url: 'https://www.ine.es/dyngs/INEbase/es/operacion.htm?c=Estadistica_C&cid=1254736176802',
+    source_type: 'oficial',
+    authority_level: 'Máxima',
+    quote_or_summary: 'Datos oficiales de la evolución interanual y mensual del IPC de alimentos y ponderaciones de la cesta familiar.'
+  },
+  {
+    id: 'src-ine-epa',
+    article_id: 'art-empleo-fijos',
+    title: 'INE - Encuesta de Población Activa (EPA)',
+    url: 'https://www.ine.es/dyngs/INEbase/es/operacion.htm?c=Estadistica_C&cid=1254736176918',
+    source_type: 'oficial',
+    authority_level: 'Máxima',
+    quote_or_summary: 'Metodología de medición del desempleo y ocupación armonizada con Eurostat y la OIT.'
+  },
+  {
+    id: 'src-sepe-1985',
+    article_id: 'art-empleo-fijos',
+    title: 'BOE - Orden del 11 de marzo de 1985 sobre demandantes de empleo',
+    url: 'https://www.boe.es/buscar/doc.php?id=BOE-A-1985-4290',
+    source_type: 'oficial',
+    authority_level: 'Máxima',
+    quote_or_summary: 'Normativa histórica reguladora del cómputo oficial de demandantes de empleo y exclusión de fijos discontinuos inactivos en el SEPE.'
+  },
+  {
+    id: 'src-ss-autonomos',
+    article_id: 'art-autonomos-cuotas',
+    title: 'Seguridad Social - Nuevo sistema de cotización para autónomos por ingresos reales',
+    url: 'https://www.seg-social.es/wps/portal/ness/nuevocotizacionautonomos',
+    source_type: 'oficial',
+    authority_level: 'Máxima',
+    quote_or_summary: 'Guía práctica oficial y tablas de tramos de cotización mínima y máxima aplicables según rendimientos netos.'
   }
 ];
 
@@ -348,6 +471,27 @@ const socialData = [
     platform: 'TikTok',
     format: 'guion',
     content: '[VOZ EN OFF]: ¿Ha sido condenada Begoña Gómez por tráfico de influencias? No te creas los titulares exagerados. La investigación sigue abierta por el juez Peinado y no hay sentencia firme. Te contamos la verdad.'
+  },
+  {
+    id: 'soc-inflacion-1',
+    article_id: 'art-inflacion-cesta',
+    platform: 'X',
+    format: 'corto',
+    content: '¿Ha subido la cesta de la compra un 50% de media? FALSO. Aunque algunos productos puntuales (como el aceite de oliva) registran subidas altas por la sequía, el IPC de alimentos del INE refleja una media ponderada muy inferior. Te contamos los datos reales de Eurostat.'
+  },
+  {
+    id: 'soc-empleo-1',
+    article_id: 'art-empleo-fijos',
+    platform: 'X',
+    format: 'hilo',
+    content: '1/ ¿Oculta el gobierno parados con los contratos fijos discontinuos? Analizamos la estadística real de la EPA (INE) y el SEPE. 🧵👇\n2/ La realidad es que la EPA (independiente y regulada por Eurostat/OIT) sí computa a los fijos discontinuos inactivos sin trabajo como parados. No hay maquillaje.'
+  },
+  {
+    id: 'soc-autonomos-1',
+    article_id: 'art-autonomos-cuotas',
+    platform: 'Instagram',
+    format: 'carrusel',
+    content: 'Diapositiva 1: ¿Es la nueva cuota de autónomos de 500€ fija para todos? FALSO.\nDiapositiva 2: El sistema progresivo por ingresos reales de 2023 reduce la cuota a 225€ para rendimientos bajos.\nDiapositiva 3: La cuota máxima de 530€ es solo para ingresos superiores a 6.000€ netos al mes. Conoce tus tramos.'
   }
 ];
 

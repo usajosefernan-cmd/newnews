@@ -8,6 +8,9 @@ let message = '';
 let messageType = 'info';
 let urlCheckResult = null;
 
+// Obtener la pestaña activa
+const currentTab = Astro.url.searchParams.get('tab') || 'aprobacion';
+
 // Manejo de peticiones POST (acciones de administración)
 if (Astro.request.method === 'POST') {
   try {
@@ -46,6 +49,76 @@ if (Astro.request.method === 'POST') {
       message = `✗ Artículo rechazado y movido a la papelera.`;
       messageType = 'error';
     } 
+    else if (action === 'edit_article') {
+      const articleId = data.get('article_id')?.toString() || '';
+      const title = data.get('title')?.toString() || '';
+      const subtitle = data.get('subtitle')?.toString() || '';
+      const verdict = data.get('verdict')?.toString() || '';
+      const explanation = data.get('explanation')?.toString() || '';
+      const whatIsTrue = data.get('what_is_true')?.toString() || '';
+      const whatIsFalse = data.get('what_is_false')?.toString() || '';
+      const whatLacksContext = data.get('what_lacks_context')?.toString() || '';
+      const whatIsNotProven = data.get('what_is_not_proven')?.toString() || '';
+      const topicId = data.get('topic_id')?.toString() || '';
+      const status = data.get('status')?.toString() || 'borrador';
+
+      db.prepare(`
+        UPDATE articles 
+        SET title = ?, subtitle = ?, verdict = ?, explanation = ?, 
+            what_is_true = ?, what_is_false = ?, what_lacks_context = ?, what_is_not_proven = ?,
+            topic_id = ?, status = ?, updated_at = datetime('now')
+        WHERE id = ?
+      `).run(title, subtitle, verdict, explanation, whatIsTrue, whatIsFalse, whatLacksContext, whatIsNotProven, topicId, status, articleId);
+
+      message = `✓ Artículo "${title.substring(0, 45)}..." actualizado correctamente.`;
+      messageType = 'success';
+    }
+    else if (action === 'delete_article') {
+      const articleId = data.get('article_id')?.toString() || '';
+      db.prepare("DELETE FROM articles WHERE id = ?").run(articleId);
+      message = `✓ Artículo eliminado físicamente de la base de datos.`;
+      messageType = 'success';
+    }
+    else if (action === 'create_topic') {
+      const title = data.get('title')?.toString() || '';
+      const category = data.get('category')?.toString() || '';
+      const description = data.get('description')?.toString() || '';
+      const verdictSummary = data.get('verdict_summary')?.toString() || '';
+      const confidence = data.get('confidence')?.toString() || 'Alta';
+
+      if (title.trim()) {
+        const topicId = `t-${Date.now()}`;
+        const slug = title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').substring(0, 60);
+
+        db.prepare(`
+          INSERT INTO topics (id, slug, title, description, category, verdict_summary, confidence, status, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'activo', datetime('now'), datetime('now'))
+        `).run(topicId, slug, title, description, category, verdictSummary, confidence);
+
+        message = `✓ Nuevo expediente temático "${title}" creado con éxito.`;
+        messageType = 'success';
+      }
+    }
+    else if (action === 'edit_topic') {
+      const topicId = data.get('topic_id')?.toString() || '';
+      const title = data.get('title')?.toString() || '';
+      const category = data.get('category')?.toString() || '';
+      const description = data.get('description')?.toString() || '';
+      const verdictSummary = data.get('verdict_summary')?.toString() || '';
+      const status = data.get('status')?.toString() || 'activo';
+      const confidence = data.get('confidence')?.toString() || 'Alta';
+
+      if (topicId && title.trim()) {
+        db.prepare(`
+          UPDATE topics 
+          SET title = ?, category = ?, description = ?, verdict_summary = ?, status = ?, confidence = ?, updated_at = datetime('now')
+          WHERE id = ?
+        `).run(title, category, description, verdictSummary, status, confidence, topicId);
+
+        message = `✓ Expediente temático "${title}" actualizado correctamente.`;
+        messageType = 'success';
+      }
+    }
     else if (action === 'create_claim') {
       const claim = data.get('claim')?.toString() || '';
       const platform = data.get('platform')?.toString() || 'Admin Manual';
@@ -156,52 +229,67 @@ const draftArticles = db.prepare(`
   ORDER BY a.created_at DESC
 `).all() as any[];
 
-// Cargar posts sociales y fuentes de cada borrador para pintarlos
 const draftsWithDetails = draftArticles.map(art => {
   const sources = db.prepare("SELECT * FROM sources WHERE article_id = ?").all(art.id) as any[];
   const socialPosts = db.prepare("SELECT * FROM social_posts WHERE article_id = ?").all(art.id) as any[];
-  return {
-    ...art,
-    sources,
-    socialPosts
-  };
+  return { ...art, sources, socialPosts };
 });
 
-// 2. Elementos del radar pendientes
+// 2. Artículos en estado publicado
+const publishedArticles = db.prepare(`
+  SELECT a.*, t.title as topic_title
+  FROM articles a
+  LEFT JOIN topics t ON a.topic_id = t.id
+  WHERE a.status = 'publicado'
+  ORDER BY a.published_at DESC
+`).all() as any[];
+
+const publishedWithDetails = publishedArticles.map(art => {
+  const sources = db.prepare("SELECT * FROM sources WHERE article_id = ?").all(art.id) as any[];
+  const socialPosts = db.prepare("SELECT * FROM social_posts WHERE article_id = ?").all(art.id) as any[];
+  return { ...art, sources, socialPosts };
+});
+
+// 3. Elementos del radar pendientes
 const pendingRadarItems = db.prepare(`
   SELECT * FROM scraped_items 
   WHERE status = 'pendiente'
   ORDER BY created_at DESC
 `).all() as any[];
 
-// 3. Fuentes del radar
+// 4. Fuentes del radar
 const radarSources = db.prepare("SELECT * FROM radar_sources ORDER BY platform, name").all() as any[];
 
-// 4. Temas activos para el selector de vinculación
-const activeTopics = db.prepare("SELECT id, title, category FROM topics WHERE status = 'activo' ORDER BY title").all() as any[];
+// 5. Todos los temas (para administración)
+const allTopics = db.prepare("SELECT * FROM topics ORDER BY title").all() as any[];
+
+// 6. Temas activos para el selector de vinculación
+const activeTopics = allTopics.filter(t => t.status === 'activo');
 
 db.close();
 
 // Mapa de veredicto a color neón
 const getVerdictClass = (verdict) => {
-  const v = verdict.toLowerCase();
+  const v = (verdict || '').toLowerCase();
   if (v.includes('verdadero')) return 'green';
   if (v.includes('falso')) return 'rose';
   if (v.includes('engañoso') || v.includes('contexto')) return 'amber';
   return 'purple';
 };
+
+const currentTab = Astro.url.searchParams.get('tab') || 'aprobacion';
 ---
 
 <Layout title="Panel de Administración y Aprobación Rápida">
-  <div class="container">
+  <div class="container" style="padding-top: 1.5rem; padding-bottom: 5rem; max-width: 900px;">
     
     <div style="margin-bottom: 2.5rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--border-color); padding-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
       <div>
-        <h1 style="font-size: 2.5rem; margin-bottom: 0.25rem;">
+        <h1 style="font-size: 2.5rem; margin-bottom: 0.25rem; font-family: var(--font-title); font-weight: 850; letter-spacing: -0.02em;">
           ⚡ Panel de <span class="text-gradient-blue">Control Editorial</span>
         </h1>
-        <p style="color: var(--text-muted);">
-          Revisa y aprueba desmentidos redactados por IA, gestiona el radar de claims y reconstruye el sitio estático.
+        <p style="color: var(--text-muted); font-size: 0.9rem;">
+          Edita y aprueba desmentidos, gestiona los expedientes temáticos, configura las fuentes del radar y compila el portal.
         </p>
       </div>
 
@@ -210,7 +298,7 @@ const getVerdictClass = (verdict) => {
           onclick="triggerBuild()" 
           id="build-btn" 
           class="cyber-btn accent" 
-          style="box-shadow: 2px 2px 0px 0px var(--text-main);"
+          style="box-shadow: 2px 2px 0px 0px var(--text-main); font-weight: 800;"
         >
           🚀 Compilar SSG (Astro Build)
         </button>
@@ -220,109 +308,193 @@ const getVerdictClass = (verdict) => {
     <!-- Mensajes de Notificación -->
     {message && (
       <div 
-        style={`padding: 1rem; margin-bottom: 2rem; font-weight: bold; border: 2px solid; ${
-          messageType === 'success' 
-            ? 'background: rgba(57, 255, 20, 0.05); border-color: var(--neon-green); color: var(--neon-green);' 
+        style={{
+          padding: '1rem',
+          marginBottom: '2rem',
+          fontWeight: 'bold',
+          border: '2px solid',
+          borderRadius: '4px',
+          background: messageType === 'success' 
+            ? 'rgba(57, 255, 20, 0.03)' 
             : messageType === 'error'
-            ? 'background: rgba(255, 0, 127, 0.05); border-color: var(--neon-rose); color: var(--neon-rose);'
-            : 'background: rgba(0, 240, 255, 0.05); border-color: var(--neon-blue); color: var(--neon-blue);'
-        }`}
+            ? 'rgba(255, 0, 127, 0.03)'
+            : 'rgba(0, 240, 255, 0.03)',
+          borderColor: messageType === 'success' 
+            ? 'var(--neon-green)' 
+            : messageType === 'error'
+            ? 'var(--neon-rose)'
+            : 'var(--neon-blue)',
+          color: messageType === 'success' 
+            ? 'var(--neon-green)' 
+            : messageType === 'error'
+            ? 'var(--neon-rose)'
+            : 'var(--neon-blue)'
+        }}
       >
         {message}
       </div>
     )}
 
     <!-- Sección de Re-construcción Feedback -->
-    <div id="build-status-box" style="display: none; padding: 1rem; margin-bottom: 2rem; background: rgba(0,240,255,0.05); border: 2px dashed var(--neon-blue); color: var(--neon-blue); font-family: monospace;">
+    <div id="build-status-box" style="display: none; padding: 1.25rem; margin-bottom: 2rem; background: rgba(7,9,19,0.9); border: 2px dashed var(--neon-blue); color: var(--neon-blue); font-family: monospace; font-size: 0.85rem; line-height: 1.5; border-radius: 6px;">
       [SYSTEM] Iniciando pipeline de compilación Astro... <br/>
       [INFO] Leyendo base de datos SQLite (data/newnews.db)... <br/>
       [INFO] Generando rutas estáticas para temas y noticias... <br/>
       [SUCCESS] ¡Compilación estática completa! 100% de páginas actualizadas.
     </div>
 
-    <div style="display: grid; grid-template-columns: 2.2fr 1fr; gap: 2rem; margin-bottom: 4rem;">
-      
-      <!-- Listado de Borradores a Aprobar -->
+    <!-- Menú de Pestañas Horizontal Premium -->
+    <div class="tabs-navigation">
+      <a href="?tab=aprobacion" class={`tab-link-btn ${currentTab === 'aprobacion' ? 'active' : ''}`}>
+        📥 Cola Aprobación ({draftsWithDetails.length})
+      </a>
+      <a href="?tab=publicados" class={`tab-link-btn ${currentTab === 'publicados' ? 'active' : ''}`}>
+        📰 Publicados ({publishedWithDetails.length})
+      </a>
+      <a href="?tab=temas" class={`tab-link-btn ${currentTab === 'temas' ? 'active' : ''}`}>
+        📁 Expedientes ({allTopics.length})
+      </a>
+      <a href="?tab=fuentes" class={`tab-link-btn ${currentTab === 'fuentes' ? 'active' : ''}`}>
+        📡 Radar y Fuentes ({pendingRadarItems.length})
+      </a>
+    </div>
+
+    <!-- PESTAÑA 1: COLA DE APROBACIÓN -->
+    {currentTab === 'aprobacion' && (
       <section style="display: flex; flex-direction: column; gap: 2rem;">
-        <h2 style="font-size: 1.6rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 0.5rem;">
-          📥 Cola de Aprobación Rápida ({draftsWithDetails.length})
-        </h2>
+        <h2 class="section-title">📥 Borradores redactados por la IA</h2>
 
         {draftsWithDetails.map(art => (
-          <div class={`cyber-card ${getVerdictClass(art.verdict)}`} style="padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem;">
+          <div class={`cyber-card ${getVerdictClass(art.verdict)}`} style="padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem; position: relative;">
             
-            <!-- Veredicto sugerido y metadatos -->
             <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
               <div style="display: flex; align-items: center; gap: 1rem;">
                 <span class={`verdict-badge ${art.verdict.toLowerCase().replace(' ', '-')}`}>
-                  Sugerido: {art.verdict}
+                  Veredicto sugerido: {art.verdict}
                 </span>
-                <span style="font-size: 0.8rem; color: var(--text-muted);">Confianza IA: <strong>{art.confidence}</strong></span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Confianza: <strong>{art.confidence || 'Media'}</strong></span>
               </div>
               <span style="font-size: 0.8rem; color: var(--text-muted);">
                 Creado: {new Date(art.created_at).toLocaleString('es-ES')}
               </span>
             </div>
 
-            <!-- Título y Claim -->
             <div>
-              <h3 style="font-size: 1.4rem; margin-bottom: 0.5rem; color: var(--text-main);">{art.title}</h3>
-              <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1rem;">
-                {art.subtitle}
-              </p>
-              
-              <div style="background: rgba(0,0,0,0.2); border-left: 3px solid var(--border-color); padding: 0.75rem; font-size: 0.9rem; font-style: italic; color: var(--text-muted);">
-                <strong>Claim original del radar:</strong> "{art.claim}"
+              <h3 style="font-size: 1.4rem; margin-bottom: 0.5rem; color: var(--text-main); font-weight: 700;">{art.title}</h3>
+              <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1rem; line-height: 1.4;">{art.subtitle}</p>
+              <div style="background: rgba(0,0,0,0.25); border-left: 3px solid var(--border-color); padding: 0.75rem; font-size: 0.85rem; font-style: italic; color: var(--text-muted);">
+                <strong>Reclamación original:</strong> "{art.claim}"
               </div>
             </div>
 
-            <!-- Explicación -->
             <div>
-              <strong style="font-size: 0.85rem; color: var(--text-main); text-transform: uppercase; display: block; margin-bottom: 0.25rem;">Explicación redactada:</strong>
-              <div style="background: var(--bg-dark); padding: 1rem; border: 1px solid var(--border-color); font-size: 0.9rem; color: var(--text-muted); max-height: 200px; overflow-y: auto; white-space: pre-wrap;">
-                {art.explanation}
-              </div>
+              <strong style="font-size: 0.8rem; color: var(--text-main); text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Explicación y Datos Contrastados (INE/BOE):</strong>
+              <div style="background: var(--bg-dark); padding: 1rem; border: 1px solid var(--border-color); font-size: 0.9rem; color: var(--text-muted); max-height: 250px; overflow-y: auto; white-space: pre-wrap; line-height: 1.5; border-radius: 4px;">{art.explanation}</div>
             </div>
 
-            <!-- Checklist rápido editorial -->
-            <div style="background: rgba(138,43,226,0.03); border: 1px dashed var(--neon-purple); padding: 1rem; font-size: 0.85rem;">
-              <strong style="color: var(--neon-purple); display: block; margin-bottom: 0.5rem; text-transform: uppercase;">🛡️ Checklist de Seguridad Editorial:</strong>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; color: var(--text-muted);">
-                <label><input type="checkbox" checked disabled /> ¿Tono objetivo y neutral?</label>
-                <label><input type="checkbox" checked disabled /> ¿Evidencia de fuente original?</label>
-                <label><input type="checkbox" checked disabled /> ¿No difamación personal?</label>
-                <label><input type="checkbox" checked disabled /> ¿Formato social adaptado?</label>
-              </div>
-            </div>
-
-            <!-- Redes sugeridas -->
-            {art.socialPosts && art.socialPosts.length > 0 && (
+            <!-- Listado de fuentes del borrador -->
+            {art.sources && art.sources.length > 0 && (
               <div>
-                <strong style="font-size: 0.85rem; color: var(--text-main); text-transform: uppercase; display: block; margin-bottom: 0.25rem;">📱 Copys sugeridos para Redes:</strong>
-                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                  {art.socialPosts.map((post) => (
-                    <div style="background: var(--bg-dark); border: 1px solid var(--border-color); padding: 0.5rem; font-size: 0.8rem; font-family: monospace; color: var(--text-muted);">
-                      <strong>[{post.platform.toUpperCase()} - {post.format}]:</strong> {post.content}
-                    </div>
+                <strong style="font-size: 0.8rem; color: var(--text-main); text-transform: uppercase; display: block; margin-bottom: 0.4rem;">Fuentes Citadas:</strong>
+                <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                  {art.sources.map(src => (
+                    <a href={src.url} target="_blank" rel="noopener noreferrer" style="font-size: 0.8rem; color: var(--neon-blue); text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem;">
+                      🔗 <strong>[{src.authority_level}]</strong> {src.title}
+                    </a>
                   ))}
                 </div>
               </div>
             )}
 
-            <!-- Botones de Acción (Formulario POST) -->
-            <div style="display: flex; gap: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 0.5rem;">
-              <form method="POST" style="flex-grow: 1;">
+            <!-- Edición en línea mediante <details> nativo -->
+            <details style="border-top: 1px dashed var(--border-color); padding-top: 1.25rem; margin-top: 0.5rem;">
+              <summary style="font-weight: 800; cursor: pointer; color: var(--neon-purple); font-size: 0.85rem; outline: none; list-style: none; display: flex; align-items: center; gap: 0.25rem;">
+                ✏️ Editar Borrador (Modificar Contenido / Fuentes del INE)
+              </summary>
+              
+              <form method="POST" style="display: flex; flex-direction: column; gap: 1.25rem; margin-top: 1.25rem; background: rgba(0,0,0,0.15); padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 6px;">
+                <input type="hidden" name="action" value="edit_article" />
+                <input type="hidden" name="article_id" value={art.id} />
+                <input type="hidden" name="status" value="borrador" />
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                  <div>
+                    <label class="edit-label">Título del Artículo:</label>
+                    <input type="text" name="title" value={art.title} required class="edit-input" />
+                  </div>
+                  <div>
+                    <label class="edit-label">Veredicto:</label>
+                    <select name="verdict" class="edit-input">
+                      <option value="Falso" selected={art.verdict === 'Falso'}>Falso</option>
+                      <option value="Verdadero" selected={art.verdict === 'Verdadero'}>Verdadero</option>
+                      <option value="Engañoso" selected={art.verdict === 'Engañoso'}>Engañoso</option>
+                      <option value="Falta contexto" selected={art.verdict === 'Falta contexto'}>Falta contexto</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="edit-label">Subtítulo / Resumen Corto:</label>
+                  <input type="text" name="subtitle" value={art.subtitle} required class="edit-input" />
+                </div>
+
+                <div>
+                  <label class="edit-label">Explicación Completa y Datos Oficiales:</label>
+                  <textarea name="explanation" rows="8" required class="edit-input" style="font-family: var(--font-body); font-size: 0.9rem; line-height: 1.4;">{art.explanation}</textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                  <div>
+                    <label class="edit-label">¿Qué es Verdad? (Cifras/Datos):</label>
+                    <textarea name="what_is_true" rows="3" class="edit-input">{art.what_is_true}</textarea>
+                  </div>
+                  <div>
+                    <label class="edit-label">¿Qué es Mentira / Bulo?:</label>
+                    <textarea name="what_is_false" rows="3" class="edit-input">{art.what_is_false}</textarea>
+                  </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                  <div>
+                    <label class="edit-label">¿Qué falta contextualizar?:</label>
+                    <textarea name="what_lacks_context" rows="3" class="edit-input">{art.what_lacks_context}</textarea>
+                  </div>
+                  <div>
+                    <label class="edit-label">¿Qué no está probado?:</label>
+                    <textarea name="what_is_not_proven" rows="3" class="edit-input">{art.what_is_not_proven}</textarea>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="edit-label">Vincular a Expediente Activo:</label>
+                  <select name="topic_id" class="edit-input">
+                    <option value="">— Sin expediente —</option>
+                    {activeTopics.map(t => (
+                      <option value={t.id} selected={art.topic_id === t.id}>[{t.category}] {t.title}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <button type="submit" class="cyber-btn" style="border-color: var(--neon-purple); color: var(--neon-purple); width: 100%; box-shadow: 2px 2px 0px 0px rgba(157, 78, 221, 0.15); font-weight: 800;">
+                  💾 Guardar Cambios en Borrador
+                </button>
+              </form>
+            </details>
+
+            <!-- Aprobación / Rechazo -->
+            <div style="display: flex; gap: 1rem; border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
+              <form method="POST" style="flex-grow: 1; margin: 0;">
                 <input type="hidden" name="action" value="approve" />
                 <input type="hidden" name="article_id" value={art.id} />
-                <button type="submit" class="cyber-btn accent" style="width: 100%; box-shadow: 2px 2px 0px 0px var(--text-main);">
-                  ✓ Aprobar y Publicar Web + Redes
+                <button type="submit" class="cyber-btn accent" style="width: 100%; box-shadow: 2px 2px 0px 0px var(--text-main); font-weight: 800;">
+                  ✓ Aprobar y Publicar en Web
                 </button>
               </form>
 
-              <form method="POST">
+              <form method="POST" style="margin: 0;">
                 <input type="hidden" name="action" value="reject" />
                 <input type="hidden" name="article_id" value={art.id} />
-                <button type="submit" class="cyber-btn" style="border-color: var(--neon-rose); color: var(--neon-rose); box-shadow: 2px 2px 0px 0px var(--border-color);">
+                <button type="submit" class="cyber-btn" style="border-color: var(--neon-rose); color: var(--neon-rose); box-shadow: 2px 2px 0px 0px rgba(255, 51, 102, 0.15);">
                   Rechazar
                 </button>
               </form>
@@ -332,262 +504,519 @@ const getVerdictClass = (verdict) => {
         ))}
 
         {draftsWithDetails.length === 0 && (
-          <div class="cyber-card" style="text-align: center; padding: 3rem; color: var(--text-muted);">
-            No hay borradores pendientes de revisión. El radar de IA está libre.
-          </div>
+          <p class="empty-state">No hay borradores pendientes de revisión. El radar de IA está al día.</p>
         )}
       </section>
+    )}
 
-      <!-- Barra Lateral (Radar e inserción manual) -->
-      <aside style="display: flex; flex-direction: column; gap: 2rem;">
-        
-        <!-- 🔍 COMPROBADOR DE URL (NUEVO) -->
-        <div class="cyber-card" style="padding: 1.5rem; background: linear-gradient(180deg, rgba(0, 240, 255, 0.04) 0%, rgba(18, 22, 41, 0.95) 100%); border: 2px solid rgba(0, 240, 255, 0.3);">
-          <h3 style="font-size: 1.3rem; margin-bottom: 0.25rem; color: var(--neon-blue); display: flex; align-items: center; gap: 0.5rem;">
-            🔍 <span class="text-gradient-blue">Comprobador de URL</span>
-          </h3>
-          <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.25rem; line-height: 1.4;">
-            Pega cualquier URL de redes sociales o prensa. El sistema la analiza, verifica su existencia, extrae metadatos reales y la vincula al expediente correspondiente.
-          </p>
+    <!-- PESTAÑA 2: ARTÍCULOS PUBLICADOS -->
+    {currentTab === 'publicados' && (
+      <section style="display: flex; flex-direction: column; gap: 2rem;">
+        <h2 class="section-title">📰 Histórico de Noticias Publicadas</h2>
 
-          <!-- Paso 1: Analizar URL -->
-          <form method="POST" style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1rem;">
-            <input type="hidden" name="action" value="check_url" />
+        {publishedWithDetails.map(art => (
+          <div class={`cyber-card ${getVerdictClass(art.verdict)}`} style="padding: 1.75rem; display: flex; flex-direction: column; gap: 1.25rem;">
             
-            <div>
-              <label style="font-size: 0.7rem; color: var(--neon-blue); display: block; margin-bottom: 0.25rem; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em;">URL a Verificar:</label>
-              <input 
-                type="url" 
-                name="check_url" 
-                required 
-                placeholder="https://youtube.com/shorts/... o t.me/canal/123"
-                style="width: 100%; padding: 0.6rem; background: var(--bg-dark); border: 2px solid rgba(0, 240, 255, 0.25); color: var(--text-main); font-family: monospace; font-size: 0.85rem; transition: border-color 0.2s;"
-              />
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+              <div style="display: flex; align-items: center; gap: 1rem;">
+                <span class={`verdict-badge ${art.verdict.toLowerCase().replace(' ', '-')}`}>
+                  {art.verdict}
+                </span>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Expediente: <strong>{art.topic_title || 'General'}</strong></span>
+              </div>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">
+                Publicado: {new Date(art.published_at || art.created_at).toLocaleString('es-ES')}
+              </span>
             </div>
 
-            <button type="submit" class="cyber-btn" style="width: 100%; border-color: var(--neon-blue); color: var(--neon-blue); font-weight: 800; box-shadow: 2px 2px 0px 0px rgba(0, 240, 255, 0.15);">
-              ⚡ Analizar y Verificar
-            </button>
-          </form>
+            <div>
+              <h3 style="font-size: 1.25rem; margin-bottom: 0.35rem; color: var(--text-main); font-weight: 700;">{art.title}</h3>
+              <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.4; margin: 0;">{art.subtitle}</p>
+            </div>
 
-          <!-- Resultado del Análisis -->
-          {urlCheckResult && urlCheckResult.isAccessible && (
-            <div style="border: 2px solid rgba(57, 255, 20, 0.25); background: rgba(57, 255, 20, 0.03); padding: 1rem; margin-bottom: 1rem;">
-              <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-green); font-size: 0.65rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.75rem;">✅ Metadatos Extraídos</span>
+            <!-- Edición de Publicado -->
+            <details style="border-top: 1px dashed var(--border-color); padding-top: 1rem; margin-top: 0.25rem;">
+              <summary style="font-weight: 800; cursor: pointer; color: var(--neon-blue); font-size: 0.8rem; outline: none; list-style: none;">
+                ✏️ Editar Contenido / Despublicar
+              </summary>
               
-              <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.8rem;">
-                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.35rem;">
-                  <span style="color: var(--text-muted);">Plataforma:</span>
-                  <span style="color: var(--neon-blue); font-weight: 700;">{urlCheckResult.platform}</span>
-                </div>
-                {urlCheckResult.title && (
-                  <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.35rem;">
-                    <span style="color: var(--text-muted); font-size: 0.7rem; display: block;">Título:</span>
-                    <span style="color: var(--text-main); font-weight: 600;">{urlCheckResult.title.substring(0, 120)}</span>
-                  </div>
-                )}
-                {urlCheckResult.author && (
-                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.35rem;">
-                    <span style="color: var(--text-muted);">Autor:</span>
-                    <span style="color: var(--text-main); font-weight: 600;">{urlCheckResult.author}</span>
-                  </div>
-                )}
-                {urlCheckResult.postId && (
-                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.35rem;">
-                    <span style="color: var(--text-muted);">Post ID:</span>
-                    <span style="color: var(--neon-purple); font-family: monospace;">{urlCheckResult.postId}</span>
-                  </div>
-                )}
-                {urlCheckResult.views && (
-                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.35rem;">
-                    <span style="color: var(--text-muted);">Vistas:</span>
-                    <span style="color: var(--neon-rose); font-weight: 700;">{urlCheckResult.views}</span>
-                  </div>
-                )}
-                {urlCheckResult.date && (
-                  <div style="display: flex; justify-content: space-between; padding-bottom: 0.35rem;">
-                    <span style="color: var(--text-muted);">Fecha:</span>
-                    <span style="color: var(--text-main);">{new Date(urlCheckResult.date).toLocaleString('es-ES')}</span>
-                  </div>
-                )}
-                {urlCheckResult.imageUrl && (
-                  <div style="margin-top: 0.5rem; border: 1px solid var(--border-color); overflow: hidden;">
-                    <img src={urlCheckResult.imageUrl} alt="Preview" style="width: 100%; height: auto; display: block; max-height: 150px; object-fit: cover;" />
-                  </div>
-                )}
-                {urlCheckResult.requiresManualReview && (
-                  <div style="padding: 0.5rem; background: rgba(255, 176, 32, 0.08); border: 1px dashed rgba(255, 176, 32, 0.3); color: var(--neon-amber); font-size: 0.75rem; font-weight: 700; text-align: center;">
-                    ⚠️ Requiere verificación manual — La plataforma bloquea scraping
-                  </div>
-                )}
-              </div>
+              <form method="POST" style="display: flex; flex-direction: column; gap: 1.25rem; margin-top: 1.25rem; background: rgba(0,0,0,0.15); padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 6px;">
+                <input type="hidden" name="action" value="edit_article" />
+                <input type="hidden" name="article_id" value={art.id} />
 
-              <!-- Paso 2: Confirmar inserción en radar -->
-              <form method="POST" style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
-                <input type="hidden" name="action" value="insert_checked_url" />
-                <input type="hidden" name="url" value={urlCheckResult.rawUrl} />
-                <input type="hidden" name="platform" value={urlCheckResult.platform} />
-                <input type="hidden" name="title" value={urlCheckResult.title || ''} />
-                <input type="hidden" name="description" value={urlCheckResult.description || ''} />
-                <input type="hidden" name="author" value={urlCheckResult.author || 'Editor'} />
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                  <div>
+                    <label class="edit-label">Título del Artículo:</label>
+                    <input type="text" name="title" value={art.title} required class="edit-input" />
+                  </div>
+                  <div>
+                    <label class="edit-label">Veredicto:</label>
+                    <select name="verdict" class="edit-input">
+                      <option value="Falso" selected={art.verdict === 'Falso'}>Falso</option>
+                      <option value="Verdadero" selected={art.verdict === 'Verdadero'}>Verdadero</option>
+                      <option value="Engañoso" selected={art.verdict === 'Engañoso'}>Engañoso</option>
+                      <option value="Falta contexto" selected={art.verdict === 'Falta contexto'}>Falta contexto</option>
+                    </select>
+                  </div>
+                </div>
 
                 <div>
-                  <label style="font-size: 0.7rem; color: var(--neon-green); display: block; margin-bottom: 0.25rem; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em;">Vincular a Expediente:</label>
-                  <select name="topic_id" style="width: 100%; padding: 0.4rem; background: var(--bg-dark); border: 2px solid rgba(57, 255, 20, 0.2); color: var(--text-main); font-size: 0.8rem;">
-                    <option value="">— Sin expediente (General) —</option>
-                    {activeTopics.map(t => (
-                      <option value={t.id}>[{t.category}] {t.title}</option>
-                    ))}
-                  </select>
+                  <label class="edit-label">Subtítulo / Resumen Corto:</label>
+                  <input type="text" name="subtitle" value={art.subtitle} required class="edit-input" />
                 </div>
 
-                <button type="submit" class="cyber-btn accent" style="width: 100%; box-shadow: 2px 2px 0px 0px var(--text-main); font-weight: 800;">
-                  ✅ Confirmar e Insertar en Radar
+                <div>
+                  <label class="edit-label">Explicación Completa y Datos Oficiales:</label>
+                  <textarea name="explanation" rows="8" required class="edit-input" style="font-family: var(--font-body); font-size: 0.9rem; line-height: 1.4;">{art.explanation}</textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                  <div>
+                    <label class="edit-label">¿Qué es Verdad? (Cifras/Datos):</label>
+                    <textarea name="what_is_true" rows="3" class="edit-input">{art.what_is_true}</textarea>
+                  </div>
+                  <div>
+                    <label class="edit-label">¿Qué es Mentira / Bulo?:</label>
+                    <textarea name="what_is_false" rows="3" class="edit-input">{art.what_is_false}</textarea>
+                  </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                  <div>
+                    <label class="edit-label">¿Qué falta de contexto?:</label>
+                    <textarea name="what_lacks_context" rows="3" class="edit-input">{art.what_lacks_context}</textarea>
+                  </div>
+                  <div>
+                    <label class="edit-label">¿Qué no está probado?:</label>
+                    <textarea name="what_is_not_proven" rows="3" class="edit-input">{art.what_is_not_proven}</textarea>
+                  </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                  <div>
+                    <label class="edit-label">Vincular a Expediente Activo:</label>
+                    <select name="topic_id" class="edit-input">
+                      <option value="">— Sin expediente —</option>
+                      {activeTopics.map(t => (
+                        <option value={t.id} selected={art.topic_id === t.id}>[{t.category}] {t.title}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label class="edit-label">Estado:</label>
+                    <select name="status" class="edit-input">
+                      <option value="publicado" selected={art.status === 'publicado'}>Publicado (En Vivo)</option>
+                      <option value="borrador" selected={art.status === 'borrador'}>Borrador (Ocultar)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button type="submit" class="cyber-btn" style="border-color: var(--neon-blue); color: var(--neon-blue); width: 100%; box-shadow: 2px 2px 0px 0px rgba(0, 240, 255, 0.15); font-weight: 800;">
+                  💾 Actualizar y Guardar Cambios
+                </button>
+              </form>
+            </details>
+
+            <div style="display: flex; gap: 1rem; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
+              <form method="POST" style="margin: 0; width: 100%;">
+                <input type="hidden" name="action" value="delete_article" />
+                <input type="hidden" name="article_id" value={art.id} />
+                <button type="submit" class="cyber-btn" style="border-color: var(--neon-rose); color: var(--neon-rose); width: 100%; font-size: 0.75rem; padding: 0.35rem;" onclick="return confirm('¿Seguro que deseas eliminar definitivamente este artículo de la base de datos? Esta acción no se puede deshacer.')">
+                  🗑️ Eliminar Definitivamente
                 </button>
               </form>
             </div>
-          )}
 
-          {urlCheckResult && !urlCheckResult.isAccessible && (
-            <div style="border: 2px solid rgba(255, 51, 102, 0.25); background: rgba(255, 51, 102, 0.03); padding: 1rem; font-size: 0.8rem;">
-              <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-rose); font-size: 0.65rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">❌ URL No Accesible</span>
-              <p style="color: var(--text-muted); margin: 0; line-height: 1.4;">{urlCheckResult.error || 'La URL no devolvió una respuesta válida. Verifica que el enlace es correcto y público.'}</p>
-            </div>
-          )}
-
-          <div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 0.75rem; line-height: 1.3; opacity: 0.7;">
-            Plataformas soportadas: YouTube, Telegram, X/Twitter, Instagram, TikTok, Reddit, Facebook, Prensa (cualquier web con OpenGraph).
           </div>
-        </div>
+        ))}
 
-        <!-- Añadir Claim Manual -->
-        <div class="cyber-card blue">
-          <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--neon-blue);">✍️ Insertar Claim Manual</h3>
-          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
-            Añade un titular dudoso directamente a la cola del radar para que sea procesado por la IA.
+        {publishedWithDetails.length === 0 && (
+          <p class="empty-state">No hay ningún artículo publicado. Ejecuta e ingresa datos.</p>
+        )}
+      </section>
+    )}
+
+    <!-- PESTAÑA 3: GESTIÓN DE EXPEDIENTES / TEMAS -->
+    {currentTab === 'temas' && (
+      <section style="display: flex; flex-direction: column; gap: 2rem;">
+        
+        <!-- Crear Nuevo Tema -->
+        <div class="cyber-card" style="padding: 2rem; background: linear-gradient(180deg, rgba(157, 78, 221, 0.03) 0%, rgba(18, 22, 41, 0.95) 100%); border-color: rgba(157, 78, 221, 0.25);">
+          <h3 style="font-size: 1.4rem; color: var(--neon-purple); margin-bottom: 0.5rem; font-weight: 700;">📁 Crear Nuevo Expediente Temático</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">
+            Añade un nuevo dossier o categoría de investigación al portal. Esto creará una página vertical independiente en el sitio.
           </p>
 
-          <form method="POST" style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <input type="hidden" name="action" value="create_claim" />
-            
-            <div>
-              <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Texto del Claim / Bulo:</label>
-              <textarea 
-                name="claim" 
-                rows="3" 
-                placeholder="Ej: Dicen que el gobierno quitará los depósitos..."
-                required 
-                style="width: 100%; padding: 0.5rem; background: var(--bg-dark); border: 2px solid var(--border-color); color: var(--text-main); font-family: var(--font-body); font-size: 0.85rem; resize: none;"
-              ></textarea>
+          <form method="POST" style="display: flex; flex-direction: column; gap: 1.25rem;">
+            <input type="hidden" name="action" value="create_topic" />
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1rem;">
+              <div>
+                <label class="edit-label">Título del Tema:</label>
+                <input type="text" name="title" required placeholder="Ej: Cotizaciones Autónomos" class="edit-input" />
+              </div>
+              <div>
+                <label class="edit-label">Categoría:</label>
+                <input type="text" name="category" required placeholder="Ej: Economía" class="edit-input" />
+              </div>
+              <div>
+                <label class="edit-label">Confianza / Ruido:</label>
+                <select name="confidence" class="edit-input">
+                  <option value="Alta">Alta (Poco Ruido)</option>
+                  <option value="Media">Media</option>
+                  <option value="Baja">Baja (Mucho Ruido)</option>
+                  <option value="Oficial">Oficial / Datos</option>
+                </select>
+              </div>
             </div>
 
             <div>
-              <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Red de Origen:</label>
-              <select name="platform" style="width: 100%; padding: 0.5rem; background: var(--bg-dark); border: 2px solid var(--border-color); color: var(--text-main); font-family: var(--font-body); font-size: 0.85rem;">
-                <option value="WhatsApp">WhatsApp</option>
-                <option value="X (Twitter)">X (Twitter)</option>
-                <option value="Instagram">Instagram</option>
-                <option value="TikTok">TikTok</option>
-                <option value="Admin Manual">Entrada Manual Editor</option>
-              </select>
+              <label class="edit-label">Descripción del Expediente (Público):</label>
+              <textarea name="description" rows="3" required placeholder="Describe brevemente la controversia, bulos recurrentes y leyes de contraste..." class="edit-input"></textarea>
             </div>
 
-            <button type="submit" class="cyber-btn accent" style="width: 100%; box-shadow: 2px 2px 0px 0px var(--text-main);">
-              Insertar en Radar
+            <div>
+              <label class="edit-label">Resumen de Veredicto General:</label>
+              <input type="text" name="verdict_summary" required placeholder="Ej: Falso sobre cuotas de 500€ generalizadas y desglose de tramos oficiales." class="edit-input" />
+            </div>
+
+            <button type="submit" class="cyber-btn" style="border-color: var(--neon-purple); color: var(--neon-purple); font-weight: 800; box-shadow: 2px 2px 0px 0px rgba(157, 78, 221, 0.15);">
+              + Crear Expediente Temático
             </button>
           </form>
         </div>
 
-        <!-- Items del radar pendientes -->
-        <div class="cyber-card purple">
-          <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--neon-purple);">📡 Cola del Radar ({pendingRadarItems.length})</h3>
-          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
-            Publicaciones sospechosas capturadas por el radar que esperan ser redactadas por la IA.
-          </p>
-
-          <div style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 350px; overflow-y: auto; padding-right: 0.25rem;">
-            {pendingRadarItems.map(item => (
-              <div style="border: 1px solid var(--border-color); padding: 0.75rem; background: var(--bg-dark); font-size: 0.8rem;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem; font-size: 0.75rem;">
-                  <span style="color: var(--neon-blue); font-weight: bold;">{item.platform}</span>
-                  <span style="color: var(--neon-rose);">Vir: {item.virality_score}/10</span>
+        <!-- Listado de temas existentes -->
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          <h3 class="section-title">📂 Expedientes y Dossiers Activos ({allTopics.length})</h3>
+          
+          {allTopics.map(topic => (
+            <div class="cyber-card" style="padding: 1.5rem; background: rgba(18, 22, 41, 0.45); display: flex; flex-direction: column; gap: 1rem;">
+              
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+                <div>
+                  <span style="font-size: 0.65rem; font-weight: 800; text-transform: uppercase; background: rgba(255,255,255,0.05); padding: 0.15rem 0.4rem; border-radius: 3px; color: var(--neon-blue); border: 1px solid rgba(0, 240, 255, 0.1); margin-right: 0.5rem;">{topic.category}</span>
+                  <strong style="font-size: 1.15rem; color: var(--text-main); font-family: var(--font-title);">{topic.title}</strong>
                 </div>
-                <p style="color: var(--text-muted); margin-bottom: 0.25rem; line-height: 1.3;">
-                  "{item.detected_claim || item.text.substring(0, 100)}"
-                </p>
-                <span style="font-size: 0.7rem; color: var(--text-muted); display: block; text-align: right;">
-                  {new Date(item.created_at).toLocaleDateString('es-ES')}
+                <span style="font-size: 0.75rem; color: topic.status === 'activo' ? 'var(--neon-green)' : 'var(--neon-rose)'; font-weight: 700; text-transform: uppercase;">
+                  [{topic.status}]
                 </span>
               </div>
-            ))}
 
-            {pendingRadarItems.length === 0 && (
-              <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 1rem;">No hay items en el radar.</p>
-            )}
-          </div>
+              <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.4; margin: 0;">{topic.description}</p>
+              
+              <div style="font-size: 0.8rem; background: var(--bg-dark); padding: 0.5rem 0.75rem; border-left: 2px solid var(--border-color); color: var(--text-muted);">
+                <strong>Resumen de Veredictos:</strong> {topic.verdict_summary || 'Sin definir.'}
+              </div>
+
+              <!-- Edición de Tema mediante <details> -->
+              <details style="border-top: 1px dashed var(--border-color); padding-top: 1rem; margin-top: 0.25rem;">
+                <summary style="font-weight: 800; cursor: pointer; color: var(--neon-purple); font-size: 0.8rem; outline: none; list-style: none;">
+                  ✏️ Editar Expediente
+                </summary>
+                
+                <form method="POST" style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem; background: rgba(0,0,0,0.15); padding: 1.25rem; border: 1px solid var(--border-color); border-radius: 6px;">
+                  <input type="hidden" name="action" value="edit_topic" />
+                  <input type="hidden" name="topic_id" value={topic.id} />
+
+                  <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                    <div>
+                      <label class="edit-label">Título:</label>
+                      <input type="text" name="title" value={topic.title} required class="edit-input" />
+                    </div>
+                    <div>
+                      <label class="edit-label">Categoría:</label>
+                      <input type="text" name="category" value={topic.category} required class="edit-input" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="edit-label">Descripción del Expediente:</label>
+                    <textarea name="description" rows="3" required class="edit-input">{topic.description}</textarea>
+                  </div>
+
+                  <div>
+                    <label class="edit-label">Resumen de Veredicto:</label>
+                    <input type="text" name="verdict_summary" value={topic.verdict_summary || ''} required class="edit-input" />
+                  </div>
+
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                      <label class="edit-label">Estado:</label>
+                      <select name="status" class="edit-input">
+                        <option value="activo" selected={topic.status === 'activo'}>Activo (Visible)</option>
+                        <option value="pausado" selected={topic.status === 'pausado'}>Pausado (Oculto)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="edit-label">Confianza / Ruido:</label>
+                      <select name="confidence" class="edit-input">
+                        <option value="Alta" selected={topic.confidence === 'Alta'}>Alta (Poco Ruido)</option>
+                        <option value="Media" selected={topic.confidence === 'Media'}>Media</option>
+                        <option value="Baja" selected={topic.confidence === 'Baja'}>Baja (Mucho Ruido)</option>
+                        <option value="Oficial" selected={topic.confidence === 'Oficial'}>Oficial / Datos</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <button type="submit" class="cyber-btn" style="border-color: var(--neon-purple); color: var(--neon-purple); font-weight: 800; width: 100%;">
+                    💾 Guardar Cambios en Expediente
+                  </button>
+                </form>
+              </details>
+
+            </div>
+          ))}
         </div>
 
-        <!-- Fuentes de Monitorización del Radar (Dinámico) -->
-        <div class="cyber-card" style="padding: 1.5rem; background: rgba(0, 240, 255, 0.03); border: 2px solid rgba(0, 240, 255, 0.25);">
-          <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--neon-blue);">📡 Configurar Fuentes de Radar</h3>
-          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem;">
-            Añade o elimina canales de Telegram, subreddits o feeds RSS monitorizados dinámicamente por el robot.
-          </p>
+      </section>
+    )}
 
-          <!-- Listado de fuentes actuales -->
-          <div style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 250px; overflow-y: auto; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; padding-right: 0.25rem;">
-            {radarSources.map(src => (
-              <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem; background: var(--bg-dark); border: 1px solid var(--border-color); font-size: 0.8rem;">
-                <div>
-                  <span style="font-size: 0.65rem; font-weight: 800; text-transform: uppercase; background: rgba(255,255,255,0.05); padding: 0.1rem 0.3rem; border-radius: 3px; margin-right: 0.4rem; color: var(--neon-purple);">{src.platform}</span>
-                  <strong style="color: var(--text-main);">{src.name}</strong>
-                  <span style="display: block; font-size: 0.7rem; color: var(--text-muted); text-overflow: ellipsis; overflow: hidden; max-width: 170px; white-space: nowrap;" title={src.url_or_id}>{src.url_or_id}</span>
+    <!-- PESTAÑA 4: RADAR, FUENTES Y COMPROBADOR -->
+    {currentTab === 'fuentes' && (
+      <div class="radar-grid" style="display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 2rem;">
+        
+        <!-- Columna Izquierda: Comprobador y Cola -->
+        <div style="display: flex; flex-direction: column; gap: 2rem;">
+          
+          <!-- Comprobador de URL -->
+          <div class="cyber-card" style="padding: 2rem; background: linear-gradient(180deg, rgba(0, 240, 255, 0.04) 0%, rgba(18, 22, 41, 0.95) 100%); border: 2px solid rgba(0, 240, 255, 0.3);">
+            <h3 style="font-size: 1.4rem; margin-bottom: 0.25rem; color: var(--neon-blue); font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+              🔍 <span class="text-gradient-blue">Comprobador de URL en Vivo</span>
+            </h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.4;">
+              Pega cualquier URL de redes o prensa. El sistema consultará la plataforma real, extraerá los metadatos verificados (títulos, autores, visualizaciones reales) y la vinculará al expediente.
+            </p>
+
+            <form method="POST" style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1rem;">
+              <input type="hidden" name="action" value="check_url" />
+              
+              <div>
+                <label style="font-size: 0.7rem; color: var(--neon-blue); display: block; margin-bottom: 0.25rem; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em;">URL a Verificar:</label>
+                <input 
+                  type="url" 
+                  name="check_url" 
+                  required 
+                  placeholder="https://youtube.com/shorts/... o t.me/canal/123"
+                  style="width: 100%; padding: 0.65rem; background: var(--bg-dark); border: 2px solid rgba(0, 240, 255, 0.25); color: var(--text-main); font-family: monospace; font-size: 0.85rem; border-radius: 4px;"
+                />
+              </div>
+
+              <button type="submit" class="cyber-btn" style="width: 100%; border-color: var(--neon-blue); color: var(--neon-blue); font-weight: 800; box-shadow: 2px 2px 0px 0px rgba(0, 240, 255, 0.15);">
+                ⚡ Analizar y Verificar URL
+              </button>
+            </form>
+
+            <!-- Resultado del Análisis -->
+            {urlCheckResult && urlCheckResult.isAccessible && (
+              <div style="border: 2px solid rgba(57, 255, 20, 0.25); background: rgba(57, 255, 20, 0.02); padding: 1.25rem; margin-top: 1.5rem; border-radius: 6px;">
+                <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-green); font-size: 0.7rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.75rem;">✅ Metadatos Extraídos Exitosamente</span>
+                
+                <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem;">
+                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.35rem;">
+                    <span style="color: var(--text-muted);">Plataforma:</span>
+                    <span style="color: var(--neon-blue); font-weight: 700;">{urlCheckResult.platform}</span>
+                  </div>
+                  {urlCheckResult.title && (
+                    <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.35rem;">
+                      <span style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-bottom: 0.15rem;">Título Extraído:</span>
+                      <span style="color: var(--text-main); font-weight: 600; line-height: 1.3; display: block;">{urlCheckResult.title}</span>
+                    </div>
+                  )}
+                  {urlCheckResult.author && (
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.35rem;">
+                      <span style="color: var(--text-muted);">Autor / Cuenta:</span>
+                      <span style="color: var(--text-main); font-weight: 600;">{urlCheckResult.author}</span>
+                    </div>
+                  )}
+                  {urlCheckResult.views && (
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.35rem;">
+                      <span style="color: var(--text-muted);">Vistas / Reproducciones:</span>
+                      <span style="color: var(--neon-rose); font-weight: 700;">{urlCheckResult.views}</span>
+                    </div>
+                  )}
+                  {urlCheckResult.date && (
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.35rem;">
+                      <span style="color: var(--text-muted);">Fecha Publicación:</span>
+                      <span style="color: var(--text-main);">{new Date(urlCheckResult.date).toLocaleString('es-ES')}</span>
+                    </div>
+                  )}
+                  {urlCheckResult.imageUrl && (
+                    <div style="margin-top: 0.75rem; border: 1px solid var(--border-color); overflow: hidden; border-radius: 4px;">
+                      <img src={urlCheckResult.imageUrl} alt="Preview" style="width: 100%; height: auto; display: block; max-height: 180px; object-fit: cover;" />
+                    </div>
+                  )}
                 </div>
-                <form method="POST" style="margin: 0;">
-                  <input type="hidden" name="action" value="delete_radar_source" />
-                  <input type="hidden" name="source_id" value={src.id} />
-                  <button type="submit" style="background: none; border: none; color: var(--neon-rose); cursor: pointer; font-size: 0.95rem;" title="Eliminar fuente">🗑️</button>
+
+                <!-- Confirmar e insertar en radar -->
+                <form method="POST" style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.25rem; border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
+                  <input type="hidden" name="action" value="insert_checked_url" />
+                  <input type="hidden" name="url" value={urlCheckResult.rawUrl} />
+                  <input type="hidden" name="platform" value={urlCheckResult.platform} />
+                  <input type="hidden" name="title" value={urlCheckResult.title || ''} />
+                  <input type="hidden" name="description" value={urlCheckResult.description || ''} />
+                  <input type="hidden" name="author" value={urlCheckResult.author || 'Editor'} />
+
+                  <div>
+                    <label style="font-size: 0.75rem; color: var(--neon-green); display: block; margin-bottom: 0.25rem; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em;">Vincular a Expediente Temático:</label>
+                    <select name="topic_id" class="edit-input" style="border-color: rgba(57, 255, 20, 0.25);">
+                      <option value="">— Sin expediente (General) —</option>
+                      {activeTopics.map(t => (
+                        <option value={t.id}>[{t.category}] {t.title}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <button type="submit" class="cyber-btn accent" style="width: 100%; box-shadow: 2px 2px 0px 0px var(--text-main); font-weight: 800;">
+                    ✅ Confirmar e Insertar en la Cola del Radar
+                  </button>
                 </form>
               </div>
-            ))}
-            
-            {radarSources.length === 0 && (
-              <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 1rem;">No hay fuentes configuradas.</p>
+            )}
+
+            {urlCheckResult && !urlCheckResult.isAccessible && (
+              <div style="border: 2px solid rgba(255, 51, 102, 0.25); background: rgba(255, 51, 102, 0.02); padding: 1.25rem; font-size: 0.85rem; margin-top: 1.5rem; border-radius: 6px;">
+                <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-rose); font-size: 0.7rem; display: block; margin-bottom: 0.35rem;">❌ URL No Accesible</span>
+                <p style="color: var(--text-muted); margin: 0; line-height: 1.4;">{urlCheckResult.error || 'La URL no es pública o no devuelve una respuesta correcta. Puedes ingresarla manualmente en la caja inferior.'}</p>
+              </div>
             )}
           </div>
 
-          <!-- Formulario de añadir fuente -->
-          <form method="POST" style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <input type="hidden" name="action" value="add_radar_source" />
-            
-            <div>
-              <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Plataforma:</label>
-              <select name="platform" required style="width: 100%; padding: 0.4rem; background: var(--bg-dark); border: 2px solid var(--border-color); color: var(--text-main); font-size: 0.8rem;">
-                <option value="Telegram">Telegram (Canal Público)</option>
-                <option value="Reddit">Reddit (JSON Hot URL)</option>
-                <option value="RSS">RSS Feed de Prensa / Tendencias</option>
-              </select>
-            </div>
+          <!-- Cola de radar items -->
+          <div class="cyber-card" style="padding: 1.5rem;">
+            <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--neon-purple); font-weight: 700;">📡 Cola del Radar ({pendingRadarItems.length})</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem;">
+              Publicaciones capturadas automáticamente de redes esperando ser redactadas en lote.
+            </p>
 
-            <div>
-              <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Nombre descriptivo:</label>
-              <input type="text" name="name" required placeholder="Ej: Canal de Alvise" style="width: 100%; padding: 0.4rem; background: var(--bg-dark); border: 2px solid var(--border-color); color: var(--text-main); font-size: 0.8rem;" />
-            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 400px; overflow-y: auto;">
+              {pendingRadarItems.map(item => (
+                <div style="border: 1px solid var(--border-color); padding: 0.75rem; background: var(--bg-dark); font-size: 0.8rem; border-radius: 4px;">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+                    <span style="color: var(--neon-blue); font-weight: bold;">{item.platform}</span>
+                    <span style="color: var(--neon-rose); font-weight: 700;">Vir: {item.virality_score}/10</span>
+                  </div>
+                  <p style="color: var(--text-muted); margin: 0 0 0.35rem 0; line-height: 1.35; font-size: 0.8rem;">
+                    "{item.detected_claim || item.text.substring(0, 120)}..."
+                  </p>
+                  {item.url && (
+                    <a href={item.url} target="_blank" rel="noopener noreferrer" style="font-size: 0.7rem; color: var(--text-muted); display: block; text-decoration: none; word-break: break-all; margin-bottom: 0.25rem;">
+                      🔗 Link original: {item.url}
+                    </a>
+                  )}
+                  <span style="font-size: 0.7rem; color: var(--text-muted); display: block; text-align: right;">
+                    Ingresado: {new Date(item.created_at).toLocaleDateString('es-ES')}
+                  </span>
+                </div>
+              ))}
 
-            <div>
-              <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Identificador o URL:</label>
-              <input type="text" name="url_or_id" required placeholder="Ej: Alviseperez o URL completa" style="width: 100%; padding: 0.4rem; background: var(--bg-dark); border: 2px solid var(--border-color); color: var(--text-main); font-size: 0.8rem; font-family: monospace;" />
+              {pendingRadarItems.length === 0 && (
+                <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 1.5rem;">No hay items pendientes en el radar.</p>
+              )}
             </div>
+          </div>
 
-            <button type="submit" class="cyber-btn" style="width: 100%; border-color: var(--neon-blue); color: var(--neon-blue); box-shadow: 2px 2px 0px 0px rgba(0, 240, 255, 0.15); font-size: 0.75rem;">
-              + Añadir Fuente al Radar
-            </button>
-          </form>
         </div>
 
-      </aside>
+        <!-- Columna Derecha: Configurar Fuentes e Inserción manual -->
+        <div style="display: flex; flex-direction: column; gap: 2rem;">
+          
+          <!-- Configurar fuentes de radar -->
+          <div class="cyber-card" style="padding: 1.5rem; background: rgba(0, 240, 255, 0.02); border-color: rgba(0, 240, 255, 0.25);">
+            <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--neon-blue); font-weight: 700;">📡 Fuentes de Monitorización</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem;">
+              Canales de Telegram, subreddits o feeds RSS monitorizados periódicamente.
+            </p>
 
-    </div>
+            <div style="display: flex; flex-direction: column; gap: 0.65rem; max-height: 300px; overflow-y: auto; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; padding-right: 0.25rem;">
+              {radarSources.map(src => (
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem; background: var(--bg-dark); border: 1px solid var(--border-color); font-size: 0.8rem; border-radius: 4px;">
+                  <div>
+                    <span style="font-size: 0.65rem; font-weight: 800; text-transform: uppercase; background: rgba(255,255,255,0.05); padding: 0.1rem 0.25rem; border-radius: 2px; margin-right: 0.35rem; color: var(--neon-purple);">{src.platform}</span>
+                    <strong style="color: var(--text-main);">{src.name}</strong>
+                    <span style="display: block; font-size: 0.7rem; color: var(--text-muted); text-overflow: ellipsis; overflow: hidden; max-width: 170px; white-space: nowrap;" title={src.url_or_id}>{src.url_or_id}</span>
+                  </div>
+                  <form method="POST" style="margin: 0;">
+                    <input type="hidden" name="action" value="delete_radar_source" />
+                    <input type="hidden" name="source_id" value={src.id} />
+                    <button type="submit" style="background: none; border: none; color: var(--neon-rose); cursor: pointer; font-size: 0.95rem;" title="Eliminar fuente">🗑️</button>
+                  </form>
+                </div>
+              ))}
+            </div>
+
+            <!-- Formulario de añadir fuente -->
+            <form method="POST" style="display: flex; flex-direction: column; gap: 0.75rem;">
+              <input type="hidden" name="action" value="add_radar_source" />
+              
+              <div>
+                <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Plataforma:</label>
+                <select name="platform" required class="edit-input" style="padding: 0.4rem;">
+                  <option value="Telegram">Telegram (Canal Público)</option>
+                  <option value="Reddit">Reddit (JSON Hot URL)</option>
+                  <option value="RSS">RSS Feed de Prensa / Tendencias</option>
+                </select>
+              </div>
+
+              <div>
+                <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Nombre descriptivo:</label>
+                <input type="text" name="name" required placeholder="Ej: Canal de Alvise" class="edit-input" style="padding: 0.4rem;" />
+              </div>
+
+              <div>
+                <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Identificador o URL:</label>
+                <input type="text" name="url_or_id" required placeholder="Ej: Alviseperez o URL RSS" class="edit-input" style="padding: 0.4rem; font-family: monospace;" />
+              </div>
+
+              <button type="submit" class="cyber-btn" style="width: 100%; border-color: var(--neon-blue); color: var(--neon-blue); box-shadow: 2px 2px 0px 0px rgba(0, 240, 255, 0.15); font-size: 0.75rem;">
+                + Añadir Fuente al Radar
+              </button>
+            </form>
+          </div>
+
+          <!-- Insertar claim manual -->
+          <div class="cyber-card" style="padding: 1.5rem;">
+            <h3 style="font-size: 1.15rem; margin-bottom: 0.5rem; color: var(--neon-blue); font-weight: 700;">✍️ Insertar Claim Manual</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
+              Añade un titular dudoso directamente a la cola del radar para que sea procesado por la IA.
+            </p>
+
+            <form method="POST" style="display: flex; flex-direction: column; gap: 0.75rem;">
+              <input type="hidden" name="action" value="create_claim" />
+              
+              <div>
+                <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Texto del Claim / Bulo:</label>
+                <textarea 
+                  name="claim" 
+                  rows="3" 
+                  placeholder="Ej: Dicen que el gobierno quitará los depósitos..."
+                  required 
+                  class="edit-input"
+                  style="font-family: var(--font-body); font-size: 0.85rem; resize: none;"
+                ></textarea>
+              </div>
+
+              <div>
+                <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Red de Origen:</label>
+                <select name="platform" class="edit-input" style="padding: 0.4rem;">
+                  <option value="WhatsApp">WhatsApp</option>
+                  <option value="X (Twitter)">X (Twitter)</option>
+                  <option value="Instagram">Instagram</option>
+                  <option value="TikTok">TikTok</option>
+                  <option value="Admin Manual">Entrada Manual Editor</option>
+                </select>
+              </div>
+
+              <button type="submit" class="cyber-btn accent" style="width: 100%; box-shadow: 2px 2px 0px 0px var(--text-main); font-weight: 800;">
+                Insertar en Radar
+              </button>
+            </form>
+          </div>
+
+        </div>
+
+      </div>
+    )}
 
   </div>
 </Layout>
@@ -615,10 +1044,4 @@ const getVerdictClass = (verdict) => {
   }
 </script>
 
-<style>
-  @media (max-width: 900px) {
-    div[style*="grid-template-columns: 2.2fr 1fr"] {
-      grid-template-columns: 1fr !important;
-    }
-  }
 </style>
