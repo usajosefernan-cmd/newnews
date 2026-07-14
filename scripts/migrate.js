@@ -56,11 +56,18 @@ db.exec(`
     status TEXT DEFAULT 'borrador',
     human_review_required INTEGER DEFAULT 1,
     published_at TEXT,
+    origin_date TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     FOREIGN KEY(topic_id) REFERENCES topics(id) ON DELETE SET NULL
   );
 `);
+
+try {
+  db.exec("ALTER TABLE articles ADD COLUMN origin_date TEXT;");
+} catch (e) {
+  // Columna ya existe
+}
 
 // Tabla sources (Fuentes originales de los desmentidos)
 db.exec(`
@@ -249,7 +256,7 @@ if (countSources.count === 0) {
   `);
   
   const initialSources = [
-    { id: 'source-rss-gt-es', platform: 'RSS', name: 'Google Trends ES', url_or_id: 'https://trends.google.com/trends/trendingsearches/daily/rss?geo=ES' },
+    { id: 'source-rss-gt-es', platform: 'RSS', name: 'Google Trends ES', url_or_id: 'https://trends.google.es/trends/trendingsearches/daily/rss?geo=ES' },
     { id: 'source-rss-mn-pt', platform: 'RSS', name: 'Menéame Portada', url_or_id: 'https://www.meneame.net/rss' },
     { id: 'source-rss-mn-ac', platform: 'RSS', name: 'Menéame Activas', url_or_id: 'https://www.meneame.net/rss?status=active' },
     { id: 'source-rss-em-es', platform: 'RSS', name: 'El Mundo España', url_or_id: 'https://www.elmundo.es/rss/portada.xml' },

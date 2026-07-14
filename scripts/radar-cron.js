@@ -52,8 +52,15 @@ async function fetchRssFeed(feed) {
       const titleMatch = itemContent.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/) || itemContent.match(/<title>([\s\S]*?)<\/title>/);
       const linkMatch = itemContent.match(/<link>([\s\S]*?)<\/link>/);
       const descMatch = itemContent.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/) || itemContent.match(/<description>([\s\S]*?)<\/description>/);
+      const pubDateMatch = itemContent.match(/<pubDate>([\s\S]*?)<\/pubDate>/);
       
       if (titleMatch && linkMatch) {
+        if (pubDateMatch) {
+          const pubDate = new Date(pubDateMatch[1].trim());
+          const diffHours = (new Date().getTime() - pubDate.getTime()) / (1000 * 60 * 60);
+          if (diffHours > 24) continue; // Solo 24 horas
+        }
+
         const title = titleMatch[1].trim().replace(/&lt;!\[CDATA\[|\]\]&gt;/g, '');
         const link = linkMatch[1].trim();
         const description = descMatch ? descMatch[1].trim().replace(/<\/?[^>]+(>|$)/g, "").substring(0, 300) : '';
@@ -69,7 +76,7 @@ async function fetchRssFeed(feed) {
         });
       }
     }
-    console.log(`[Radar Motor] -> ${feed.name}: Detectados ${items.length} elementos en bruto.`);
+    console.log(`[Radar Motor] -> ${feed.name}: Detectados ${items.length} elementos de las últimas 24h.`);
   } catch (err) {
     console.log(`[Radar Motor] ❌ Error descargando RSS ${feed.name}:`, err.message);
   }
@@ -93,6 +100,12 @@ async function fetchRedditFeed(feed) {
     for (const child of children) {
       const post = child.data;
       if (post && !post.pinned && !post.stickied) {
+        if (post.created_utc) {
+          const createdMs = post.created_utc * 1000;
+          const diffHours = (new Date().getTime() - createdMs) / (1000 * 60 * 60);
+          if (diffHours > 24) continue; // Solo 24 horas
+        }
+
         items.push({
           title: post.title || '',
           link: `https://www.reddit.com${post.permalink}`,
@@ -104,7 +117,7 @@ async function fetchRedditFeed(feed) {
         });
       }
     }
-    console.log(`[Radar Motor] -> ${feed.name}: Detectados ${items.length} posts.`);
+    console.log(`[Radar Motor] -> ${feed.name}: Detectados ${items.length} posts de las últimas 24h.`);
   } catch (err) {
     console.log(`[Radar Motor] ❌ Error descargando Reddit ${feed.name}:`, err.message);
   }
@@ -137,6 +150,12 @@ async function fetchTelegramChannel(channel) {
       const viewsMatch = block.match(/<span class="tgme_widget_message_views">([^<]+)<\/span>/);
       
       if (textMatch && linkMatch) {
+        if (dateMatch) {
+          const messageDate = new Date(dateMatch[1]);
+          const diffHours = (new Date().getTime() - messageDate.getTime()) / (1000 * 60 * 60);
+          if (diffHours > 24) continue; // Solo 24 horas
+        }
+
         let textContent = textMatch[1]
           .replace(/<br\s*\/?>/gi, '\n')
           .replace(/<\/?[^>]+(>|$)/g, "")
@@ -185,6 +204,152 @@ async function fetchTelegramChannel(channel) {
   return items;
 }
 
+// ═══ NITTER / X RSS FEEDS ═══
+async function fetchNitterFeed(feed) {
+  const items = [];
+  // Lista de instancias Nitter públicas para intentar (failover)
+  const nitterInstances = [
+    'https://nitter.privacydev.net',
+    'https://nitter.poast.org',
+    'https://nitter.woodland.cafe'
+  ];
+  
+  for (const instance of nitterInstances) {
+    try {
+      const rssUrl = `${instance}/${feed.username}/rss`;
+      console.log(`[Radar Motor] Probando Nitter RSS: ${rssUrl}...`);
+      const response = await fetch(rssUrl, { 
+        headers: userAgentHeader,
+        signal: AbortSignal.timeout(3000)
+      });
+      
+      if (!response.ok) continue;
+      
+      const xml = await response.text();
+      const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+      const matches = xml.matchAll(itemRegex);
+      
+      for (const match of matches) {
+        const itemContent = match[1];
+        const titleMatch = itemContent.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/) || itemContent.match(/<title>([\s\S]*?)<\/title>/);
+        const linkMatch = itemContent.match(/<link>([\s\S]*?)<\/link>/);
+        const descMatch = itemContent.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/) || itemContent.match(/<description>([\s\S]*?)<\/description>/);
+        const pubDateMatch = itemContent.match(/<pubDate>([\s\S]*?)<\/pubDate>/);
+        
+        if (titleMatch && linkMatch) {
+          if (pubDateMatch) {
+            const pubDate = new Date(pubDateMatch[1].trim());
+            const diffHours = (new Date().getTime() - pubDate.getTime()) / (1000 * 60 * 60);
+            if (diffHours > 24) continue; // Solo 24 horas
+          }
+
+          let link = linkMatch[1].trim();
+          // Convertir link de Nitter a link real de X
+          link = link.replace(new RegExp(instance.replace('https://', '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), 'x.com');
+          if (!link.startsWith('http')) link = `https://x.com/${feed.username}`;
+          
+          const title = titleMatch[1].trim().replace(/<\/?[^>]+(>|$)/g, '');
+          const description = descMatch ? descMatch[1].trim().replace(/<\/?[^>]+(>|$)/g, '').substring(0, 300) : '';
+          
+          items.push({
+            title: title.substring(0, 200),
+            link,
+            description,
+            platform: 'X',
+            author: `@${feed.username}`,
+            score: 100,
+            comments: 0
+          });
+        }
+      }
+      
+      if (items.length > 0) {
+        console.log(`[Radar Motor] -> ${feed.name}: Detectados ${items.length} posts de X vía ${instance}.`);
+        break; // Éxito, no probar más instancias
+      }
+    } catch (err) {
+      console.log(`[Radar Motor] Nitter instance failed: ${err.message}`);
+      continue;
+    }
+  }
+  
+  if (items.length === 0) {
+    console.log(`[Radar Motor] ⚠️ No se pudo acceder a X/@${feed.username} vía Nitter.`);
+  }
+  return items;
+}
+
+async function fetchYouTubeSearch(query) {
+  const items = [];
+  try {
+    console.log(`[Radar Motor] Buscando en YouTube: "${query}"...`);
+    // sp=CAI%253D es el parametro de ordenamiento por fecha de subida en YouTube
+    const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}&sp=CAI%253D`;
+    const response = await fetch(url, { headers: userAgentHeader });
+
+    if (!response.ok) {
+      console.log(`[Radar Motor] Advertencia: YouTube respondió con estado ${response.status}`);
+      return items;
+    }
+
+    const html = await response.text();
+    const jsonMatch = html.match(/var ytInitialData = (\{[\s\S]*?\});/);
+    if (!jsonMatch) {
+      console.log(`[Radar Motor] No se encontró ytInitialData en la respuesta de YouTube.`);
+      return items;
+    }
+
+    const data = JSON.parse(jsonMatch[1]);
+    
+    // Navegar de forma segura el arbol de componentes de YouTube para extraer videos
+    const contents = data?.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer?.contents || [];
+    
+    let videoResults = [];
+    for (const section of contents) {
+      const itemSection = section?.itemSectionRenderer?.contents || [];
+      for (const item of itemSection) {
+        if (item.videoRenderer) {
+          videoResults.push(item.videoRenderer);
+        }
+      }
+    }
+
+    for (const video of videoResults.slice(0, 8)) { // 8 primeros videos mas recientes
+      const title = video?.title?.runs?.[0]?.text || '';
+      const videoId = video?.videoId || '';
+      const description = video?.detailedMetadataSnippets?.[0]?.snippetText?.runs?.[0]?.text 
+        || video?.descriptionSnippet?.runs?.[0]?.text || '';
+      const author = video?.ownerText?.runs?.[0]?.text || 'YouTube Creator';
+      const viewCountText = video?.viewCountText?.simpleText || video?.viewCountText?.runs?.[0]?.text || '0';
+      
+      let views = 0;
+      const cleanViews = viewCountText.replace(/\D/g, '');
+      if (cleanViews) views = parseInt(cleanViews);
+
+      // Descartar videos antiguos
+      const timeText = video?.publishedTimeText?.simpleText || '';
+      if (timeText && !timeText.includes('segundo') && !timeText.includes('minuto') && !timeText.includes('hora') && !timeText.includes('día') && !timeText.includes('dia')) {
+        continue; // Descartar si es de hace semanas, meses o años
+      }
+
+      items.push({
+        title,
+        link: `https://www.youtube.com/watch?v=${videoId}`,
+        description,
+        platform: 'YouTube',
+        author,
+        score: views,
+        comments: 0,
+        views: views
+      });
+    }
+    console.log(`[Radar Motor] -> YouTube "${query}": Detectados ${items.length} videos de las últimas 24h.`);
+  } catch (err) {
+    console.log(`[Radar Motor] ❌ Error buscando en YouTube para "${query}":`, err.message);
+  }
+  return items;
+}
+
 async function runRadar() {
   if (!fs.existsSync(dbPath)) {
     console.error(`❌ La base de datos no existe en ${dbPath}.`);
@@ -209,7 +374,11 @@ async function runRadar() {
     .filter(s => s.platform === 'Telegram')
     .map(s => ({ id: s.url_or_id, name: s.name, platform: 'Telegram' }));
 
-  console.log(`[Radar Motor] Fuentes cargadas: ${rssFeeds.length} RSS, ${redditFeeds.length} Reddit, ${telegramChannels.length} Telegram.`);
+  const xAccounts = activeSources
+    .filter(s => s.platform === 'X')
+    .map(s => ({ username: s.url_or_id, name: s.name, platform: 'X' }));
+
+  console.log(`[Radar Motor] Fuentes cargadas: ${rssFeeds.length} RSS, ${redditFeeds.length} Reddit, ${telegramChannels.length} Telegram, ${xAccounts.length} X.`);
 
   const insertScrapedItem = db.prepare(`
     INSERT OR IGNORE INTO scraped_items (id, platform, url, text, author_public_name, metrics_json, detected_claim, suggested_topic, virality_score, risk_score, status, created_at)
@@ -237,7 +406,20 @@ async function runRadar() {
     allItems.push(...channelItems);
   }
 
-  // 3. Procesar y filtrar items
+  // 3. Cargar X/Twitter vía Nitter RSS
+  for (const account of xAccounts) {
+    const xItems = await fetchNitterFeed(account);
+    allItems.push(...xItems);
+  }
+
+  // 3.5 Cargar videos de YouTube buscando keywords virales de España
+  const ytQueries = ['bulo España', 'okupa España', 'inmigración España ayudas', 'Begoña Gómez juicio', 'Koldo mascarillas'];
+  for (const query of ytQueries) {
+    const ytItems = await fetchYouTubeSearch(query);
+    allItems.push(...ytItems);
+  }
+
+  // 4. Procesar y filtrar items
   for (const item of allItems) {
     const titleLower = item.title.toLowerCase();
     const descLower = item.description.toLowerCase();
@@ -246,6 +428,42 @@ async function runRadar() {
     const hasForbidden = forbiddenKeywords.some(kw => titleLower.includes(kw) || descLower.includes(kw));
     if (hasForbidden) continue;
 
+    // Filtro estricto de viralidad (mínimo alcance de 10.000 personas o equivalente)
+    let isViral = false;
+    const plat = (item.platform || '').toLowerCase();
+    
+    if (plat === 'youtube') {
+      if ((item.views || 0) >= 10000) isViral = true;
+    } else if (plat === 'telegram') {
+      if ((item.views || 0) >= 10000) isViral = true;
+    } else if (plat === 'x' || plat === 'twitter') {
+      // En X, estimamos 1 like = 200 impresiones, de forma que >= 50 likes equivale a 10k vistas
+      if ((item.score || 0) >= 50) isViral = true;
+    } else if (plat === 'reddit') {
+      // En Reddit, score >= 40 o comentarios >= 15 representa gran difusion en subreddits de Espana
+      if ((item.score || 0) >= 40 || (item.comments || 0) >= 15) isViral = true;
+    } else if (plat === 'tiktok') {
+      // En TikTok, >= 10k vistas o >= 1k likes
+      if ((item.views || 0) >= 10000 || (item.score || 0) >= 1000) isViral = true;
+    } else if (plat === 'instagram') {
+      // En Instagram, >= 10k vistas o >= 1k likes
+      if ((item.views || 0) >= 10000 || (item.score || 0) >= 1000) isViral = true;
+    } else if (plat === 'facebook') {
+      // En Facebook, >= 10k vistas o >= 200 compartidos/reacciones
+      if ((item.views || 0) >= 10000 || (item.score || 0) >= 200) isViral = true;
+    } else if (plat === 'prensa' || plat === 'menéame' || plat === 'google trends') {
+      // La prensa nacional y Meneame Portada superan las 10k vistas de base
+      isViral = true;
+    } else {
+      // Para reportes generales o de la web
+      if ((item.views || 0) >= 10000 || (item.score || 0) >= 500) isViral = true;
+    }
+
+    if (!isViral) {
+      // Omitir posts no virales
+      continue;
+    }
+
     // Buscar relevancia sociopolítica
     const hasInteresting = interestingKeywords.some(kw => titleLower.includes(kw) || descLower.includes(kw));
     
@@ -253,28 +471,35 @@ async function runRadar() {
       // Generar ID único basado en URL para evitar duplicados
       const id = `radar-${item.platform.toLowerCase()}-${Buffer.from(item.link).toString('base64').substring(0, 32)}`;
       
-      // Clasificación preliminar del tema del debate
+      // Clasificación mejorada del tema
       let suggestedTopic = 'Economía y Sociedad';
-      if (titleLower.includes('franco')) suggestedTopic = 'Mitos y Leyendas del Franquismo';
-      else if (titleLower.includes('mena') || titleLower.includes('inmigr') || titleLower.includes('extranj')) suggestedTopic = 'Inmigración, Delincuencia y Ayudas';
-      else if (titleLower.includes('begoña') || titleLower.includes('peinado') || titleLower.includes('sánchez')) suggestedTopic = 'Investigación Judicial a Begoña Gómez';
-      else if (titleLower.includes('koldo') || titleLower.includes('ábalos') || titleLower.includes('mascarilla')) suggestedTopic = 'Caso Koldo y Sentencia del Tribunal Supremo';
-      else if (titleLower.includes('okupa') || titleLower.includes('vivienda') || titleLower.includes('alquiler')) suggestedTopic = 'Vivienda y Okupación';
+      const combined = titleLower + ' ' + descLower;
+      if (combined.includes('franco') || combined.includes('memoria histórica') || combined.includes('exhumación')) suggestedTopic = 'Mitos y Leyendas del Franquismo';
+      else if (combined.includes('mena') || combined.includes('inmigr') || combined.includes('extranj') || combined.includes('frontera')) suggestedTopic = 'Inmigración, Delincuencia y Ayudas';
+      else if (combined.includes('begoña') || combined.includes('peinado')) suggestedTopic = 'Investigación Judicial a Begoña Gómez';
+      else if (combined.includes('koldo') || combined.includes('ábalos') || combined.includes('mascarilla')) suggestedTopic = 'Caso Koldo y Sentencia del Tribunal Supremo';
+      else if (combined.includes('okupa') || combined.includes('vivienda') || combined.includes('alquiler') || combined.includes('hipoteca')) suggestedTopic = 'Vivienda y Okupación';
+      else if (combined.includes('amnistía') || combined.includes('procés') || combined.includes('puigdemont')) suggestedTopic = 'Ley de Amnistía y Procés';
+      else if (combined.includes('paro') || combined.includes('empleo') || combined.includes('sepe') || combined.includes('fijo discontinuo')) suggestedTopic = 'Empleo y Cifras de Paro';
+      else if (combined.includes('autónomo') || combined.includes('irpf') || combined.includes('hacienda') || combined.includes('cuota')) suggestedTopic = 'Autónomos y Fiscalidad';
+      else if (combined.includes('inflación') || combined.includes('iva') || combined.includes('precio') || combined.includes('cesta')) suggestedTopic = 'Inflación y Coste de Vida';
 
       // Calcular virality_score real basado en los datos
       let viralityScore = 5.0;
       if (item.platform === 'Reddit') {
-        // En Reddit, valoramos votos y comentarios
         viralityScore = Math.min(10.0, 3.0 + (item.score / 50) + (item.comments / 20));
-      } else if (item.platform === 'Menéame') {
-        // En Menéame, el engagement en portada es alto
+      } else if (item.platform === 'Menéame' || item.platform === 'Prensa') {
         viralityScore = Math.min(10.0, 4.0 + (item.comments / 30));
       } else if (item.platform === 'Google Trends') {
-        viralityScore = 8.5; // Alta viralidad por búsquedas masivas estimadas
+        viralityScore = 8.5;
       } else if (item.platform === 'Telegram') {
-        // En Telegram, valoramos las visitas (views) estimadas
         const views = item.views || 0;
         viralityScore = Math.min(10.0, 3.0 + (views / 25000));
+      } else if (item.platform === 'X') {
+        viralityScore = Math.min(10.0, 5.0 + (item.score / 100));
+      } else if (item.platform === 'YouTube') {
+        const views = item.views || 0;
+        viralityScore = Math.min(10.0, 4.0 + (views / 15000));
       }
 
       // Calcular risk_score por el tipo de tema sensible

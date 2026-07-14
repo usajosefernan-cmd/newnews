@@ -208,6 +208,7 @@ async function processItems() {
 
   const db = new DatabaseSync(dbPath);
   db.exec('PRAGMA foreign_keys = ON;');
+  db.exec('PRAGMA journal_mode = WAL;');
 
   // Obtener items pendientes del radar
   const pendingItems = db.prepare("SELECT * FROM scraped_items WHERE status = 'pendiente'").all();
@@ -275,6 +276,8 @@ El análisis debe estar enfocado en las preocupaciones socioeconómicas del ciud
 - Si trata de precios, inflación o cesta de la compra, cita el IPC del INE (Instituto Nacional de Estadística) y estándares de Eurostat.
 - Si trata de paro, empleo o contratos (fijos discontinuos), explica la diferencia entre el paro registrado del SEPE y la EPA del INE (normativa OIT).
 - Si trata de autónomos o impuestos, cita las cuotas del BOE, tramos de cotización por ingresos reales de la Seguridad Social o leyes de Hacienda.
+- PROHIBIDO ABSOLUTAMENTE citar, mencionar, referenciar o enlazar a agencias de verificación de terceros como Newtral, Maldita, EFE Verifica u otras similares. Los desmentidos y fuentes deben basarse EXCLUSIVAMENTE en fuentes primarias oficiales del Estado (BOE, INE, ministerios, resoluciones de juzgados, etc.).
+- Las fuentes que propongas en la lista de "sources" deben ser obligatoriamente del dominio oficial (.gob.es, .es, .europa.eu). NUNCA generes enlaces a Newtral.es o Maldita.es.
 Explicar de forma sencilla pero rigurosa, aportando el link original real en lo posible.
 
 Devuelve un JSON con:
@@ -404,6 +407,11 @@ Devuelve un JSON con:
       console.log(`  ✅ Procesado con éxito: "${articleData.title}" agregado.`);
     } catch (dbErr) {
       console.error('  ❌ Error guardando en base de datos:', dbErr.message);
+      try {
+        updateScrapedItemStatus.run('error', item.id);
+      } catch (e) {
+        console.error('  ❌ Error actualizando estado a error:', e.message);
+      }
     }
   }
 

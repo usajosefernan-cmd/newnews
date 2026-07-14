@@ -29,6 +29,25 @@ const articles = db.prepare(`
   ORDER BY published_at DESC
 `).all(topic.id);
 
+// Obtener propuestas políticas del área correspondiente al tema
+let areaMapping = null;
+const lowerSlug = slug.toLowerCase();
+if (lowerSlug.includes('vivienda')) {
+  areaMapping = 'Vivienda';
+} else if (lowerSlug.includes('fiscalidad') || lowerSlug.includes('impuestos') || lowerSlug.includes('ahorro') || lowerSlug.includes('catalunya') || lowerSlug.includes('autonomos')) {
+  areaMapping = 'Fiscalidad';
+}
+
+let policyMeasures = [];
+if (areaMapping) {
+  policyMeasures = db.prepare(`
+    SELECT pm.*, p.name as party_name, p.slug as party_slug
+    FROM policy_measures pm
+    JOIN parties p ON pm.party_id = p.id
+    WHERE pm.area = ?
+  `).all(areaMapping);
+}
+
 db.close();
 
 // Mapa de veredicto a color neón
@@ -800,250 +819,357 @@ const info = infographicData[slug];
 ---
 
 <Layout title={topic.title} description={topic.description}>
-  <div class="container" style="padding-top: 1.5rem; padding-bottom: 5rem;">
-    
-    <!-- Miga de Pan -->
-    <div style="margin-bottom: 1.5rem; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
-      <a href="/" style="text-decoration: none;">Radar</a> / <a href="/temas" style="text-decoration: none;">Expedientes</a> / <span style="color: var(--neon-blue);">{topic.title.split(' ')[0]}</span>
-    </div>
+    <!-- ═══ HERO DEL TEMA ═══ -->
+    <section class="topic-hero" style="margin-bottom: 2rem;">
+      <div class="cyber-card" style="padding: 2.5rem 2rem; background: linear-gradient(180deg, rgba(18, 22, 41, 0.8) 0%, rgba(7, 9, 19, 0.95) 100%); overflow: hidden; border-color: rgba(0, 240, 255, 0.25);">
+        
+        <!-- Background Glow -->
+        <div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: var(--neon-blue); filter: blur(80px); opacity: 0.15; pointer-events: none;"></div>
 
-    <!-- Cabecera Viva del Tema -->
-    <section style="margin-bottom: 2.5rem;">
-      <div class="cyber-card" style="padding: 2rem; background: linear-gradient(180deg, rgba(18, 22, 41, 0.8) 0%, rgba(7, 9, 19, 0.95) 100%);">
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
-          <span style="background: rgba(255,255,255,0.04); color: var(--text-muted); font-size: 0.7rem; font-weight: 800; padding: 0.25rem 0.6rem; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; position: relative; z-index: 2;">
+          <span style="background: rgba(0, 240, 255, 0.06); color: var(--neon-blue); font-size: 0.65rem; font-weight: 800; padding: 0.35rem 0.85rem; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.08em; border: 1px solid rgba(0, 240, 255, 0.15);">
             Expediente: {topic.category}
           </span>
-          <span style="color: var(--neon-blue); font-weight: 800; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 0.4rem;">
-            <span style="display: inline-block; width: 6px; height: 6px; background-color: var(--neon-blue); border-radius: 50%; box-shadow: 0 0 6px var(--neon-blue);"></span>
-            ACTIVO
+          <span style="color: var(--neon-green); font-weight: 800; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; display: inline-flex; align-items: center; gap: 0.4rem;">
+            <span class="pulse-icon" style="margin-right: 0;"></span>
+            Seguimiento Activo
           </span>
         </div>
 
-        <h1 style="font-size: 2.2rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.2; margin-bottom: 1rem; color: var(--text-main);">
+        <h1 style="font-size: 2.4rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 1rem; color: var(--text-main); font-family: var(--font-title); position: relative; z-index: 2;">
           {topic.title}
         </h1>
 
-        <p style="font-size: 1rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 2rem;">
+        <p style="font-size: 1.05rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 2rem; max-width: 580px; position: relative; z-index: 2;">
           {topic.description}
         </p>
 
-        <!-- Interfaz de Vertical Educativo por Pestañas (Tabs) -->
-        <div style="border-top: 1px solid var(--border-color); padding-top: 1.5rem; margin-top: 1.5rem;">
-          
-          <!-- Botones de Pestañas -->
-          <div style="display: flex; gap: 0.5rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1.5rem; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch;">
-            <button class="tab-btn active" data-tab="infografia" style="padding: 0.5rem 1rem; background: transparent; border: none; color: var(--neon-blue); font-weight: 700; font-size: 0.85rem; font-family: var(--font-title); cursor: pointer; transition: all 0.2s; border-bottom: 2px solid var(--neon-blue); margin-bottom: -0.65rem;">
-              📊 Infografía Visual
-            </button>
-            <button class="tab-btn" data-tab="leyes" style="padding: 0.5rem 1rem; background: transparent; border: none; color: var(--text-muted); font-weight: 700; font-size: 0.85rem; font-family: var(--font-title); cursor: pointer; transition: all 0.2s; border-bottom: 2px solid transparent; margin-bottom: -0.65rem;">
-              ⚖️ Leyes del BOE ({cards.length})
-            </button>
-            <button class="tab-btn" data-tab="realidad" style="padding: 0.5rem 1rem; background: transparent; border: none; color: var(--text-muted); font-weight: 700; font-size: 0.85rem; font-family: var(--font-title); cursor: pointer; transition: all 0.2s; border-bottom: 2px solid transparent; margin-bottom: -0.65rem;">
-              🔍 Datos y Contraste
-            </button>
+        <!-- Stat Cards Grid -->
+        {info && (
+          <div class="topic-stat-grid" style="position: relative; z-index: 2;">
+            <div class="topic-stat-card">
+              <div class="topic-stat-value" style="color: var(--neon-blue);">{info.metric}</div>
+              <div class="topic-stat-label">{info.metricLabel.split(' ').slice(0, 3).join(' ')}</div>
+            </div>
+            <div class="topic-stat-card">
+              <div class="topic-stat-value" style="color: var(--neon-purple);">{cards.length}</div>
+              <div class="topic-stat-label">Apartados Legales</div>
+            </div>
+            <div class="topic-stat-card">
+              <div class="topic-stat-value" style="color: var(--neon-green);">{articles.length}</div>
+              <div class="topic-stat-label">Desmentidos</div>
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+
+    <!-- ═══ BOTONES DE APARTADOS (TABS) ═══ -->
+    <nav class="topic-tabs-nav">
+      <button class="tab-btn active" data-target="panel-magnitud">
+        📊 <span>Cifras</span>
+      </button>
+      <button class="tab-btn" data-target="panel-legal">
+        ⚖️ <span>Marco Legal</span>
+      </button>
+      <button class="tab-btn" data-target="panel-radar">
+        🛡️ <span>Expedientes ({articles.length})</span>
+      </button>
+      <button class="tab-btn" data-target="panel-politica">
+        🏛️ <span>Enfoque Político ({policyMeasures.length})</span>
+      </button>
+    </nav>
+
+    <!-- ═══ PANEL 1: MAGNITUD Y CIFRAS ═══ -->
+    <div id="panel-magnitud" class="topic-tab-panel active">
+      {info && (
+        <section class="topic-section">
+          <div class="topic-section-header">
+            <div class="topic-section-icon" style="background: rgba(0, 240, 255, 0.1); color: var(--neon-blue);">📊</div>
+            <h2 class="topic-section-title">Magnitud y Cifras Oficiales</h2>
           </div>
 
-          <!-- Contenedor Pestaña 1: Infografía Visual -->
-          <div class="tab-pane active" id="pane-infografia" style="display: block;">
-            {info ? (
-              <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                <!-- Métrica Gigante -->
-                <div style="background: linear-gradient(135deg, rgba(0, 240, 255, 0.04) 0%, rgba(7, 9, 19, 0.8) 100%); border: 1px solid rgba(0, 240, 255, 0.2); padding: 1.5rem; border-radius: 12px; text-align: center;">
-                  <span style="font-size: 3.5rem; font-weight: 800; font-family: var(--font-title); color: var(--neon-blue); line-height: 1; display: block; margin-bottom: 0.25rem; text-shadow: 0 0 15px rgba(0, 240, 255, 0.3);">{info.metric}</span>
-                  <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.75rem;">{info.metricLabel}</span>
-                  <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin: 0; max-width: 550px; margin-left: auto; margin-right: auto;">{info.subText}</p>
-                </div>
+          <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+            <!-- Métrica Detallada -->
+            <div style="background: linear-gradient(135deg, rgba(0, 240, 255, 0.03) 0%, rgba(7, 9, 19, 0.8) 100%); border: 1px solid rgba(0, 240, 255, 0.15); padding: 1.5rem; border-radius: 20px; text-align: center;">
+              <span style="font-size: 3.5rem; font-weight: 800; font-family: var(--font-title); color: var(--neon-blue); line-height: 1; display: block; margin-bottom: 0.25rem; text-shadow: 0 0 15px rgba(0, 240, 255, 0.2);">{info.metric}</span>
+              <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.75rem;">{info.metricLabel}</span>
+              <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin: 0; max-width: 550px; margin-left: auto; margin-right: auto;">{info.subText}</p>
+            </div>
 
-                <!-- Gráficos de barra CSS nativos -->
-                <div class="cyber-card" style="padding: 1.5rem; background: rgba(18, 22, 41, 0.45); display: flex; flex-direction: column; gap: 1.25rem;">
-                  <strong style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); display: block; letter-spacing: 0.05em;">Visualización de Magnitud y Datos Oficiales</strong>
-                  {info.bars.map(bar => (
-                    <div style="display: flex; flex-direction: column; gap: 0.4rem;">
-                      <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
-                        <span style="color: var(--text-main); font-weight: 700;">{bar.label}</span>
-                        <strong style={{ color: bar.color }}>{bar.percentage}</strong>
-                      </div>
-                      <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; border: 1px solid rgba(255,255,255,0.02);">
-                        <div style={{ width: bar.percentage, height: '100%', background: bar.color, borderRadius: '4px' }}></div>
-                      </div>
-                      <span style="font-size: 0.7rem; color: var(--text-muted);">{bar.desc}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <p style="color: var(--text-muted); text-align: center; padding: 2rem;">No hay infografía configurada para este tema.</p>
-            )}
-          </div>
-
-          <!-- Contenedor Pestaña 2: Leyes del BOE -->
-          <div class="tab-pane" id="pane-leyes" style="display: none;">
-            <div style="display: flex; flex-direction: column; gap: 1.25rem;">
-              {cards.map((card, idx) => (
-                <div class="cyber-card" style="padding: 1.5rem; background: rgba(18, 22, 41, 0.45); border-color: rgba(0, 240, 255, 0.15);">
-                  <h4 style="font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                    <span style="color: var(--neon-blue); font-size: 1.2rem;">⚖️</span> {card.title}
-                  </h4>
-                  <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;" set:html={card.htmlContent || card.text} />
+            <!-- Indicadores de barras -->
+            <div class="cyber-card" style="padding: 1.5rem; background: rgba(18, 22, 41, 0.45); display: flex; flex-direction: column; gap: 1.25rem;">
+              <strong style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); display: block; letter-spacing: 0.05em;">Indicadores y Contexto de Datos</strong>
+              {info.bars.map(bar => (
+                <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                  <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                    <span style="color: var(--text-main); font-weight: 700;">{bar.label}</span>
+                    <strong style={{ color: bar.color }}>{bar.percentage}</strong>
+                  </div>
+                  <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; border: 1px solid rgba(255,255,255,0.02);">
+                    <div style={{ width: bar.percentage, height: '100%', background: bar.color, borderRadius: '4px' }} class="topic-bar-fill"></div>
+                  </div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">{bar.desc}</span>
                 </div>
               ))}
             </div>
           </div>
+        </section>
+      )}
+    </div>
 
-          <!-- Contenedor Pestaña 3: Datos y Contraste -->
-          <div class="tab-pane" id="pane-realidad" style="display: none;">
-            <div class="cyber-card" style="padding: 1.5rem; background: rgba(18, 22, 41, 0.45); display: flex; flex-direction: column; gap: 1rem;">
-              <h4 style="font-size: 1.1rem; font-weight: 800; color: var(--neon-amber); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                <span>🛡️</span> Metodología de Contraste Oficial
-              </h4>
-              <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin: 0;">
-                Toda la información del portal es analizada contrastando directamente con los textos de ley del Boletín Oficial del Estado (BOE), el Instituto Nacional de Estadística (INE), el Banco de España y los Ministerios competentes.
-              </p>
-              
-              <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 0.5rem;">
-                <span style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Fuentes institucionales de contraste recurrente:</span>
-                <ul style="padding-left: 1.25rem; font-size: 0.8rem; color: var(--neon-blue); display: flex; flex-direction: column; gap: 0.4rem;">
-                  <li><a href="https://www.boe.es" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">Boletín Oficial del Estado (BOE) - Leyes Consolidadas</a></li>
-                  <li><a href="https://www.ine.es" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">Instituto Nacional de Estadística (INE) - Índices oficiales</a></li>
-                  <li><a href="https://www.bde.es" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">Banco de España - Informes y publicaciones económicas</a></li>
-                </ul>
+    <!-- ═══ PANEL 2: MARCO LEGAL (BOE) ═══ -->
+    <div id="panel-legal" class="topic-tab-panel">
+      <section class="topic-section">
+        <div class="topic-section-header">
+          <div class="topic-section-icon" style="background: rgba(157, 78, 221, 0.1); color: var(--neon-purple);">⚖️</div>
+          <h2 class="topic-section-title">Marco Legal y Normativo (BOE)</h2>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          {cards.map((card) => (
+            <div class="topic-edu-card">
+              <h4>{card.title}</h4>
+              <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;" set:html={card.htmlContent || card.text} />
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+
+    <!-- ═══ PANEL 3: EXPEDIENTES Y CASOS AUDITADOS ═══ -->
+    <div id="panel-radar" class="topic-tab-panel">
+      <section class="topic-section">
+        <div class="topic-section-header">
+          <div class="topic-section-icon" style="background: rgba(0, 245, 160, 0.1); color: var(--neon-green);">🛡️</div>
+          <h2 class="topic-section-title">Casos Auditados en el Radar</h2>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+          {articles.map(art => (
+            <div class={"cyber-card " + getVerdictClass(art.verdict)} style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; background: rgba(18, 22, 41, 0.45);">
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+                <span class={"verdict-badge " + getVerdictClass(art.verdict)}>
+                  {art.verdict}
+                </span>
+                <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 500;">
+                  Auditoría: {new Date(art.published_at).toLocaleDateString('es-ES')}
+                </span>
+              </div>
+
+              <div>
+                <h3 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: -0.02em; line-height: 1.25;">
+                  <a href={`/noticia/${art.slug}`} class="article-link">{art.title}</a>
+                </h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.4; margin-bottom: 1rem;">
+                  {art.subtitle}
+                </p>
+                <div style="background: rgba(255,255,255,0.015); border-left: 2px solid var(--border-color); padding: 0.85rem 1rem; font-size: 0.8rem; font-style: italic; color: var(--text-muted); border-radius: 0 8px 8px 0; line-height: 1.45;">
+                  <strong>Afirmación viral:</strong> "{art.claim}"
+                </div>
+              </div>
+
+              <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 1rem; font-size: 0.8rem; color: var(--text-muted);">
+                <span>Origen: <strong style="color: var(--text-main);">{art.origin_platform}</strong></span>
+                <a href={`/noticia/${art.slug}`} class="cyber-btn" style="padding: 0.35rem 0.85rem; font-size: 0.7rem; border-radius: 10px; color: var(--neon-blue); border-color: rgba(0, 240, 255, 0.15);">
+                  Auditar Datos &rarr;
+                </a>
               </div>
             </div>
-          </div>
+          ))}
 
-        </div>
-      </div>
-    </section>
-
-    <!-- Listado de Desmentidos específicos (Hilos a Desmentir) -->
-    <section style="display: flex; flex-direction: column; gap: 2rem; margin-top: 2rem;">
-      <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: -0.5rem; padding-left: 0.25rem;">
-        <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.1em; display: inline-flex; align-items: center; gap: 0.3rem;">
-          🛡️ Hilos y Desmentidos a Auditar en este Expediente
-        </span>
-        <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 700;">
-          {articles.length} casos activos
-        </span>
-      </div>
-
-      {articles.map(art => (
-        <div class={"cyber-card " + getVerdictClass(art.verdict)} style="padding: 1.75rem; display: flex; flex-direction: column; gap: 1.25rem; background: rgba(18, 22, 41, 0.45);">
-          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
-            <span class={"verdict-badge " + getVerdictClass(art.verdict)}>
-              {art.verdict}
-            </span>
-            <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 500;">
-              Detección: {new Date(art.published_at).toLocaleDateString('es-ES')}
-            </span>
-          </div>
-
-          <div>
-            <h3 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: -0.02em; line-height: 1.25;">
-              <a href={`/noticia/${art.slug}`} class="article-link">{art.title}</a>
-            </h3>
-            <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.4; margin-bottom: 1rem;">
-              {art.subtitle}
-            </p>
-            <div style="background: rgba(255,255,255,0.02); border-left: 2px solid var(--border-color); padding: 0.85rem 1rem; font-size: 0.85rem; font-style: italic; color: var(--text-muted); border-radius: 0 8px 8px 0; line-height: 1.4;">
-              <strong>Afirmación:</strong> "{art.claim}"
+          {articles.length === 0 && (
+            <div class="cyber-card" style="text-align: center; padding: 3.5rem; color: var(--text-muted); background: rgba(18, 22, 41, 0.3); border-radius: 20px; border: 1px dashed var(--border-color); font-size: 0.9rem;">
+              No hay desmentidos publicados en esta sección. El radar sigue escaneando.
             </div>
+          )}
+        </div>
+      </section>
+
+      <!-- FAQ del Tema -->
+      <section class="cyber-card" style="padding: 1.5rem; background: rgba(18, 22, 41, 0.4); margin-bottom: 2rem;">
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1.25rem; color: var(--neon-purple); letter-spacing: -0.01em;">Preguntas Frecuentes</h3>
+        <div style="display: flex; flex-direction: column; gap: 1.25rem; font-size: 0.85rem; line-height: 1.5;">
+          <div>
+            <strong style="color: var(--text-main); display: block; margin-bottom: 0.25rem;">¿De dónde proceden los datos contrastados?</strong>
+            <p style="color: var(--text-muted);">
+              Se contrastan directamente con el articulado oficial de las leyes vigentes publicadas en el BOE, bases de datos estadísticas oficiales (INE, SEPE) y memorias de la Fiscalía General del Estado.
+            </p>
           </div>
-
-          <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 1rem; font-size: 0.8rem; color: var(--text-muted);">
-            <span>Vía: <strong style="color: var(--text-main);">{art.origin_platform}</strong></span>
-            <a href={`/noticia/${art.slug}`} class="cyber-btn" style="padding: 0.4rem 0.9rem; font-size: 0.75rem; border-radius: 12px; color: var(--neon-blue); border-color: rgba(0, 240, 255, 0.15);">
-              Auditar Datos &rarr;
-            </a>
+          <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
+            <strong style="color: var(--text-main); display: block; margin-bottom: 0.25rem;">¿Hay fuentes oficiales fiables para auditar?</strong>
+            <p style="color: var(--text-muted);">
+              Sí, puedes consultar el catálogo completo de fuentes del Estado y enlaces del BOE al pie de cada artículo de verificación individual.
+            </p>
           </div>
         </div>
-      ))}
+      </section>
+    </div>
 
-      {articles.length === 0 && (
-        <div class="cyber-card" style="text-align: center; padding: 3rem; color: var(--text-muted); background: var(--bg-card); border-radius: 20px; border: 1px dashed var(--border-color); font-size: 0.9rem;">
-          No se han publicado desmentidos para este tema todavía.
+    <!-- ═══ PANEL 4: ENFOQUE POLÍTICO ═══ -->
+    <div id="panel-politica" class="topic-tab-panel">
+      <section class="topic-section">
+        <div class="topic-section-header">
+          <div class="topic-section-icon" style="background: rgba(157, 78, 221, 0.1); color: var(--neon-purple);">🏛️</div>
+          <h2 class="topic-section-title">Programas y Propuestas Políticas</h2>
         </div>
-      )}
-    </section>
 
-    <!-- FAQ del Tema (Integrado en el Feed de forma minimalista) -->
-    <section class="cyber-card" style="padding: 1.5rem; background: rgba(18, 22, 41, 0.4); margin-top: 3rem;">
-      <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1.25rem; color: var(--neon-purple); letter-spacing: -0.01em;">Preguntas Frecuentes</h3>
-      
-      <div style="display: flex; flex-direction: column; gap: 1.25rem; font-size: 0.85rem; line-height: 1.5;">
-        <div>
-          <strong style="color: var(--text-main); display: block; margin-bottom: 0.25rem;">¿Por qué se viraliza esto ahora?</strong>
-          <p style="color: var(--text-muted);">
-            Suele dispararse en períodos pre-electorales o tras debates parlamentarios acalorados sobre memoria democrática o migración.
-          </p>
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+          {policyMeasures.map(pm => (
+            <div class="cyber-card" style="padding: 1.75rem; background: rgba(18, 22, 41, 0.45); display: flex; flex-direction: column; gap: 1.25rem;">
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 0.75rem;">
+                <span style="background: rgba(0, 240, 255, 0.06); color: var(--neon-blue); border: 1px solid rgba(0, 240, 255, 0.2); font-size: 0.7rem; font-weight: 800; padding: 0.3rem 0.65rem; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.04em;">
+                  Propuesta electoral {pm.party_name}
+                </span>
+                <span style="color: var(--text-muted); font-size: 0.8rem;">
+                  Área: <strong>{pm.area}</strong>
+                </span>
+              </div>
+
+              <div>
+                <h4 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main); font-family: var(--font-title);">
+                  {pm.title}
+                </h4>
+                <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 1rem;">
+                  {pm.plain_language_summary}
+                </p>
+
+                <div style="background: rgba(255, 255, 255, 0.015); border-left: 3px solid var(--neon-blue); padding: 0.75rem 1rem; border-radius: 0 8px 8px 0; margin-bottom: 0.75rem;">
+                  <strong style="font-size: 0.75rem; text-transform: uppercase; color: var(--neon-blue); display: block; margin-bottom: 0.25rem;">Texto del Programa:</strong>
+                  <span style="font-size: 0.82rem; color: var(--text-muted); font-style: italic; line-height: 1.5; display: block;">
+                    "{pm.original_text}"
+                  </span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr; gap: 0.75rem; margin-top: 1rem;">
+                  <div style="background: rgba(0, 245, 160, 0.02); border: 1px solid rgba(0, 245, 160, 0.08); padding: 0.75rem 1rem; border-radius: 12px;">
+                    <strong style="font-size: 0.72rem; text-transform: uppercase; color: var(--neon-green); display: block; margin-bottom: 0.15rem;">Impacto Estimado:</strong>
+                    <span style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; display: block;">
+                      {pm.possible_impact}
+                    </span>
+                  </div>
+                  <div style="background: rgba(255, 176, 32, 0.02); border: 1px solid rgba(255, 176, 32, 0.08); padding: 0.75rem 1rem; border-radius: 12px;">
+                    <strong style="font-size: 0.72rem; text-transform: uppercase; color: var(--neon-amber); display: block; margin-bottom: 0.15rem;">Colectivos Afectados:</strong>
+                    <span style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; display: block;">
+                      {pm.target_groups}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 0.85rem; font-size: 0.78rem; color: var(--text-muted);">
+                <span>Programa 2023</span>
+                {pm.source_page && (
+                  <span style="color: var(--neon-blue);">Página {pm.source_page}</span>
+                )}
+              </div>
+            </div>
+          ))}
+
+          {policyMeasures.length === 0 && (
+            <div class="cyber-card" style="text-align: center; padding: 3.5rem; color: var(--text-muted); background: rgba(18, 22, 41, 0.3); border-radius: 20px; border: 1px dashed var(--border-color); font-size: 0.9rem;">
+              No hay propuestas electorales o medidas gubernamentales específicas registradas para este tema en la base de datos.
+            </div>
+          )}
         </div>
-        <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
-          <strong style="color: var(--text-main); display: block; margin-bottom: 0.25rem;">¿Hay fuentes oficiales fiables?</strong>
-          <p style="color: var(--text-muted);">
-            Sí, los registros del Boletín Oficial del Estado (BOE), el Instituto Nacional de Estadística (INE) y bases de datos históricas académicas.
-          </p>
-        </div>
-      </div>
-    </section>
+      </section>
+    </div>
 
     <!-- Buscador Rápido -->
-    <section class="cyber-card" style="padding: 1.5rem; background: rgba(18, 22, 41, 0.3); text-align: center; border-style: dashed; margin-top: 2rem;">
-      <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main);">¿Has detectado otro bulo?</h3>
+    <section class="cyber-card" style="padding: 1.5rem; background: rgba(18, 22, 41, 0.3); text-align: center; border-style: dashed; margin-bottom: 2rem;">
+      <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main);">¿Has detectado bulos sobre este tema?</h3>
       <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.4; margin-bottom: 1.25rem; max-width: 400px; margin-left: auto; margin-right: auto;">
-        Si tienes capturas o links sobre este tema que no estén en la lista, envíanoslos para auditar.
+        Ayúdanos a recopilar evidencias enviando capturas de publicaciones de redes al buzón del radar.
       </p>
       <a href="/buscador" class="cyber-btn accent" style="width: 100%; max-width: 250px; border-radius: 12px; font-size: 0.75rem;">
-        Enviar al Radar
+        Buscar o reportar bulo
       </a>
     </section>
 
   </div>
 </Layout>
 
+<script is:inline>
+  document.addEventListener('DOMContentLoaded', () => {
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const panels = document.querySelectorAll('.topic-tab-panel');
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Remover clase activa de todos los botones y paneles
+        tabButtons.forEach(b => b.classList.remove('active'));
+        panels.forEach(p => p.classList.remove('active'));
+
+        // Activar el botón actual
+        btn.classList.add('active');
+
+        // Activar el panel correspondiente
+        const targetId = btn.getAttribute('data-target');
+        const targetPanel = document.getElementById(targetId);
+        if (targetPanel) {
+          targetPanel.classList.add('active');
+        }
+      });
+    });
+  });
+</script>
+
 <style>
   .article-link:hover {
     color: var(--neon-blue) !important;
   }
+  
+  /* Estilos de pestañas (Tabs) */
+  .topic-tabs-nav {
+    display: flex;
+    gap: 0.6rem;
+    margin: 1.5rem 0;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.75rem;
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+  }
+  .topic-tabs-nav::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+  }
+  .tab-btn {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    padding: 0.65rem 1.15rem;
+    border-radius: 12px;
+    font-family: var(--font-title);
+    font-weight: 700;
+    font-size: 0.82rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .tab-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-main);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  .tab-btn.active {
+    background: rgba(0, 240, 255, 0.08);
+    color: var(--neon-blue);
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.15);
+  }
+  
+  .topic-tab-panel {
+    display: none;
+    animation: tabFadeIn 0.35s ease-out forwards;
+  }
+  .topic-tab-panel.active {
+    display: block;
+  }
+  
+  @keyframes tabFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 </style>
-
-<script is:inline>
-  document.addEventListener('DOMContentLoaded', () => {
-    const tabs = document.querySelectorAll('.tab-btn');
-    const panes = document.querySelectorAll('.tab-pane');
-
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        // Remover clase activa de todos los botones
-        tabs.forEach(t => {
-          t.classList.remove('active');
-          t.style.borderBottomColor = 'transparent';
-          t.style.color = 'var(--text-muted)';
-        });
-
-        // Ocultar todos los paneles
-        panes.forEach(pane => {
-          pane.style.display = 'none';
-        });
-
-        // Activar pestaña clickeada
-        tab.classList.add('active');
-        tab.style.borderBottomColor = 'var(--neon-blue)';
-        tab.style.color = 'var(--neon-blue)';
-
-        // Mostrar panel correspondiente
-        const targetId = `pane-${tab.getAttribute('data-tab')}`;
-        const targetPane = document.getElementById(targetId);
-        if (targetPane) {
-          targetPane.style.display = 'block';
-        }
-      });
-    });
-
-    // Inicializar estilos de la pestaña activa al cargar
-    const activeTab = document.querySelector('.tab-btn.active');
-    if (activeTab) {
-      activeTab.style.borderBottomColor = 'var(--neon-blue)';
-      activeTab.style.color = 'var(--neon-blue)';
-    }
-  });
-</script>

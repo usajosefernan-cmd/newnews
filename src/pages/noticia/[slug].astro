@@ -6,6 +6,8 @@ import path from 'node:path';
 export async function getStaticPaths() {
   const dbPath = path.resolve('data/newnews.db');
   const db = new DatabaseSync(dbPath);
+  db.exec('PRAGMA busy_timeout = 5000;');
+  db.exec('PRAGMA journal_mode = WAL;');
   const articles = db.prepare("SELECT slug FROM articles WHERE status = 'publicado'").all();
   db.close();
 
@@ -18,6 +20,8 @@ const { slug } = Astro.params;
 
 const dbPath = path.resolve('data/newnews.db');
 const db = new DatabaseSync(dbPath);
+db.exec('PRAGMA busy_timeout = 5000;');
+db.exec('PRAGMA journal_mode = WAL;');
 
 // Cargar artículo
 const article = db.prepare(`
@@ -44,6 +48,35 @@ const getVerdictClass = (verdict) => {
   return 'purple';
 };
 
+function getRelativeTime(dateString) {
+  if (!dateString) return 'hace un momento';
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  if (isNaN(diffMs)) return 'hace un momento';
+  const diffMin = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffMin < 1) return 'hace unos segundos';
+  if (diffMin < 60) return `hace ${diffMin} min`;
+  if (diffHours < 24) return `hace ${diffHours} h`;
+  return `hace ${diffDays} días`;
+}
+
+function formatOriginalDate(dateString) {
+  if (!dateString) return 'Reciente';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
+  return date.toLocaleDateString('es-ES', { 
+    day: '2-digit', 
+    month: '2-digit', 
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
 // Helpers auxiliares de metadatos sociales
 const getDeterministicGradient = (username) => {
   const gradients = [
@@ -63,15 +96,44 @@ const getDeterministicGradient = (username) => {
 };
 
 const formatDisplayName = (username) => {
-  if (username.toLowerCase() === 'alviseperez') return 'Alvise Pérez';
-  if (username.toLowerCase() === 'empleo_es') return 'Ministerio de Trabajo';
-  if (username.toLowerCase() === 'comisioneuropea') return 'Comisión Europea';
+  const u = username.toLowerCase();
+  if (u === 'alviseperez') return 'Alvise Pérez';
+  if (u === 'alvsjng') return 'Alvisjng';
+  if (u === 'vox_es') return 'VOX España';
+  if (u === 'ppopular') return 'Partido Popular';
+  if (u === 'psoe') return 'PSOE';
+  if (u === 'empleo_es') return 'Ministerio de Trabajo';
+  if (u === 'comisioneuropea') return 'Comisión Europea';
   return username
     .replace(/[_\-]/g, ' ')
     .split(' ')
     .map(w => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ');
 };
+
+function getDeterministicMetrics(slug) {
+  let hash = 0;
+  for (let i = 0; i < slug.length; i++) {
+    hash = slug.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const likesVal = Math.abs((hash % 150) + 120) * 100 + 450;
+  const repostsVal = Math.round(likesVal * 0.38);
+  const commentsVal = Math.round(likesVal * 0.12);
+  const viewsVal = Math.round(likesVal * 15.5);
+
+  const formatNumber = (num) => {
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toString();
+  };
+
+  return {
+    likes: formatNumber(likesVal),
+    reposts: formatNumber(repostsVal),
+    comments: formatNumber(commentsVal),
+    views: formatNumber(viewsVal),
+    rawLikes: likesVal.toLocaleString('es-ES')
+  };
+}
 
 const getInitials = (displayName) => {
   return displayName
@@ -85,13 +147,19 @@ const getInitials = (displayName) => {
 const getSocialPostMeta = (url, platform) => {
   if (!url) return null;
   const lowerPlat = platform.toLowerCase();
-  const dateStr = new Date(article.published_at).toLocaleString('es-ES', {
+  
+  // Usar la fecha original de publicacion (origin_date) si está disponible, si no published_at
+  const dateObj = article.origin_date ? new Date(article.origin_date) : new Date(article.published_at);
+  const dateStr = dateObj.toLocaleString('es-ES', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit'
   });
+
+  const verifiedAccounts = ['alviseperez', 'vox_es', 'ppopular', 'psoe', 'empleo_es', 'comisioneuropea'];
+  const metrics = getDeterministicMetrics(article.slug);
 
   // 1. TELEGRAM
   if (lowerPlat.includes('telegram') || url.includes('t.me') || url.includes('telegram.me')) {
@@ -106,11 +174,12 @@ const getSocialPostMeta = (url, platform) => {
       username: `@${rawUser}`,
       postId: `#${postId}`,
       displayName,
-      verified: rawUser.toLowerCase() === 'alviseperez',
+      verified: verifiedAccounts.includes(rawUser.toLowerCase()),
       avatarColor,
       initials: getInitials(displayName),
       dateStr,
-      url
+      url,
+      metrics
     };
   }
 
@@ -127,11 +196,12 @@ const getSocialPostMeta = (url, platform) => {
       username: `@${rawUser}`,
       postId: postId ? `post: ${postId.substring(0, 8)}...` : '',
       displayName,
-      verified: rawUser.toLowerCase() === 'empleo_es' || rawUser.toLowerCase() === 'comisioneuropea',
+      verified: verifiedAccounts.includes(rawUser.toLowerCase()),
       avatarColor,
       initials: getInitials(displayName),
       dateStr,
-      url
+      url,
+      metrics
     };
   }
 
@@ -147,15 +217,57 @@ const getSocialPostMeta = (url, platform) => {
       username: `@${rawUser}`,
       postId: 'Post',
       displayName,
-      verified: false,
+      verified: verifiedAccounts.includes(rawUser.toLowerCase()),
       avatarColor,
       initials: getInitials(displayName),
       dateStr,
-      url
+      url,
+      metrics
     };
   }
 
-  return null;
+  // 4. YOUTUBE
+  if (lowerPlat.includes('youtube') || url.includes('youtube.com') || url.includes('youtu.be')) {
+    let youtubeId = '';
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    if (match && match[2].length === 11) {
+      youtubeId = match[2];
+    }
+    
+    return {
+      type: 'youtube',
+      youtubeId,
+      url,
+      dateStr,
+      metrics
+    };
+  }
+
+  // 5. TIKTOK
+  if (lowerPlat.includes('tiktok') || url.includes('tiktok.com')) {
+    let tiktokVideoId = '';
+    const match = url.match(/\/video\/(\d+)/);
+    if (match) {
+      tiktokVideoId = match[1];
+    }
+
+    return {
+      type: 'tiktok',
+      tiktokVideoId,
+      url,
+      dateStr,
+      metrics
+    };
+  }
+
+  // Fallback genérico para cualquier URL
+  return {
+    type: 'generic',
+    url,
+    dateStr,
+    metrics
+  };
 };
 
 const socialMeta = getSocialPostMeta(article.origin_url, article.origin_platform);
@@ -177,8 +289,13 @@ const socialMeta = getSocialPostMeta(article.origin_url, article.origin_platform
             {article.category}
           </span>
           <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 500;">
-            Publicado el {new Date(article.published_at).toLocaleDateString('es-ES')}
+            Incorporado a la web: <strong style="color: var(--neon-blue);">{getRelativeTime(article.published_at)}</strong>
           </span>
+          {article.origin_date && (
+            <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 500;">
+              &bull; Publicación original: <strong style="color: var(--text-main);">{formatOriginalDate(article.origin_date)}</strong>
+            </span>
+          )}
         </div>
         <h1 style="font-size: 2.2rem; line-height: 1.2; font-weight: 800; letter-spacing: -0.03em; color: var(--text-main);">
           {article.title}
@@ -211,157 +328,81 @@ const socialMeta = getSocialPostMeta(article.origin_url, article.origin_platform
     <!-- Ficha del Claim y el Origen -->
     <section style="margin-bottom: 2.5rem; display: flex; flex-direction: column; gap: 1.5rem;">
       
-      <!-- Detalle Técnico de la Afirmación y Caja de Origen (Mockups Fidedignos) -->
-      {socialMeta ? (
+      <!-- Detalle Técnico de la Afirmación y Caja de Origen (Mockups       {socialMeta ? (
         <div class="cyber-card" style={{ padding: '1.5rem', background: 'rgba(18, 22, 41, 0.45)', borderColor: socialMeta.type === 'telegram' ? 'rgba(0, 136, 204, 0.25)' : socialMeta.type === 'x' ? 'rgba(255,255,255,0.1)' : 'rgba(220, 39, 67, 0.25)' }}>
-          <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-rose); font-size: 0.7rem; letter-spacing: 0.05em; display: block; margin-bottom: 1rem;">Publicación Viral Identificada (Captura de Origen)</span>
+          <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-rose); font-size: 0.7rem; letter-spacing: 0.05em; display: block; margin-bottom: 1rem;">
+            Publicación Viral Original (Incrustada en Vivo)
+          </span>
           
-          {/* MOCKUP: TELEGRAM */}
+          {/* EMBED: YOUTUBE */}
+          {socialMeta.type === 'youtube' && socialMeta.youtubeId && (
+            <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; border-radius: 16px; border: 1px solid var(--border-color); margin-bottom: 1.25rem; background: #000;">
+              <iframe 
+                src={`https://www.youtube.com/embed/${socialMeta.youtubeId}`} 
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen
+              ></iframe>
+            </div>
+          )}
+
+          {/* EMBED: TELEGRAM */}
           {socialMeta.type === 'telegram' && (
-            <div style="background: rgba(10, 15, 30, 0.6); border: 1px solid rgba(0, 136, 204, 0.3); border-radius: 12px; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin-bottom: 1.25rem;">
-              <!-- Cabecera de Telegram Canal -->
-              <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0, 136, 204, 0.06); padding: 0.75rem 1rem; border-bottom: 1px solid rgba(0, 136, 204, 0.15);">
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                  <!-- Avatar Circular -->
-                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: socialMeta.avatarColor, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '700', fontSize: '0.95rem', boxShadow: '0 0 10px rgba(0, 136, 204, 0.25)' }}>
-                    {socialMeta.initials}
-                  </div>
-                  <!-- Información del Canal -->
-                  <div style="display: flex; flex-direction: column;">
-                    <div style="display: flex; align-items: center; gap: 0.25rem;">
-                      <span style="color: #ffffff; font-weight: 700; font-size: 0.9rem; line-height: 1.2;">{socialMeta.displayName}</span>
-                      {socialMeta.verified && (
-                        <span style="color: #0088cc; font-size: 0.8rem; font-weight: bold; cursor: default;" title="Canal Verificado">✓</span>
-                      )}
-                    </div>
-                    <span style="color: #0088cc; font-size: 0.75rem; font-weight: 500;">{socialMeta.username}</span>
-                  </div>
-                </div>
-                <div style="display: flex; flex-direction: column; align-items: flex-end; font-size: 0.7rem; color: #a0aec0;">
-                  <span style="font-weight: 600; color: rgba(0, 136, 204, 0.85);">{socialMeta.postId}</span>
-                  <span>{socialMeta.dateStr}</span>
-                </div>
-              </div>
-              <!-- Mensaje y Claim -->
-              <div style="padding: 1.25rem; background: rgba(7, 9, 19, 0.4); border-bottom: 1px solid rgba(255,255,255,0.03);">
-                <span style="color: var(--neon-rose); font-weight: 800; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">Afirmación Textual:</span>
-                <p style="font-style: italic; color: #e2e8f0; font-size: 0.95rem; font-weight: 500; line-height: 1.5; margin: 0; padding-left: 0.75rem; border-left: 2px solid var(--neon-rose);">
-                  "{article.claim}"
-                </p>
-              </div>
-              <!-- Contexto del Origen -->
-              <div style="padding: 1rem 1.25rem; font-size: 0.85rem; color: #a0aec0; line-height: 1.5;">
-                <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">Contexto de Difusión:</span>
-                <p style="margin: 0;">{article.origin_summary}</p>
-              </div>
+            <div style="margin-bottom: 1.25rem; width: 100%;">
+              <iframe 
+                src={`${socialMeta.url.replace('t.me/', 't.me/s/')}?embed=1`} 
+                style="width: 100%; border: none; height: 380px; background: rgba(7, 9, 19, 0.7); border-radius: 12px;"
+                title="Telegram Embed"
+              ></iframe>
             </div>
           )}
 
-          {/* MOCKUP: TWITTER / X */}
+          {/* EMBED: TWITTER / X */}
           {socialMeta.type === 'x' && (
-            <div style="background: #000000; border: 1px solid #2f3336; border-radius: 12px; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 1rem; margin-bottom: 1.25rem; position: relative;">
-              <!-- Logo X flotante -->
-              <div style="position: absolute; top: 1rem; right: 1rem; color: #ffffff; font-size: 1.1rem; font-weight: 900; opacity: 0.8;">𝕏</div>
-              
-              <!-- Cabecera -->
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; margin-bottom: 1.25rem; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+              <blockquote class="twitter-tweet" data-theme="dark" data-align="center" style="margin: 0 auto; max-width: 100%;">
+                <a href={socialMeta.url}>Cargando publicación interactiva de X...</a>
+              </blockquote>
+              <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+            </div>
+          )}
+
+          {/* EMBED: TIKTOK */}
+          {socialMeta.type === 'tiktok' && (
+            <div style="display: flex; justify-content: center; margin-bottom: 1.25rem; width: 100%; max-height: 580px; overflow-y: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); padding: 0.5rem;">
+              <blockquote class="tiktok-embed" data-video-id={socialMeta.tiktokVideoId} style="max-width: 605px; min-width: 325px; margin: 0 auto;">
+                <section>
+                  <a target="_blank" title="TikTok" href={socialMeta.url}>Cargando vídeo oficial de TikTok...</a>
+                </section>
+              </blockquote>
+              <script async src="https://www.tiktok.com/embed.js"></script>
+            </div>
+          )}
+
+          {/* FALLBACK: INSTAGRAM Y OTROS */}
+          {(socialMeta.type === 'instagram' || socialMeta.type === 'generic') && (
+            <div style="background: rgba(10, 15, 30, 0.6); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem;">
               <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.85rem;">
-                <!-- Avatar Circular -->
-                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: socialMeta.avatarColor, display: 'flex', alignItems: 'center', justifycontent: 'center', color: 'white', fontWeight: '700', fontSize: '0.95rem' }}>
-                  {socialMeta.initials}
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-card-hover); display: flex; alignItems: center; justifyContent: center; font-weight: bold; color: var(--neon-blue);">
+                  🔗
                 </div>
-                <!-- Handles -->
-                <div style="display: flex; flex-direction: column;">
-                  <div style="display: flex; align-items: center; gap: 0.25rem;">
-                    <span style="color: #ffffff; font-weight: 700; font-size: 0.9rem; line-height: 1.2;">{socialMeta.displayName}</span>
-                    {socialMeta.verified && (
-                      <span style="color: #1d9bf0; font-size: 0.8rem;" title="Cuenta Oficial Verificada">✓</span>
-                    )}
-                  </div>
-                  <span style="color: #6e767d; font-size: 0.8rem;">{socialMeta.username}</span>
+                <div>
+                  <span style="color: #ffffff; font-weight: 700; font-size: 0.9rem; display: block;">Publicación en {article.origin_platform}</span>
+                  <span style="color: var(--text-muted); font-size: 0.75rem;">{socialMeta.dateStr}</span>
                 </div>
               </div>
-
-              <!-- Mensaje / Claim -->
-              <div style="margin-bottom: 0.85rem;">
-                <p style="color: #e7e9ea; font-size: 0.95rem; line-height: 1.5; margin: 0; font-style: italic; border-left: 2px solid var(--neon-rose); padding-left: 0.75rem;">
-                  "{article.claim}"
-                </p>
-              </div>
-
-              <!-- Fecha, hora y metadata de visualización -->
-              <div style="font-size: 0.75rem; color: #6e767d; border-bottom: 1px solid #2f3336; padding-bottom: 0.75rem; margin-bottom: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                <span>{socialMeta.dateStr.split(',')[1]?.trim() || '12:00'}</span>
-                <span>·</span>
-                <span>{socialMeta.dateStr.split(',')[0]}</span>
-                <span>·</span>
-                <span style="color: #1d9bf0; font-weight: 600;">Visualizaciones en Redes</span>
-              </div>
-
-              <!-- Fila de interacciones de X (Like, Retweet, etc.) -->
-              <div style="display: flex; justify-content: space-around; font-size: 0.75rem; color: #6e767d; padding-top: 0.25rem;">
-                <span style="display: flex; align-items: center; gap: 0.3rem;">💬 <strong style="color: #e7e9ea;">1.2K</strong></span>
-                <span style="display: flex; align-items: center; gap: 0.3rem;">🔁 <strong style="color: #e7e9ea;">4.8K</strong></span>
-                <span style="display: flex; align-items: center; gap: 0.3rem;">❤️ <strong style="color: #e7e9ea;">12.5K</strong></span>
-                <span style="display: flex; align-items: center; gap: 0.3rem;">📊 <strong style="color: #e7e9ea;">180K</strong></span>
-              </div>
+              <p style="font-style: italic; color: #e2e8f0; font-size: 0.95rem; line-height: 1.5; border-left: 2px solid var(--neon-rose); padding-left: 0.75rem; margin-bottom: 1rem;">
+                "{article.claim}"
+              </p>
+              <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin: 0;">
+                {article.origin_summary}
+              </p>
             </div>
           )}
 
-          {/* MOCKUP: INSTAGRAM */}
-          {socialMeta.type === 'instagram' && (
-            <div style="background: #000000; border: 1px solid #262626; border-radius: 12px; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin-bottom: 1.25rem;">
-              <!-- Cabecera -->
-              <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem;">
-                <div style="display: flex; align-items: center; gap: 0.6rem;">
-                  <!-- Borde gradiente de historias de Instagram -->
-                  <div style="padding: 2px; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#000000', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '700', fontSize: '0.8rem' }}>
-                      {socialMeta.initials}
-                    </div>
-                  </div>
-                  <div style="display: flex; flex-direction: column;">
-                    <span style="color: #ffffff; font-weight: 700; font-size: 0.85rem; line-height: 1.2;">{socialMeta.displayName}</span>
-                    <span style="color: #a8a8a8; font-size: 0.7rem;">{socialMeta.username}</span>
-                  </div>
-                </div>
-                <div style="color: #ffffff; font-size: 1rem; cursor: pointer; letter-spacing: 1px;">•••</div>
-              </div>
-
-              <!-- Cuadro de Imagen Simulada (Premium Gradient Post) -->
-              <div style="width: 100%; aspect-ratio: 1; background: linear-gradient(135deg, rgba(220, 39, 67, 0.15) 0%, rgba(7, 9, 19, 0.95) 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; border-top: 1px solid #262626; border-bottom: 1px solid #262626; text-align: center; box-sizing: border-box; position: relative;">
-                <!-- Icono de advertencia de bulo -->
-                <div style="font-size: 3rem; margin-bottom: 0.75rem; text-shadow: 0 0 20px rgba(220, 39, 67, 0.4);">⚠️</div>
-                <span style="color: var(--neon-rose); font-weight: 800; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 0.5rem;">Afirmación Detectada</span>
-                <p style="color: #ffffff; font-size: 0.95rem; font-style: italic; line-height: 1.4; margin: 0; font-weight: 600; max-width: 320px;">
-                  "{article.claim}"
-                </p>
-                <div style="position: absolute; bottom: 0.75rem; right: 0.75rem; background: rgba(0,0,0,0.7); color: #fff; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">1 / 1</div>
-              </div>
-
-              <!-- Fila de botones de interacción -->
-              <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem 0.5rem 1rem;">
-                <div style="display: flex; gap: 0.85rem; font-size: 1.1rem;">
-                  <span style="cursor: pointer;">❤️</span>
-                  <span style="cursor: pointer;">💬</span>
-                  <span style="cursor: pointer;">📤</span>
-                </div>
-                <div style="font-size: 1.1rem; cursor: pointer;">🔖</div>
-              </div>
-
-              <!-- Likes y Pie del Post -->
-              <div style="padding: 0 1rem 1rem 1rem; font-size: 0.8rem; line-height: 1.4; font-family: -apple-system, sans-serif;">
-                <span style="color: #ffffff; font-weight: 700; display: block; margin-bottom: 0.25rem;">Les gusta a 14.820 personas</span>
-                <p style="color: #f5f5f5; margin: 0;">
-                  <strong style="color: #ffffff; margin-right: 0.4rem;">{socialMeta.username}</strong>
-                  {article.origin_summary}
-                </p>
-                <span style="color: #a8a8a8; font-size: 0.65rem; text-transform: uppercase; display: block; margin-top: 0.5rem;">{socialMeta.dateStr.split(',')[0]}</span>
-              </div>
-            </div>
-          )}
-
-          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
-            <span>Plataforma: <strong style={{ color: socialMeta.type === 'telegram' ? '#0088cc' : socialMeta.type === 'x' ? '#ffffff' : '#cc2366' }}>{article.origin_platform}</strong></span>
+          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+            <span>Plataforma: <strong style={{ color: socialMeta.type === 'telegram' ? '#0088cc' : socialMeta.type === 'x' ? '#ffffff' : socialMeta.type === 'youtube' ? '#ff0000' : '#cc2366' }}>{article.origin_platform}</strong></span>
             <a href={socialMeta.url} target="_blank" rel="noopener noreferrer" style="color: var(--neon-blue); text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 0.25rem;">
               Ver publicación original <span style="font-size: 0.9rem;">&rarr;</span>
             </a>

@@ -64,7 +64,7 @@ const getVerdictClass = (verdict) => {
                 {art.verdict}
               </span>
               <a 
-                href={`/categoria/${art.category.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-')}`}
+                href={`/categoria/${art.category.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')}`}
                 style="font-size: 0.7rem; font-weight: bold; color: var(--text-muted); text-decoration: none; text-transform: uppercase;"
               >
                 #{art.category}

@@ -5,6 +5,16 @@ import Layout from '../layouts/Layout.astro';
 
 const dbPath = path.resolve('data/newnews.db');
 const db = new DatabaseSync(dbPath);
+db.exec('PRAGMA busy_timeout = 5000;');
+db.exec('PRAGMA journal_mode = WAL;');
+
+// Obtener categorías dinámicas
+const rawCategories = db.prepare("SELECT DISTINCT category FROM articles WHERE status = 'publicado'").all() as any[];
+const categories = rawCategories.map(c => {
+  const cat = c.category;
+  const slug = cat.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+  return { name: cat, slug };
+}).filter(c => c.name);
 
 // Obtener todos los temas activos con indicadores dinámicos
 const topics = db.prepare(`
@@ -16,10 +26,10 @@ const topics = db.prepare(`
          ) as noise_level
   FROM topics t 
   WHERE t.status = 'activo' 
-  LIMIT 4
+  ORDER BY t.title
 `).all();
 
-// Obtener todas las piezas publicadas ordenadas por fecha
+// Obtener las piezas publicadas ordenadas por fecha
 const articles = db.prepare(`
   SELECT a.*, t.title as topic_title, t.slug as topic_slug 
   FROM articles a
@@ -28,10 +38,25 @@ const articles = db.prepare(`
   ORDER BY a.published_at DESC
 `).all();
 
+// Obtener últimos items del radar
+const radarItems = db.prepare(`
+  SELECT * FROM scraped_items 
+  WHERE status = 'pendiente' 
+  ORDER BY virality_score DESC
+  LIMIT 6
+`).all();
+
+// Obtener fuentes oficiales
+const officialSourceCount = (() => {
+  try { return db.prepare("SELECT COUNT(*) as c FROM official_sources WHERE status = 'activo'").get().c; } 
+  catch(e) { return 0; }
+})();
+
 db.close();
 
 const featuredArticle = articles.length > 0 ? articles[0] : null;
 const remainingArticles = articles.length > 1 ? articles.slice(1) : [];
+const hasArticles = articles.length > 0;
 
 function getVerdictClass(verdict) {
   const v = (verdict || '').toLowerCase();
@@ -41,7 +66,6 @@ function getVerdictClass(verdict) {
   return 'purple';
 }
 
-// Iniciales ilustrativas de categoría para avatares minimalistas
 function getCategoryInitials(category) {
   const c = (category || '').toLowerCase();
   if (c.includes('migr') || c.includes('socied')) return 'MG';
@@ -50,20 +74,53 @@ function getCategoryInitials(category) {
   if (c.includes('polit') || c.includes('parti')) return 'PL';
   return 'EX';
 }
+
+function getCategorySlug(category) {
+  return (category || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+}
+
+function getRelativeTime(dateString) {
+  if (!dateString) return 'hace un momento';
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  if (isNaN(diffMs)) return 'hace un momento';
+  const diffMin = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffMin < 1) return 'hace unos segundos';
+  if (diffMin < 60) return `hace ${diffMin} min`;
+  if (diffHours < 24) return `hace ${diffHours} h`;
+  return `hace ${diffDays} días`;
+}
+
+function formatOriginalDate(dateString) {
+  if (!dateString) return 'Reciente';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString; // Si no es parseable, devolver como esta
+  return date.toLocaleDateString('es-ES', { 
+    day: '2-digit', 
+    month: '2-digit', 
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
 ---
 
-<Layout title="Radar de Desinformación - España">
-  <!-- Radar Ticker de Noticias -->
+<Layout title="Radar de Desinformación - España" activeNav="radar">
+  <!-- Radar Ticker -->
   <div class="radar-ticker">
     <div class="radar-content">
       <span class="pulse-icon"></span>
       <div class="ticker-wrapper" style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
         <div class="ticker-track">
-          <span>RADAR: El bulo sobre el impuesto a cuentas bancarias...</span>
+          <span>NEWNEWS: Solo datos oficiales. Sin intermediarios. Sin fact-checkers.</span>
           <span>&bull;</span>
-          <span>DESMENTIDO: Prestaciones de 4.200€ al mes para menores extranjeros tutelados es falso...</span>
+          <span>FUENTES: BOE · INE · SEPE · Congreso · Tribunal Supremo · Banco de España</span>
           <span>&bull;</span>
-          <span>VIVIENDA: Diferencias legales entre usurpación y allanamiento explicadas con datos...</span>
+          <span>{topics.length} EXPEDIENTES ACTIVOS · {officialSourceCount} FUENTES OFICIALES INDEXADAS</span>
         </div>
       </div>
     </div>
@@ -71,7 +128,7 @@ function getCategoryInitials(category) {
 
   <div class="container" style="padding-top: 1.5rem; padding-bottom: 5rem;">
     
-    <!-- Instagram Stories Bar (Expedientes Rápidos) -->
+    <!-- Expedientes Activos (Stories) -->
     <section style="margin-bottom: 2rem;">
       <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.1em; display: block; margin-bottom: 0.75rem; padding-left: 0.25rem;">Expedientes Activos</span>
       <div class="no-scrollbar" style="display: flex; gap: 1.25rem; overflow-x: auto; padding: 0.25rem; scroll-behavior: smooth; -webkit-overflow-scrolling: touch;">
@@ -106,138 +163,289 @@ function getCategoryInitials(category) {
       </div>
     </section>
 
-    <!-- Fichas Móviles / Feed Principal (Tipo Instagram/TikTok) -->
+    <!-- Selector de Categorías -->
+    <section style="margin: 0.5rem 0 1.5rem;">
+      <div class="no-scrollbar" style="display: flex; gap: 0.5rem; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 0.25rem;">
+        <a href="/" class="cyber-btn" style="padding: 0.4rem 1rem; font-size: 0.75rem; border-radius: 30px; background: rgba(0, 240, 255, 0.06); border-color: rgba(0,240,255,0.2); color: var(--neon-blue); white-space: nowrap;">Todos los Expedientes</a>
+        {categories.map(c => (
+          <a href={"/categoria/" + c.slug} class="cyber-btn" style="padding: 0.4rem 1rem; font-size: 0.75rem; border-radius: 30px; white-space: nowrap; color: var(--text-main); border-color: rgba(255,255,255,0.1);">
+            📁 {c.name}
+          </a>
+        ))}
+      </div>
+    </section>
+
+    {/* ═══ CONTENIDO PRINCIPAL ═══ */}
     <div style="display: flex; flex-direction: column; gap: 2rem;">
-      
-      <!-- Ficha Destacada (Hero Post) -->
-      {featuredArticle && (
-        <section>
-          <div class={"cyber-card " + getVerdictClass(featuredArticle.verdict)} style="padding: 1.75rem; background: linear-gradient(180deg, rgba(18, 22, 41, 0.8) 0%, rgba(7, 9, 19, 0.95) 100%);">
-            
-            <!-- Cabecera de la Ficha (Estilo Red Social) -->
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
-              <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(0, 240, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.25); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; color: var(--neon-blue);">
-                  {getCategoryInitials(featuredArticle.category)}
-                </div>
-                <div>
-                  <a href={"/tema/" + featuredArticle.topic_slug} style="font-size: 0.85rem; font-weight: 700; color: var(--text-main); display: block;">
-                    {featuredArticle.topic_title}
-                  </a>
-                  <span style="font-size: 0.7rem; color: var(--text-muted); display: block;">
-                    Radar &bull; {new Date(featuredArticle.published_at).toLocaleDateString('es-ES')}
+
+      {hasArticles ? (
+        <>
+          {/* Ficha Destacada */}
+          {featuredArticle && (
+            <section>
+              <div class={"cyber-card " + getVerdictClass(featuredArticle.verdict)} style="padding: 1.75rem; background: linear-gradient(180deg, rgba(18, 22, 41, 0.8) 0%, rgba(7, 9, 19, 0.95) 100%);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+                  <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <a href={"/categoria/" + getCategorySlug(featuredArticle.category)} style="text-decoration: none;" title={`Categoría: ${featuredArticle.category}`}>
+                      <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(0, 240, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.25); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; color: var(--neon-blue);">
+                        {getCategoryInitials(featuredArticle.category)}
+                      </div>
+                    </a>
+                    <div>
+                      <a href={"/tema/" + featuredArticle.topic_slug} style="font-size: 0.85rem; font-weight: 700; color: var(--text-main); display: block;">
+                        {featuredArticle.topic_title}
+                      </a>
+                      <span style="font-size: 0.7rem; color: var(--text-muted); display: block;">
+                        Categoría: <a href={"/categoria/" + getCategorySlug(featuredArticle.category)} style="color: var(--neon-blue); text-decoration: none; font-weight: 700;">{featuredArticle.category}</a> &bull; Incorporado: <strong style="color: var(--neon-blue);">{getRelativeTime(featuredArticle.published_at)}</strong>
+                      </span>
+                    </div>
+                  </div>
+                  <span class={"verdict-badge " + getVerdictClass(featuredArticle.verdict)}>
+                    {featuredArticle.verdict}
                   </span>
                 </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                  <a href={"/noticia/" + featuredArticle.slug}>
+                    <h2 style="font-size: 1.75rem; line-height: 1.2; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.75rem; color: var(--text-main);">
+                      {featuredArticle.title}
+                    </h2>
+                  </a>
+                  <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.5;">
+                    {featuredArticle.subtitle}
+                  </p>
+                </div>
+
+                <div style="background: rgba(255, 51, 102, 0.02); border-left: 2px solid var(--neon-rose); padding: 1rem 1.25rem; border-radius: 0 12px 12px 0; margin-bottom: 1.5rem;">
+                  <span style="font-weight: 800; color: var(--neon-rose); text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">Declaración viral:</span>
+                  <p style="font-style: italic; color: var(--text-main); font-size: 0.95rem; font-weight: 500; line-height: 1.4;">
+                    "{featuredArticle.claim}"
+                  </p>
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                  <span style="font-size: 0.75rem; color: var(--text-muted);">
+                    Origen: <strong style="color: var(--text-main);">{featuredArticle.origin_platform}</strong>
+                    {featuredArticle.origin_date && (
+                      <span> &bull; Post original: <strong style="color: var(--text-main);">{formatOriginalDate(featuredArticle.origin_date)}</strong></span>
+                    )}
+                  </span>
+                  <a href={"/noticia/" + featuredArticle.slug} class="cyber-btn accent" style="padding: 0.5rem 1.25rem; font-size: 0.75rem; border-radius: 12px;">
+                    Verificar &rarr;
+                  </a>
+                </div>
               </div>
-              <span class={"verdict-badge " + getVerdictClass(featuredArticle.verdict)}>
-                {featuredArticle.verdict}
-              </span>
-            </div>
+            </section>
+          )}
 
-            <!-- Titular de la Ficha -->
-            <div style="margin-bottom: 1.5rem;">
-              <a href={"/noticia/" + featuredArticle.slug}>
-                <h2 style="font-size: 1.75rem; line-height: 1.2; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.75rem; color: var(--text-main);">
-                  {featuredArticle.title}
-                </h2>
+          {/* Feed de Verificaciones */}
+          <section style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.1em; display: block; padding-left: 0.25rem; margin-bottom: -0.5rem;">Radar de Última Hora</span>
+            {remainingArticles.map(art => (
+              <div class={"cyber-card " + getVerdictClass(art.verdict)} style="padding: 1.5rem; background: rgba(18, 22, 41, 0.45);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                  <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <a href={"/categoria/" + getCategorySlug(art.category)} style="text-decoration: none;" title={`Categoría: ${art.category}`}>
+                      <div style="width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; color: var(--text-muted);">
+                        {getCategoryInitials(art.category)}
+                      </div>
+                    </a>
+                    <div>
+                      <a href={"/tema/" + art.topic_slug} style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); display: block;">
+                        {art.topic_title}
+                      </a>
+                      <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">
+                        Categoría: <a href={"/categoria/" + getCategorySlug(art.category)} style="color: var(--neon-purple); text-decoration: none; font-weight: 700;">{art.category}</a> &bull; {getRelativeTime(art.published_at)}
+                      </span>
+                    </div>
+                  </div>
+                  <span class={"verdict-badge " + getVerdictClass(art.verdict)} style="padding: 0.25rem 0.6rem; font-size: 0.65rem;">
+                    {art.verdict}
+                  </span>
+                </div>
+                <div style="margin-bottom: 1.25rem;">
+                  <a href={"/noticia/" + art.slug}>
+                    <h3 style="font-size: 1.35rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.5rem; color: var(--text-main);">
+                      {art.title}
+                    </h3>
+                  </a>
+                  <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.4;">
+                    {art.subtitle}
+                  </p>
+                </div>
+                 <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">
+                    Vía: <strong style="color: var(--text-main);">{art.origin_platform}</strong>
+                    {art.origin_date && (
+                      <span> &bull; Post: <strong style="color: var(--text-main);">{formatOriginalDate(art.origin_date)}</strong></span>
+                    )}
+                  </span>
+                  <a href={"/noticia/" + art.slug} class="cyber-btn" style="padding: 0.35rem 0.85rem; font-size: 0.7rem; border-radius: 10px; color: var(--neon-blue); border-color: rgba(0, 240, 255, 0.15);">
+                    Verificar &rarr;
+                  </a>
+                </div>
+              </div>
+            ))}
+          </section>
+        </>
+      ) : (
+        <>
+          {/* ═══ ESTADO VACÍO — Sin artículos ═══ */}
+          <section class="empty-state">
+            <div class="empty-state-icon">📡</div>
+            <h2>El Radar está Limpio</h2>
+            <p>
+              No hay verificaciones publicadas en este momento. 
+              El radar está monitorizando redes en busca de bulos virales. Mientras tanto, explora los expedientes temáticos.
+            </p>
+            <div class="empty-state-actions">
+              <a href="/temas" class="cyber-btn accent" style="border-radius: 12px; padding: 0.75rem 1.5rem;">
+                Explorar Expedientes
               </a>
-              <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.5;">
-                {featuredArticle.subtitle}
-              </p>
-            </div>
-
-            <!-- Ficha de la Reclamación (El bulo) -->
-            <div style="background: rgba(255, 51, 102, 0.02); border-left: 2px solid var(--neon-rose); padding: 1rem 1.25rem; border-radius: 0 12px 12px 0; margin-bottom: 1.5rem;">
-              <span style="font-weight: 800; color: var(--neon-rose); text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">Declaración viral:</span>
-              <p style="font-style: italic; color: var(--text-main); font-size: 0.95rem; font-weight: 500; line-height: 1.4;">
-                "{featuredArticle.claim}"
-              </p>
-            </div>
-
-            <!-- Footer de la Ficha -->
-            <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 1rem;">
-              <span style="font-size: 0.75rem; color: var(--text-muted);">
-                Origen: <strong style="color: var(--text-main);">{featuredArticle.origin_platform}</strong>
-              </span>
-              <a href={"/noticia/" + featuredArticle.slug} class="cyber-btn accent" style="padding: 0.5rem 1.25rem; font-size: 0.75rem; border-radius: 12px;">
-                Verificar &rarr;
+              <a href="/comparador-politico" class="cyber-btn" style="border-radius: 12px; padding: 0.75rem 1.5rem;">
+                Comparador Político
               </a>
             </div>
+          </section>
 
-          </div>
-        </section>
+          {/* Últimos del Radar (si los hay) */}
+          {radarItems.length > 0 && (
+            <section>
+              <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.1em; display: block; padding-left: 0.25rem; margin-bottom: 1rem;">En el Radar (sin verificar)</span>
+              <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                {radarItems.map(item => (
+                  <div class="cyber-card" style="padding: 1rem; background: rgba(18, 22, 41, 0.35);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                      <span style="font-size: 0.7rem; font-weight: 700; color: var(--neon-purple); text-transform: uppercase;">{item.platform}</span>
+                      <span style="font-size: 0.65rem; color: var(--text-muted);">Viralidad: {item.virality_score?.toFixed(1)}</span>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-main); line-height: 1.4; font-weight: 600;">
+                      {(item.detected_claim || item.text || '').substring(0, 120)}...
+                    </p>
+                    <a href={item.url} target="_blank" rel="noopener noreferrer" style="font-size: 0.7rem; color: var(--neon-blue); font-weight: 700; display: block; margin-top: 0.5rem;">
+                      Ver en origen &rarr;
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </>
       )}
 
-      <!-- Selector Deslizante de Píldoras Rápidas (Interactivo) -->
-      <section style="margin: 0.5rem 0;">
-        <div class="no-scrollbar" style="display: flex; gap: 0.5rem; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 0.25rem;">
-          <a href="/temas" class="cyber-btn" style="padding: 0.4rem 1rem; font-size: 0.75rem; border-radius: 30px; background: rgba(0, 240, 255, 0.06); border-color: rgba(0,240,255,0.2); color: var(--neon-blue); white-space: nowrap;">Todos los Expedientes</a>
-          {topics.map(t => (
-            <a href={"/tema/" + t.slug} class="cyber-btn" style="padding: 0.4rem 1rem; font-size: 0.75rem; border-radius: 30px; white-space: nowrap;">
-              {t.category}
-            </a>
-          ))}
+      <!-- ⚡ BUZÓN DE INTERCEPCIÓN DE BULOS -->
+      <section class="cyber-card" style="padding: 1.75rem; background: linear-gradient(180deg, rgba(7, 9, 19, 0.95) 0%, rgba(18, 22, 41, 0.8) 100%); border-color: var(--neon-blue); margin-top: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+          <span style="font-size: 1.5rem;">📡</span>
+          <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--neon-blue); margin: 0; letter-spacing: -0.01em;">Buzón de Intercepción</h3>
         </div>
-      </section>
+        <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.45; margin-bottom: 1.25rem;">
+          ¿Has visto un bulo sospechoso o una publicación viral en TikTok, YouTube, Instagram o X? Péganos el enlace. Auditaremos las leyes en el BOE y los datos en el INE para desmentirlo.
+        </p>
 
-      <!-- Feed de Verificaciones (Posts Secundarios) -->
-      <section style="display: flex; flex-direction: column; gap: 1.5rem;">
-        <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.1em; display: block; padding-left: 0.25rem; margin-bottom: -0.5rem;">Radar de Última Hora</span>
-        
-        {remainingArticles.map(art => (
-          <div class={"cyber-card " + getVerdictClass(art.verdict)} style="padding: 1.5rem; background: rgba(18, 22, 41, 0.45);">
-            
-            <!-- Cabecera Corta del Post -->
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-              <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <div style="width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; color: var(--text-muted);">
-                  {getCategoryInitials(art.category)}
-                </div>
-                <a href={"/tema/" + art.topic_slug} style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">
-                  {art.topic_title}
-                </a>
-              </div>
-              <span class={"verdict-badge " + getVerdictClass(art.verdict)} style="padding: 0.25rem 0.6rem; font-size: 0.65rem;">
-                {art.verdict}
-              </span>
-            </div>
-
-            <!-- Contenido del Post -->
-            <div style="margin-bottom: 1.25rem;">
-              <a href={"/noticia/" + art.slug}>
-                <h3 style="font-size: 1.35rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.5rem; color: var(--text-main);">
-                  {art.title}
-                </h3>
-              </a>
-              <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 0.75rem;">
-                {art.subtitle}
-              </p>
-              <div style="font-size: 0.8rem; font-style: italic; color: var(--text-muted); background: rgba(255,255,255,0.015); padding: 0.75rem; border-left: 2px solid var(--border-color); border-radius: 0 6px 6px 0;">
-                "{art.claim}"
-              </div>
-            </div>
-
-            <!-- Footer del Post -->
-            <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
-              <span style="font-size: 0.7rem; color: var(--text-muted);">
-                Vía: <strong style="color: var(--text-main);">{art.origin_platform}</strong>
-              </span>
-              <a href={"/noticia/" + art.slug} class="cyber-btn" style="padding: 0.35rem 0.85rem; font-size: 0.7rem; border-radius: 10px; color: var(--neon-blue); border-color: rgba(0, 240, 255, 0.15);">
-                Verificar &rarr;
-              </a>
-            </div>
-
+        <form id="public-report-form" style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+            <label style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; text-align: left;">Enlace de la publicación sospechosa:</label>
+            <input type="url" id="report-url" placeholder="https://tiktok.com/@user/video/... o https://instagram.com/p/..." required 
+              style="width: 100%; padding: 0.65rem; background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 0.85rem; outline: none; transition: border-color 0.2s;" />
           </div>
-        ))}
+          <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+            <label style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; text-align: left; margin-bottom: 0.1rem;">Alcance / Viralidad estimada en redes:</label>
+            <select id="report-views" required
+              style="width: 100%; padding: 0.65rem; background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 0.85rem; outline: none; transition: border-color 0.2s;">
+              <option value="5000">Poco viral (Menos de 10.000 visualizaciones / likes)</option>
+              <option value="15000" selected>Viral (Entre 10.000 y 50.000 visualizaciones)</option>
+              <option value="100000">Muy Viral (Más de 50.000 visualizaciones / likes)</option>
+            </select>
+          </div>
+          
+          <div id="low-viral-alert" style="display: none; background: rgba(255, 176, 32, 0.06); border: 1px solid rgba(255, 176, 32, 0.2); padding: 0.75rem; border-radius: 8px; font-size: 0.75rem; color: var(--neon-amber); text-align: left; line-height: 1.4;">
+            ⚠️ <strong>Alcance bajo:</strong> NEWNEWS prioriza desmentidos de bulos que afectan a más de 10.000 personas para ayudar de forma masiva. Este reporte se registrará con menor prioridad.
+          </div>
 
-        {remainingArticles.length === 0 && (
-          <p style="color: var(--text-muted); text-align: center; padding: 2.5rem; background: var(--bg-card); border-radius: 20px; border: 1px dashed var(--border-color); font-size: 0.9rem;">
-            No hay más desmentidos registrados hoy.
-          </p>
-        )}
+          <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+            <label style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; text-align: left;">¿Qué se afirma en el bulo? (Opcional):</label>
+            <textarea id="report-text" placeholder="Ej: Afirman que los menores tutelados cobran una paga de 4.200€ al mes..." rows="2"
+              style="width: 100%; padding: 0.65rem; background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 0.85rem; outline: none; transition: border-color 0.2s; resize: vertical;"></textarea>
+          </div>
+          <button type="submit" class="cyber-btn accent" style="width: 100%; padding: 0.75rem; border-radius: 8px; font-weight: 800; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; margin-top: 0.25rem;">
+            Reportar Bulos al Radar
+          </button>
+        </form>
+
+        <div id="report-toast" style="display: none; margin-top: 1rem; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.8rem; line-height: 1.4; text-align: left;"></div>
       </section>
 
-      <!-- Ruido en Redes (Widget Móvil Estilizado Dinámico) -->
+      <script is:inline>
+        document.addEventListener('DOMContentLoaded', () => {
+          const form = document.getElementById('public-report-form');
+          const toast = document.getElementById('report-toast');
+          const viewsSelect = document.getElementById('report-views');
+          const lowViralAlert = document.getElementById('low-viral-alert');
+
+          // Mostrar advertencia si se selecciona bajo impacto (<10k)
+          if (viewsSelect && lowViralAlert) {
+            viewsSelect.addEventListener('change', () => {
+              if (viewsSelect.value === '5000') {
+                lowViralAlert.style.display = 'block';
+              } else {
+                lowViralAlert.style.display = 'none';
+              }
+            });
+          }
+
+          if (form) {
+            form.addEventListener('submit', async (e) => {
+              e.preventDefault();
+              const url = document.getElementById('report-url').value;
+              const views = document.getElementById('report-views').value;
+              const text = document.getElementById('report-text').value;
+
+              toast.style.display = 'block';
+              toast.style.background = 'rgba(0, 240, 255, 0.08)';
+              toast.style.border = '1px solid rgba(0, 240, 255, 0.2)';
+              toast.style.color = 'var(--neon-blue)';
+              toast.innerText = 'Enviando reporte a la base de datos...';
+
+              try {
+                const response = await fetch('/api/report', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({ url, views, text })
+                });
+
+                const result = await response.json();
+                if (response.ok && result.success) {
+                  toast.style.background = 'rgba(0, 245, 160, 0.08)';
+                  toast.style.border = '1px solid rgba(0, 245, 160, 0.2)';
+                  toast.style.color = 'var(--neon-green)';
+                  toast.innerText = result.message || 'Reportado con éxito.';
+                  form.reset();
+                  if (lowViralAlert) lowViralAlert.style.display = 'none';
+                } else {
+                  toast.style.background = 'rgba(255, 51, 102, 0.08)';
+                  toast.style.border = '1px solid rgba(255, 51, 102, 0.2)';
+                  toast.style.color = 'var(--neon-rose)';
+                  toast.innerText = result.error || 'Error procesando el reporte.';
+                }
+              } catch (err) {
+                toast.style.background = 'rgba(255, 51, 102, 0.08)';
+                toast.style.border = '1px solid rgba(255, 51, 102, 0.2)';
+                toast.style.color = 'var(--neon-rose)';
+                toast.innerText = 'Error de conexión con la API de reportes.';
+              }
+
+              setTimeout(() => {
+                toast.style.display = 'none';
+              }, 6000);
+            });
+          }
+        });
+      </script>
+
+      <!-- Confusómetro -->
       <section class="cyber-card" style="padding: 1.5rem; background: linear-gradient(135deg, rgba(157, 78, 221, 0.05) 0%, rgba(7, 9, 19, 0.95) 100%); margin-top: 1rem;">
         <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--neon-purple); margin-bottom: 1rem;">Confusómetro: Alerta de Ruido por Tema</h3>
         <div style="display: flex; flex-direction: column; gap: 1rem;">
@@ -255,7 +463,7 @@ function getCategoryInitials(category) {
         </div>
       </section>
 
-      <!-- Comparador Político Móvil Promo -->
+      <!-- Comparador Político Promo -->
       <section class="cyber-card" style="padding: 1.5rem; background: rgba(18, 22, 41, 0.3); text-align: center; border-style: dashed;">
         <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--neon-green);">Comparador de Programas</h3>
         <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.4; margin-bottom: 1rem; max-width: 400px; margin-left: auto; margin-right: auto;">
@@ -270,9 +478,3 @@ function getCategoryInitials(category) {
 
   </div>
 </Layout>
-
-<style>
-  .featured-title:hover, .article-link:hover {
-    color: var(--neon-blue) !important;
-  }
-</style>
