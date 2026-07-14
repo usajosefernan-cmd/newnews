@@ -1,5 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
+const baseRoute = import.meta.env.BASE_URL;
+const cleanBase = baseRoute.endsWith('/') ? baseRoute.slice(0, -1) : baseRoute;
 ---
 
 <Layout title="Interceptador de Bulos — Hermes Engine" description="Audita links virales sospechosos de TikTok, YouTube, Instagram y X en caliente con bases de datos del BOE e INE.">
@@ -57,7 +59,7 @@ import Layout from '../layouts/Layout.astro';
   </div>
 </Layout>
 
-<script is:inline>
+<script define:vars={{ cleanBase }}>
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('public-report-form');
     const submitBtn = document.getElementById('submit-btn');
@@ -103,7 +105,7 @@ import Layout from '../layouts/Layout.astro';
         };
 
         try {
-          const response = await fetch('/api/report', {
+          const response = await fetch(`${cleanBase}/api/report`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
