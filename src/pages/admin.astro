@@ -6,6 +6,9 @@ import path from 'node:path';
 import { analyzeUrl } from '../../scripts/check-url.js';
 import { execSync } from 'node:child_process';
 
+const baseRoute = Astro.url.pathname.includes('/pro/newnews') ? '/pro/newnews' : '/';
+const cleanBase = baseRoute.endsWith('/') ? baseRoute.slice(0, -1) : baseRoute;
+
 let message = '';
 let messageType = 'info';
 let urlCheckResult = null;
@@ -652,25 +655,14 @@ const getVerdictClass = (verdict) => {
           <div class="cyber-card" style="padding: 1.5rem;">
             <h3 class="card-title">⚙️ Consola de Control de Procesos en Vivo</h3>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
-              Ejecuta los scripts reales del portal en caliente y observa su salida de depuración en la terminal.
+              Ejecuta los motores del portal manualmente y observa su flujo detallado en tiempo real (proveedor de IA, pasos de compilación, etc.).
             </p>
-            <div class="console-actions">
-              <form method="POST">
-                <input type="hidden" name="action" value="trigger_sync" />
-                <button type="submit" class="cyber-btn accent">🔄 Sincronizar Base Datos</button>
-              </form>
-              <form method="POST">
-                <input type="hidden" name="action" value="trigger_build" />
-                <button type="submit" class="cyber-btn" style="border-color: var(--neon-purple); color: var(--neon-purple);">🚀 Compilar Web SSG</button>
-              </form>
-              <form method="POST">
-                <input type="hidden" name="action" value="trigger_radar" />
-                <button type="submit" class="cyber-btn" style="border-color: var(--neon-blue); color: var(--neon-blue);">📡 Disparar Radar (Scrapers)</button>
-              </form>
-              <form method="POST">
-                <input type="hidden" name="action" value="trigger_ai" />
-                <button type="submit" class="cyber-btn" style="border-color: var(--neon-rose); color: var(--neon-rose);">🤖 Procesar IA (Borradores)</button>
-              </form>
+            <div class="console-actions" style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+              <button onclick="runAdminJob('cron')" class="cyber-btn accent" id="btn-job-cron" style="cursor: pointer; border-radius: 8px; font-weight: bold; font-size: 0.75rem; padding: 0.6rem 1rem;">📦 Ciclo Completo (Cron)</button>
+              <button onclick="runAdminJob('radar')" class="cyber-btn" id="btn-job-radar" style="border-color: var(--neon-blue); color: var(--neon-blue); cursor: pointer; border-radius: 8px; font-weight: bold; font-size: 0.75rem; padding: 0.6rem 1rem;">📡 Iniciar Radar</button>
+              <button onclick="runAdminJob('ai')" class="cyber-btn" id="btn-job-ai" style="border-color: var(--neon-rose); color: var(--neon-rose); cursor: pointer; border-radius: 8px; font-weight: bold; font-size: 0.75rem; padding: 0.6rem 1rem;">🤖 Iniciar IA (Borradores)</button>
+              <button onclick="runAdminJob('sync')" class="cyber-btn" id="btn-job-sync" style="border-color: var(--neon-amber); color: var(--neon-amber); cursor: pointer; border-radius: 8px; font-weight: bold; font-size: 0.75rem; padding: 0.6rem 1rem;">🔄 Sincronizar DB</button>
+              <button onclick="runAdminJob('build')" class="cyber-btn" id="btn-job-build" style="border-color: var(--neon-purple); color: var(--neon-purple); cursor: pointer; border-radius: 8px; font-weight: bold; font-size: 0.75rem; padding: 0.6rem 1rem;">🚀 Compilar Web</button>
             </div>
           </div>
 
@@ -694,20 +686,21 @@ const getVerdictClass = (verdict) => {
           </div>
         </div>
 
-        <!-- Terminal Cyberpunk de Output en Caliente -->
-        {commandOutput && (
-          <div class="terminal-cyberpunk">
-            <div class="terminal-header">
+        <!-- Terminal Cyberpunk de Output en Vivo -->
+        <div class="terminal-cyberpunk" id="admin-terminal" style="display: block; margin-top: 1.5rem;">
+          <div class="terminal-header" style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
               <span class="terminal-dot red"></span>
               <span class="terminal-dot yellow"></span>
               <span class="terminal-dot green"></span>
-              <span class="terminal-title">TERMINAL@NEWNEWS:~$ stdout_output</span>
+              <span class="terminal-title" id="terminal-job-title" style="font-family: monospace; font-size: 0.75rem; color: #a9b2c3;">TERMINAL@NEWNEWS:~$ listo para ejecutar</span>
             </div>
-            <div class="terminal-body">
-              <pre>{commandOutput}</pre>
-            </div>
+            <span id="terminal-status" style="color: var(--neon-green); font-family: monospace; font-size: 0.7rem; font-weight: bold;">IDLE</span>
           </div>
-        )}
+          <div class="terminal-body" id="admin-terminal-body" style="background: #05070e; max-height: 400px; overflow-y: auto; padding: 1.25rem; font-family: monospace; font-size: 0.75rem; color: #a9b2c3; line-height: 1.5; border-radius: 0 0 12px 12px; scroll-behavior: smooth; text-align: left; border-top: 1px solid rgba(255,255,255,0.05);">
+            <div style="color: var(--text-muted);">> Selecciona un proceso arriba para ver sus logs de ejecución en vivo...</div>
+          </div>
+        </div>
       </div>
 
       <!-- PESTAÑA 2: COLA DE MODERACIÓN (BORRADORES DE LA IA) -->
@@ -2158,6 +2151,99 @@ const getVerdictClass = (verdict) => {
       }, 2500);
     }
   }
+
+  window.runAdminJob = async function(jobName) {
+    const terminal = document.getElementById('admin-terminal-body');
+    const termTitle = document.getElementById('terminal-job-title');
+    const termStatus = document.getElementById('terminal-status');
+    
+    if (!terminal || !termTitle || !termStatus) return;
+    
+    const cleanBase = window.location.pathname.includes('/pro/newnews') ? '/pro/newnews' : '';
+    
+    // Bloquear botones
+    const btnNames = ['cron', 'radar', 'ai', 'sync', 'build'];
+    btnNames.forEach(n => {
+      const btn = document.getElementById(`btn-job-${n}`);
+      if (btn) btn.disabled = true;
+    });
+    
+    termTitle.innerText = `TERMINAL@NEWNEWS:~$ running ${jobName.toUpperCase()}...`;
+    termStatus.innerText = 'EJECUTANDO';
+    termStatus.style.color = 'var(--neon-amber)';
+    
+    terminal.innerHTML = '<div style="color: var(--neon-blue);">> Conectando con el motor de la VPS y preparando flujo...</div>';
+    
+    try {
+      const response = await fetch(`${cleanBase}/api/run-job`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ job: jobName })
+      });
+      
+      if (!response.body) {
+        terminal.innerHTML += '<div style="color: var(--neon-rose);">> Error: El servidor no devolvió un flujo de datos.</div>';
+        return;
+      }
+      
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+        
+        for (const line of lines) {
+          if (line.trim()) {
+            try {
+              const data = JSON.parse(line);
+              const row = document.createElement('div');
+              row.style.wordBreak = 'break-all';
+              
+              if (data.status === 'success') {
+                row.style.color = '#00ffc4'; // neon green
+                termStatus.innerText = 'ÉXITO';
+                termStatus.style.color = '#00ffc4';
+              } else if (data.status === 'error') {
+                row.style.color = '#ff3366'; // neon rose
+                termStatus.innerText = 'ERROR';
+                termStatus.style.color = '#ff3366';
+              } else if (data.status === 'warn') {
+                row.style.color = '#ffb020'; // neon amber
+              } else {
+                row.style.color = '#a9b2c3';
+              }
+              
+              row.innerText = `> ${data.message}`;
+              terminal.appendChild(row);
+              terminal.scrollTop = terminal.scrollHeight;
+            } catch (jsonErr) {
+              const row = document.createElement('div');
+              row.innerText = line;
+              terminal.appendChild(row);
+              terminal.scrollTop = terminal.scrollHeight;
+            }
+          }
+        }
+      }
+    } catch (err) {
+      terminal.innerHTML += `<div style="color: var(--neon-rose);">> Error de conexión con la API de la VPS: ${err.message}</div>`;
+      termStatus.innerText = 'ERROR';
+      termStatus.style.color = '#ff3366';
+    } finally {
+      btnNames.forEach(n => {
+        const btn = document.getElementById(`btn-job-${n}`);
+        if (btn) btn.disabled = false;
+      });
+    }
+  };
 </script>
 
 </style>

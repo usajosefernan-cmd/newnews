@@ -255,47 +255,70 @@ async function processItems() {
     const claimLower = (item.detected_claim || '').toLowerCase();
     const textLower = (item.text || '').toLowerCase();
     
+    // Clasificación Deontológica preliminar para logs
+    console.log(`  -> [Deontología Periodística] Analizando tipo de contenido para el claim...`);
+    if (claimLower.includes('mcp') || claimLower.includes('tool') || claimLower.includes('compras') || claimLower.includes('referido') || claimLower.includes('afiliado') || textLower.includes('mcp') || textLower.includes('enlace')) {
+      console.log(`  -> [Filtro Aplicado] Contenido Tecnológico / Comercial Detectado. Evaluando sesgo comercial y enlaces de referidos...`);
+    } else if (claimLower.includes('sánchez') || claimLower.includes('partido') || claimLower.includes('ley') || claimLower.includes('boe') || claimLower.includes('gobierno') || textLower.includes('ley') || textLower.includes('boe')) {
+      console.log(`  -> [Filtro Aplicado] Debate Público / Político Detectado. Contrastando leyes del BOE y datos del INE...`);
+    } else {
+      console.log(`  -> [Filtro Aplicado] Rumor de Redes Sociales Detectado. Evaluando veracidad general de afirmaciones...`);
+    }
+
     // 1. Intentar llamar a la API de Gemini si hay API Key
     try {
       if (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) {
+        console.log(`  -> [Conexión] Solicitando análisis al motor Gemini API (modelo gemini-2.5-flash)...`);
         const prompt = `
-Eres el redactor jefe de NEWNEWS, una web especializada en desmentir bulos y contrastar datos oficiales de España.
-Genera un análisis neutral, riguroso y explicativo sobre este claim detectado en discusiones sociales:
+Eres el Director de Verificación y Defensor del Lector de NEWNEWS. Tu labor se rige bajo los principios del Código Deontológico de la FAPE (Federación de Asociaciones de Periodistas de España) y los estándares del periodismo de investigación clásico: neutralidad absoluta, separación rigurosa entre información y opinión/promoción, e independencia editorial.
+
+Analiza el siguiente claim detectado en el radar y genera una auditoría de hechos estructurada:
 Original: ${item.text}
 Claim: ${item.detected_claim}
 Tema: ${item.suggested_topic}
 Origen (Plataforma): ${item.platform}
+URL Original: ${item.url || 'No proporcionada'}
 
-REQUISITO CRÍTICO DE CALIDAD:
-El análisis debe estar enfocado en las preocupaciones socioeconómicas del ciudadano español. No seas superficial. Debes citar obligatoriamente datos concretos y metodología de fuentes oficiales del Estado:
-- Si trata de precios, inflación o cesta de la compra, cita el IPC del INE (Instituto Nacional de Estadística) y estándares de Eurostat.
-- Si trata de paro, empleo o contratos (fijos discontinuos), explica la diferencia entre el paro registrado del SEPE y la EPA del INE (normativa OIT).
-- Si trata de autónomos o impuestos, cita las cuotas del BOE, tramos de cotización por ingresos reales de la Seguridad Social o leyes de Hacienda.
-- PROHIBIDO ABSOLUTAMENTE citar, mencionar, referenciar o enlazar a agencias de verificación de terceros como Newtral, Maldita, EFE Verifica u otras similares. Los desmentidos y fuentes deben basarse EXCLUSIVAMENTE en fuentes primarias oficiales del Estado (BOE, INE, ministerios, resoluciones de juzgados, etc.).
-- Las fuentes que propongas en la lista de "sources" deben ser obligatoriamente del dominio oficial (.gob.es, .es, .europa.eu). NUNCA generes enlaces a Newtral.es o Maldita.es.
-Explicar de forma sencilla pero rigurosa, aportando el link original real en lo posible.
+--- FILTROS Y REGLAS DE AUDITORÍA ESPECÍFICAS POR CATEGORÍA ---
 
-Devuelve un JSON con:
+1. FILTRO DE OPINIÓN COMERCIAL, HYPE TECNOLÓGICO Y MARKETING (Ej. Herramientas de IA, MCPs, gadgets, software):
+   - Detecta si el recurso original es promocional, publicitario o si contiene enlaces de afiliados/referidos directos u ocultos.
+   - Si el video/post vende un producto como "el mejor", "revolucionario" o incita a la compra/registro usando enlaces de referidos, tu veredicto debe ser "Falta contexto" o "Engañoso".
+   - Explica detalladamente al lector que se trata de OPINIÓN COMERCIAL y MARKETING DE AFILIADOS, no de información neutral. Expón los sesgos comerciales involucrados.
+   - Separa claramente las características técnicas reales del producto de la exageración publicitaria.
+
+2. FILTRO DE POLÍTICA Y DEBATE PÚBLICO (Ej. Leyes, presupuestos, empleo, inmigración):
+   - Mantén una neutralidad política absoluta. No tomes partido. Cita exclusivamente datos oficiales.
+   - Si trata de precios, inflación o cesta de la compra, cita el IPC del INE (Instituto Nacional de Estadística) y estándares de Eurostat.
+   - Si trata de paro, empleo o contratos (fijos discontinuos), explica la diferencia entre el paro registrado del SEPE y la EPA del INE (normativa OIT).
+   - Si trata de autónomos o impuestos, cita las cuotas del BOE, tramos de cotización por ingresos reales de la Seguridad Social o leyes de Hacienda.
+
+3. REGLA DE FUENTES PRIMARIAS DE ESPAÑA (DEONTOLOGÍA PERIODÍSTICA):
+   - PROHIBIDO ABSOLUTAMENTE citar, mencionar, referenciar o enlazar a agencias de verificación de terceros como Newtral, Maldita, EFE Verifica u otras similares. Los desmentidos y fuentes deben basarse EXCLUSIVAMENTE en fuentes primarias oficiales del Estado (BOE, INE, ministerios, resoluciones de juzgados, patentes oficiales, etc.).
+   - Las fuentes que propongas en la lista de "sources" deben ser del dominio oficial (.gob.es, .es, .europa.eu). NUNCA generes enlaces a Newtral.es o Maldita.es.
+
+Devuelve un JSON válido con la siguiente estructura:
 {
-  "title": "...",
-  "subtitle": "...",
+  "title": "Auditoría de hechos sobre: [Título claro, periodístico y directo]",
+  "subtitle": "[Subtítulo corto, didáctico y centrado en el veredicto]",
   "verdict": "Verdadero" | "Falso" | "Engañoso" | "Falta contexto",
   "confidence": "Alta",
-  "summary": "...",
-  "explanation": "...",
-  "what_is_true": "...",
-  "what_is_false": "...",
-  "what_lacks_context": "...",
-  "what_is_not_proven": "...",
-  "sources": [{ "title": "...", "url": "...", "source_type": "oficial", "authority_level": "Máxima", "quote_or_summary": "..." }],
-  "social_posts": [{ "platform": "X", "format": "hilo", "content": "..." }]
+  "summary": "[Resumen periodístico del desmentido y la detección del sesgo u omisión de datos]",
+  "explanation": "[Explicación detallada con datos del BOE/INE o de la naturaleza comercial del post/video. Cita artículos y leyes exactas si aplica]",
+  "what_is_true": "[Qué partes de los datos expuestos son reales]",
+  "what_is_false": "[Qué partes son exageraciones publicitarias, mentiras o bulos]",
+  "what_lacks_context": "[Qué contexto omiten (como la presencia de enlaces de referidos o costes reales de cuotas/servicios)]",
+  "what_is_not_proven": "[Qué afirmaciones no tienen respaldo técnico, legislativo o científico]",
+  "sources": [{ "title": "[Nombre de la fuente oficial o registro de patentes/comercial]", "url": "[URL de la fuente]", "source_type": "oficial", "authority_level": "Máxima", "quote_or_summary": "[Extracto resumido]" }],
+  "social_posts": [{ "platform": "X", "format": "hilo", "content": "[Contenido corto para redes]" }]
 }
 `;
         articleData = await callGemini(prompt);
         usedAi = true;
-        console.log('  -> Procesado por Gemini API.');
+        console.log(`  -> [Verificación] Procesado con éxito por Gemini API. Veredicto sugerido: ${articleData.verdict}`);
       } else {
         throw new Error('Sin API Key');
+      }
       }
     } catch (err) {
       // 2. Fallback Inteligente Local con datos reales de actualidad recopilados

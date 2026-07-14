@@ -129,9 +129,23 @@ async function analyzeYouTube(url) {
           if (viewMatch) {
             result.views = parseInt(viewMatch[1]);
           } else {
-            const viewsRegex = /"viewCount":\s*"(\d+)"/i;
-            const viewsMatch = html.match(viewsRegex);
-            if (viewsMatch) result.views = parseInt(viewsMatch[1]);
+            // Fallback 1: viewCount string standard
+            const m1 = html.match(/"viewCount":\s*"(\d+)"/i);
+            if (m1) {
+              result.views = parseInt(m1[1]);
+            } else {
+              // Fallback 2: Localized simpleText (ej: "241.004 visualizaciones" en VPS España)
+              const m2 = html.match(/"simpleText"\s*:\s*"([\d\.,\s]+)\s*(?:visualizaciones|views|reproducciones|vis)/i);
+              if (m2) {
+                result.views = parseInt(m2[1].replace(/[\.,\s]/g, ''));
+              } else {
+                // Fallback 3: nested videoViewCountRenderer
+                const m3 = html.match(/"viewCount"\s*:\s*\{\s*"videoViewCountRenderer"\s*:\s*\{\s*"viewCount"\s*:\s*\{\s*"simpleText"\s*:\s*"([\d\.,\s]+)/i);
+                if (m3) {
+                  result.views = parseInt(m3[1].replace(/[\.,\s]/g, ''));
+                }
+              }
+            }
           }
         }
       } catch (e) {
