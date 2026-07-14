@@ -88,7 +88,7 @@ import Layout from '../layouts/Layout.astro';
         <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--neon-blue); margin: 0; letter-spacing: -0.01em;">Buzón de Intercepción</h3>
       </div>
       <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.45; margin-bottom: 1.5rem;">
-        Pega tu enlace sospechoso. Si es realmente viral, el sistema iniciará de inmediato el análisis en caliente en nuestra base de datos alojada en la VPS.
+        Pega tu enlace sospechoso. La plataforma analizará automáticamente su viralidad real y el impacto social del tema para activar la auditoría en caliente.
       </p>
 
       <form id="public-report-form" style="display: flex; flex-direction: column; gap: 1rem;">
@@ -97,20 +97,6 @@ import Layout from '../layouts/Layout.astro';
           <label style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; text-align: left;">Enlace de la publicación sospechosa:</label>
           <input type="url" id="report-url" placeholder="https://tiktok.com/@user/video/... o https://instagram.com/p/..." required 
             style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 0.85rem; outline: none; transition: border-color 0.2s;" />
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 0.35rem;">
-          <label style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; text-align: left; margin-bottom: 0.1rem;">Alcance / Viralidad estimada en redes:</label>
-          <select id="report-views" required
-            style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 0.85rem; outline: none; transition: border-color 0.2s;">
-            <option value="5000">Poco viral (Menos de 10.000 visualizaciones / likes)</option>
-            <option value="15000" selected>Viral (Entre 10.000 y 50.000 visualizaciones) — ⚡ ACTIVA ANÁLISIS EN CALIENTE</option>
-            <option value="100000">Muy Viral (Más de 50.000 visualizaciones) — ⚡ PRIORIDAD CRÍTICA</option>
-          </select>
-        </div>
-        
-        <div id="low-viral-alert" style="display: none; background: rgba(255, 176, 32, 0.06); border: 1px solid rgba(255, 176, 32, 0.2); padding: 0.75rem; border-radius: 8px; font-size: 0.75rem; color: var(--neon-amber); text-align: left; line-height: 1.4;">
-          ⚠️ <strong>Alcance bajo:</strong> Al ser un impacto menor a 10.000 reproducciones, este enlace se registrará en la cola del radar para análisis periódico (cada 20 minutos) en lugar de disparar el pipeline de inmediato.
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 0.35rem;">
@@ -134,25 +120,11 @@ import Layout from '../layouts/Layout.astro';
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('public-report-form');
     const toast = document.getElementById('report-toast');
-    const viewsSelect = document.getElementById('report-views');
-    const lowViralAlert = document.getElementById('low-viral-alert');
-
-    // Mostrar advertencia si se selecciona bajo impacto (<10k)
-    if (viewsSelect && lowViralAlert) {
-      viewsSelect.addEventListener('change', () => {
-        if (viewsSelect.value === '5000') {
-          lowViralAlert.style.display = 'block';
-        } else {
-          lowViralAlert.style.display = 'none';
-        }
-      });
-    }
 
     if (form) {
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const url = document.getElementById('report-url').value;
-        const views = document.getElementById('report-views').value;
         const text = document.getElementById('report-text').value;
 
         toast.style.display = 'block';
@@ -167,7 +139,7 @@ import Layout from '../layouts/Layout.astro';
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ url, views, text })
+            body: JSON.stringify({ url, text })
           });
 
           const result = await response.json();
@@ -177,7 +149,6 @@ import Layout from '../layouts/Layout.astro';
             toast.style.color = 'var(--neon-green)';
             toast.innerText = result.message || 'Reportado con éxito.';
             form.reset();
-            if (lowViralAlert) lowViralAlert.style.display = 'none';
           } else {
             toast.style.background = 'rgba(255, 51, 102, 0.08)';
             toast.style.border = '1px solid rgba(255, 51, 102, 0.2)';

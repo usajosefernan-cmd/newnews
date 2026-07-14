@@ -1,6 +1,7 @@
 export const prerender = false;
 import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
+import { analyzeUrl } from '../../../scripts/check-url.js';
 
 export async function POST({ request }) {
   try {
@@ -15,24 +16,101 @@ export async function POST({ request }) {
       });
     }
 
-    const views = parseInt(data.views) || 0;
-    
-    // Detectar plataforma de forma basica basada en la URL
+    // 1. Analizar URL utilizando el módulo real de scraping de NEWNEWS
     let platform = 'Web Report';
-    const lowerUrl = url.toLowerCase();
-    if (lowerUrl.includes('tiktok.com')) platform = 'TikTok';
-    else if (lowerUrl.includes('instagram.com')) platform = 'Instagram';
-    else if (lowerUrl.includes('facebook.com')) platform = 'Facebook';
-    else if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) platform = 'YouTube';
-    else if (lowerUrl.includes('x.com') || lowerUrl.includes('twitter.com')) platform = 'X';
-    else if (lowerUrl.includes('t.me') || lowerUrl.includes('telegram.me')) platform = 'Telegram';
+    let title = '';
+    let description = '';
+    let views = 0;
+    
+    try {
+      const analysis = await analyzeUrl(url);
+      platform = analysis.platform || platform;
+      title = analysis.title || '';
+      description = analysis.description || '';
+      if (typeof analysis.views === 'number') {
+        views = analysis.views;
+      } else if (typeof analysis.views === 'string') {
+        // Extraer número de vistas
+        const matched = analysis.views.match(/\d+/);
+        if (matched) views = parseInt(matched[0]);
+      }
+    } catch (e) {
+      console.warn('[API Report] Error analizando URL, usando fallbacks:', e.message);
+    }
 
-    // Determinar virality_score en base a vistas
-    let viralityScore = 2.0; // Bajo impacto (<10k)
-    if (views >= 50000) {
-      viralityScore = 10.0; // Muy viral
-    } else if (views >= 10000) {
-      viralityScore = 7.5; // Viral
+    // 2. Evaluar viralidad de forma inteligente (AI o keywords)
+    let isViral = false;
+    let viralityScore = 2.0;
+    let cleanClaim = text.trim() || title || `Enlace de ${platform} reportado por el público.`;
+    let reason = "Evaluado por el motor del radar.";
+
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    if (apiKey) {
+      try {
+        const prompt = `Analiza la siguiente URL o afirmación para determinar si describe un bulo o debate potencialmente viral, de alta difusión o de gran impacto social en España (ej. subsidios, okupas, inmigración, impuestos, leyes, cotizaciones, pensiones, corrupción, etc.).
+URL: ${url}
+Título/Metadatos: ${title} ${description}
+Comentario del usuario: ${text}
+
+Debes responder estrictamente en formato JSON con la siguiente estructura:
+{
+  "is_viral": true/false,
+  "virality_score": número del 0.0 al 10.0,
+  "detected_claim": "afirmación limpia resumida",
+  "reason": "justificación corta"
+}`;
+
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        const resp = await fetch(geminiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: "application/json" }
+          })
+        });
+
+        if (resp.ok) {
+          const geminiData = await resp.json();
+          const jsonText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (jsonText) {
+            const parsed = JSON.parse(jsonText.trim());
+            isViral = !!parsed.is_viral;
+            viralityScore = parseFloat(parsed.virality_score) || 2.0;
+            if (parsed.detected_claim) {
+              cleanClaim = parsed.detected_claim;
+            }
+            if (parsed.reason) {
+              reason = parsed.reason;
+            }
+          }
+        }
+      } catch (e) {
+        console.error('[API Report] Error consultando Gemini para valoración:', e.message);
+      }
+    }
+
+    // Fallback de keywords si no hay API key o falló la consulta a la IA
+    if (!apiKey || viralityScore === 2.0) {
+      const lowercaseContent = `${url} ${title} ${description} ${text}`.toLowerCase();
+      const viralKeywords = [
+        'okupa', 'allanamiento', 'inmigrante', 'ayudas', 'tutelado', 'menores', 'marruecos',
+        'pensiones', 'jubilación', 'autónomos', 'cuota', 'impuesto', 'hacienda', 'irpf',
+        'sanchez', 'koldo', 'corrupción', 'begoña', 'fraude', 'amnistía', 'bulo', 'delito'
+      ];
+      
+      const hasViralKeyword = viralKeywords.some(kw => lowercaseContent.includes(kw));
+      if (hasViralKeyword || views >= 10000) {
+        isViral = true;
+        viralityScore = 7.5;
+        reason = "Contiene palabras clave virales de alta sensibilidad social en España.";
+      }
+    }
+
+    // Si tiene muchas vistas reales, forzar a verdadero
+    if (views >= 10000) {
+      isViral = true;
+      viralityScore = Math.max(viralityScore, 7.5);
     }
 
     const dbPath = path.resolve('data/newnews.db');
@@ -41,21 +119,22 @@ export async function POST({ request }) {
     db.exec('PRAGMA journal_mode = WAL;');
 
     const id = `report-web-${Date.now()}`;
-    const claim = text.trim() || `Enlace de ${platform} reportado por el público.`;
 
     // Insertar en la cola del radar (scraped_items) como pendiente
     db.prepare(`
       INSERT INTO scraped_items (id, platform, url, text, author_public_name, metrics_json, detected_claim, suggested_topic, virality_score, risk_score, status, created_at)
       VALUES (?, ?, ?, ?, 'Público', ?, ?, 'General', ?, 6.0, 'pendiente', datetime('now'))
-    `).run(id, platform, url, claim, JSON.stringify({ declared_views: views }), claim, viralityScore);
+    `).run(id, platform, url, cleanClaim, JSON.stringify({ declared_views: views, auto_reason: reason }), cleanClaim, viralityScore);
 
     db.close();
 
-    // Si supera los cortafuegos de algo realmente viral (viralityScore >= 7.5), procesar inmediatamente en caliente
-    if (viralityScore >= 7.5) {
+    // Si supera los cortafuegos de algo realmente viral (viralityScore >= 7.0), procesar inmediatamente en caliente
+    let triggerExecuted = false;
+    if (viralityScore >= 7.0) {
+      triggerExecuted = true;
       import('node:child_process').then(({ execSync }) => {
         try {
-          console.log(`[Radar Hot-Trigger] Reporte viral detectado (${views} visualizaciones). Iniciando procesamiento en caliente...`);
+          console.log(`[Radar Hot-Trigger] Reporte viral de intercepción validado (${viralityScore}/10). Iniciando procesamiento en caliente...`);
           execSync('node scripts/ai-pipeline.js', { env: process.env });
           execSync('node scripts/sync.js', { env: process.env });
           execSync('npm run build', { env: process.env });
@@ -69,7 +148,14 @@ export async function POST({ request }) {
       });
     }
 
-    return new Response(JSON.stringify({ success: true, message: '¡Gracias! El bulo ha sido reportado en la cola del radar. Al superar el umbral de viralidad, el motor de Hermes ha iniciado su auditoría en caliente.' }), {
+    return new Response(JSON.stringify({ 
+      success: true, 
+      is_viral: isViral,
+      virality_score: viralityScore,
+      message: triggerExecuted
+        ? '¡Intercepción de bulo activada! El enlace y tema han sido catalogados como de alto impacto social. El motor de Hermes ha iniciado la auditoría y compilación en caliente automática.'
+        : '¡Gracias! El enlace ha sido catalogado. Al tener un impacto local/moderado, se procesará en el siguiente ciclo automático de 20 minutos.'
+    }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });

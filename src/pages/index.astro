@@ -327,123 +327,25 @@ function formatOriginalDate(dateString) {
                     </a>
                   </div>
                 ))}
+                    <!-- ⚡ TEASER DEL BUZÓN DE INTERCEPCIÓN -->
+      <section class="cyber-card" style="padding: 1.75rem; background: linear-gradient(185deg, rgba(7, 9, 19, 0.95) 0%, rgba(18, 22, 41, 0.8) 100%); border-color: var(--neon-blue); margin-top: 1rem; text-align: left; position: relative; overflow: hidden; transition: all 0.3s ease;">
+        <div style="position: absolute; top: -20px; right: -20px; font-size: 5rem; opacity: 0.05; pointer-events: none;">📡</div>
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+          <span style="font-size: 1.5rem;">📡</span>
+          <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--neon-blue); margin: 0; letter-spacing: -0.01em;">Buzón de Intercepción</h3>
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.45; margin-bottom: 1.25rem; max-width: 95%;">
+          ¿Has detectado un bulo sospechoso o una publicación viral en TikTok, YouTube, Instagram o X? Envía el enlace al radar. Nuestro motor contrastará los hechos con las leyes vigentes del BOE y los datos macroeconómicos del INE de forma neutral.
+        </p>
+        <a href="/interceptador" class="cyber-btn accent" style="display: inline-flex; align-items: center; justify-content: center; width: 100%; padding: 0.75rem; border-radius: 8px; font-weight: 800; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; text-decoration: none; box-sizing: border-box; text-align: center;">
+          Acceder al Interceptador &rarr;
+        </a>
+      </section>
               </div>
             </section>
           )}
         </>
       )}
-
-      <!-- ⚡ BUZÓN DE INTERCEPCIÓN DE BULOS -->
-      <section class="cyber-card" style="padding: 1.75rem; background: linear-gradient(180deg, rgba(7, 9, 19, 0.95) 0%, rgba(18, 22, 41, 0.8) 100%); border-color: var(--neon-blue); margin-top: 1rem;">
-        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-          <span style="font-size: 1.5rem;">📡</span>
-          <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--neon-blue); margin: 0; letter-spacing: -0.01em;">Buzón de Intercepción</h3>
-        </div>
-        <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.45; margin-bottom: 1.25rem;">
-          ¿Has visto un bulo sospechoso o una publicación viral en TikTok, YouTube, Instagram o X? Péganos el enlace. Auditaremos las leyes en el BOE y los datos en el INE para desmentirlo.
-        </p>
-
-        <form id="public-report-form" style="display: flex; flex-direction: column; gap: 0.75rem;">
-          <div style="display: flex; flex-direction: column; gap: 0.35rem;">
-            <label style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; text-align: left;">Enlace de la publicación sospechosa:</label>
-            <input type="url" id="report-url" placeholder="https://tiktok.com/@user/video/... o https://instagram.com/p/..." required 
-              style="width: 100%; padding: 0.65rem; background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 0.85rem; outline: none; transition: border-color 0.2s;" />
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 0.35rem;">
-            <label style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; text-align: left; margin-bottom: 0.1rem;">Alcance / Viralidad estimada en redes:</label>
-            <select id="report-views" required
-              style="width: 100%; padding: 0.65rem; background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 0.85rem; outline: none; transition: border-color 0.2s;">
-              <option value="5000">Poco viral (Menos de 10.000 visualizaciones / likes)</option>
-              <option value="15000" selected>Viral (Entre 10.000 y 50.000 visualizaciones)</option>
-              <option value="100000">Muy Viral (Más de 50.000 visualizaciones / likes)</option>
-            </select>
-          </div>
-          
-          <div id="low-viral-alert" style="display: none; background: rgba(255, 176, 32, 0.06); border: 1px solid rgba(255, 176, 32, 0.2); padding: 0.75rem; border-radius: 8px; font-size: 0.75rem; color: var(--neon-amber); text-align: left; line-height: 1.4;">
-            ⚠️ <strong>Alcance bajo:</strong> NEWNEWS prioriza desmentidos de bulos que afectan a más de 10.000 personas para ayudar de forma masiva. Este reporte se registrará con menor prioridad.
-          </div>
-
-          <div style="display: flex; flex-direction: column; gap: 0.35rem;">
-            <label style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; text-align: left;">¿Qué se afirma en el bulo? (Opcional):</label>
-            <textarea id="report-text" placeholder="Ej: Afirman que los menores tutelados cobran una paga de 4.200€ al mes..." rows="2"
-              style="width: 100%; padding: 0.65rem; background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 0.85rem; outline: none; transition: border-color 0.2s; resize: vertical;"></textarea>
-          </div>
-          <button type="submit" class="cyber-btn accent" style="width: 100%; padding: 0.75rem; border-radius: 8px; font-weight: 800; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; margin-top: 0.25rem;">
-            Reportar Bulos al Radar
-          </button>
-        </form>
-
-        <div id="report-toast" style="display: none; margin-top: 1rem; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.8rem; line-height: 1.4; text-align: left;"></div>
-      </section>
-
-      <script is:inline>
-        document.addEventListener('DOMContentLoaded', () => {
-          const form = document.getElementById('public-report-form');
-          const toast = document.getElementById('report-toast');
-          const viewsSelect = document.getElementById('report-views');
-          const lowViralAlert = document.getElementById('low-viral-alert');
-
-          // Mostrar advertencia si se selecciona bajo impacto (<10k)
-          if (viewsSelect && lowViralAlert) {
-            viewsSelect.addEventListener('change', () => {
-              if (viewsSelect.value === '5000') {
-                lowViralAlert.style.display = 'block';
-              } else {
-                lowViralAlert.style.display = 'none';
-              }
-            });
-          }
-
-          if (form) {
-            form.addEventListener('submit', async (e) => {
-              e.preventDefault();
-              const url = document.getElementById('report-url').value;
-              const views = document.getElementById('report-views').value;
-              const text = document.getElementById('report-text').value;
-
-              toast.style.display = 'block';
-              toast.style.background = 'rgba(0, 240, 255, 0.08)';
-              toast.style.border = '1px solid rgba(0, 240, 255, 0.2)';
-              toast.style.color = 'var(--neon-blue)';
-              toast.innerText = 'Enviando reporte a la base de datos...';
-
-              try {
-                const response = await fetch('/api/report', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json'
-                  },
-                  body: JSON.stringify({ url, views, text })
-                });
-
-                const result = await response.json();
-                if (response.ok && result.success) {
-                  toast.style.background = 'rgba(0, 245, 160, 0.08)';
-                  toast.style.border = '1px solid rgba(0, 245, 160, 0.2)';
-                  toast.style.color = 'var(--neon-green)';
-                  toast.innerText = result.message || 'Reportado con éxito.';
-                  form.reset();
-                  if (lowViralAlert) lowViralAlert.style.display = 'none';
-                } else {
-                  toast.style.background = 'rgba(255, 51, 102, 0.08)';
-                  toast.style.border = '1px solid rgba(255, 51, 102, 0.2)';
-                  toast.style.color = 'var(--neon-rose)';
-                  toast.innerText = result.error || 'Error procesando el reporte.';
-                }
-              } catch (err) {
-                toast.style.background = 'rgba(255, 51, 102, 0.08)';
-                toast.style.border = '1px solid rgba(255, 51, 102, 0.2)';
-                toast.style.color = 'var(--neon-rose)';
-                toast.innerText = 'Error de conexión con la API de reportes.';
-              }
-
-              setTimeout(() => {
-                toast.style.display = 'none';
-              }, 6000);
-            });
-          }
-        });
-      </script>
 
       <!-- Confusómetro -->
       <section class="cyber-card" style="padding: 1.5rem; background: linear-gradient(135deg, rgba(157, 78, 221, 0.05) 0%, rgba(7, 9, 19, 0.95) 100%); margin-top: 1rem;">
