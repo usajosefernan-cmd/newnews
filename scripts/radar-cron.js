@@ -22,26 +22,10 @@ const forbiddenKeywords = [
   'liga', 'champions', 'fichaje', 'entrenamiento'
 ];
 
-// Feeds RSS de Tendencias y Prensa
-const rssFeeds = [
-  { name: 'Google Trends ES', url: 'https://trends.google.com/trends/trendingsearches/daily/rss?geo=ES', platform: 'Google Trends' },
-  { name: 'Menéame Portada', url: 'https://www.meneame.net/rss', platform: 'Menéame' },
-  { name: 'Menéame Activas', url: 'https://www.meneame.net/rss?status=active', platform: 'Menéame' },
-  { name: 'El Mundo España', url: 'https://www.elmundo.es/rss/portada.xml', platform: 'Prensa' },
-  { name: 'El País Nacional', url: 'https://ep00.epimg.net/rss/elpais/portada.xml', platform: 'Prensa' },
-  { name: 'ABC España', url: 'https://www.abc.es/rss/2.0/espana/', platform: 'Prensa' }
-];
-
-// Feeds JSON públicos de Reddit
-const redditFeeds = [
-  { name: 'Reddit SpainPolitics', url: 'https://www.reddit.com/r/spainpolitics/hot.json?limit=25', platform: 'Reddit' },
-  { name: 'Reddit España', url: 'https://www.reddit.com/r/es/hot.json?limit=25', platform: 'Reddit' }
-];
-
 // Headers de navegador reales y refinados para evitar bloqueos
 const userAgentHeader = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-  'Accept': 'application/json, text/xml, application/xml, */*',
+  'Accept': 'application/json, text/html, application/xhtml+xml, application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
   'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8'
 };
 
@@ -127,6 +111,80 @@ async function fetchRedditFeed(feed) {
   return items;
 }
 
+async function fetchTelegramChannel(channel) {
+  const items = [];
+  try {
+    console.log(`[Radar Motor] Descargando canal de Telegram: ${channel.name}...`);
+    const url = `https://telegram.me/s/${channel.id}`;
+    const response = await fetch(url, { headers: userAgentHeader });
+
+    if (!response.ok) {
+      console.log(`[Radar Motor] Advertencia: Telegram ${channel.name} respondió con estado ${response.status}`);
+      return items;
+    }
+
+    const html = await response.text();
+    
+    // Dividir el HTML por bloques de mensaje
+    const messageBlocks = html.split('<div class="tgme_widget_message ');
+    
+    for (let i = 1; i < messageBlocks.length; i++) {
+      const block = messageBlocks[i];
+      
+      const textMatch = block.match(/<div class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/);
+      const linkMatch = block.match(/<a class="tgme_widget_message_date" href="([^"]+)"/);
+      const dateMatch = block.match(/<time datetime="([^"]+)"/);
+      const viewsMatch = block.match(/<span class="tgme_widget_message_views">([^<]+)<\/span>/);
+      
+      if (textMatch && linkMatch) {
+        let textContent = textMatch[1]
+          .replace(/<br\s*\/?>/gi, '\n')
+          .replace(/<\/?[^>]+(>|$)/g, "")
+          .trim();
+        
+        textContent = textContent
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'");
+
+        const link = linkMatch[1].trim();
+        
+        let views = 0;
+        if (viewsMatch) {
+          const viewsRaw = viewsMatch[1].trim().toUpperCase().replace(',', '.');
+          if (viewsRaw.includes('K')) {
+            views = parseFloat(viewsRaw.replace('K', '')) * 1000;
+          } else if (viewsRaw.includes('M')) {
+            views = parseFloat(viewsRaw.replace('M', '')) * 1000000;
+          } else {
+            views = parseFloat(viewsRaw) || 0;
+          }
+        }
+
+        const firstLine = textContent.split('\n')[0] || '';
+        const title = firstLine.substring(0, 100) || 'Post de Telegram';
+
+        items.push({
+          title,
+          link,
+          description: textContent,
+          platform: 'Telegram',
+          author: channel.name,
+          score: views,
+          comments: 0,
+          views: views
+        });
+      }
+    }
+    console.log(`[Radar Motor] -> ${channel.name}: Detectados ${items.length} posts.`);
+  } catch (err) {
+    console.log(`[Radar Motor] ❌ Error descargando Telegram ${channel.name}:`, err.message);
+  }
+  return items;
+}
+
 async function runRadar() {
   if (!fs.existsSync(dbPath)) {
     console.error(`❌ La base de datos no existe en ${dbPath}.`);
@@ -135,6 +193,23 @@ async function runRadar() {
 
   const db = new DatabaseSync(dbPath);
   db.exec('PRAGMA foreign_keys = ON;');
+
+  console.log('[Radar Motor] Cargando fuentes de monitorización desde la base de datos...');
+  const activeSources = db.prepare("SELECT * FROM radar_sources WHERE status = 'activo'").all();
+
+  const rssFeeds = activeSources
+    .filter(s => s.platform === 'RSS')
+    .map(s => ({ name: s.name, url: s.url_or_id, platform: 'Prensa' }));
+
+  const redditFeeds = activeSources
+    .filter(s => s.platform === 'Reddit')
+    .map(s => ({ name: s.name, url: s.url_or_id, platform: 'Reddit' }));
+
+  const telegramChannels = activeSources
+    .filter(s => s.platform === 'Telegram')
+    .map(s => ({ id: s.url_or_id, name: s.name, platform: 'Telegram' }));
+
+  console.log(`[Radar Motor] Fuentes cargadas: ${rssFeeds.length} RSS, ${redditFeeds.length} Reddit, ${telegramChannels.length} Telegram.`);
 
   const insertScrapedItem = db.prepare(`
     INSERT OR IGNORE INTO scraped_items (id, platform, url, text, author_public_name, metrics_json, detected_claim, suggested_topic, virality_score, risk_score, status, created_at)
@@ -154,6 +229,12 @@ async function runRadar() {
   for (const feed of redditFeeds) {
     const feedItems = await fetchRedditFeed(feed);
     allItems.push(...feedItems);
+  }
+
+  // 2.5 Cargar Telegram channels
+  for (const channel of telegramChannels) {
+    const channelItems = await fetchTelegramChannel(channel);
+    allItems.push(...channelItems);
   }
 
   // 3. Procesar y filtrar items
@@ -190,6 +271,10 @@ async function runRadar() {
         viralityScore = Math.min(10.0, 4.0 + (item.comments / 30));
       } else if (item.platform === 'Google Trends') {
         viralityScore = 8.5; // Alta viralidad por búsquedas masivas estimadas
+      } else if (item.platform === 'Telegram') {
+        // En Telegram, valoramos las visitas (views) estimadas
+        const views = item.views || 0;
+        viralityScore = Math.min(10.0, 3.0 + (views / 25000));
       }
 
       // Calcular risk_score por el tipo de tema sensible

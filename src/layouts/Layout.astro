@@ -1,5 +1,7 @@
 ---
 import '../styles/global.css';
+import { DatabaseSync } from 'node:sqlite';
+import path from 'node:path';
 
 const { 
   title, 
@@ -7,13 +9,11 @@ const {
   category
 } = Astro.props;
 
-const categories = [
-  { name: 'Política', path: '/programas-politicos' },
-  { name: 'Historia', path: '/tema/franco' },
-  { name: 'Economía', path: '/tema/economia-espanola' },
-  { name: 'Sociedad', path: '/tema/menores-extranjeros-no-acompanados' },
-  { name: 'Vivienda', path: '/tema/vivienda-y-okupacion' }
-];
+// Cargar temas de forma dinámica desde SQLite
+const dbPath = path.resolve('data/newnews.db');
+const db = new DatabaseSync(dbPath);
+const topics = db.prepare("SELECT title, slug FROM topics WHERE status = 'activo' ORDER BY title").all() as any[];
+db.close();
 ---
 
 <!doctype html>
@@ -50,10 +50,33 @@ const categories = [
 
         <!-- Desktop Navigation Links -->
         <nav class="desktop-nav" style="display: flex; align-items: center; gap: 1.5rem;">
-          <a href="/temas" class="nav-link" style="font-size: 0.85rem; color: var(--text-muted);">Temas</a>
-          <a href="/programas-politicos" class="nav-link" style="font-size: 0.85rem; color: var(--text-muted);">Programas</a>
-          <a href="/comparador-politico" class="nav-link" style="font-size: 0.85rem; color: var(--text-muted);">Comparador</a>
-          <a href="/bienes-declarados" class="nav-link" style="font-size: 0.85rem; color: var(--text-muted);">Bienes</a>
+          
+          <!-- Dropdown Temas Vivos -->
+          <div class="nav-dropdown" style="position: relative; display: inline-block;">
+            <a href="/temas" class="nav-link dropdown-toggle" style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem; text-decoration: none;">
+              Temas <span style="font-size: 0.5rem; transition: transform 0.2s; display: inline-block;">▼</span>
+            </a>
+            <div class="dropdown-menu" style="display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: rgba(7, 9, 19, 0.95); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0px 4px 20px rgba(0, 240, 255, 0.15); min-width: 210px; z-index: 1000; padding: 0.5rem 0; margin-top: 0.5rem; backdrop-filter: blur(16px);">
+              <a href="/temas" style="display: block; padding: 0.5rem 1rem; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 700; font-family: var(--font-title); border-bottom: 1px solid var(--border-color); margin-bottom: 0.25rem; transition: all 0.2s; color: var(--neon-blue);">🔍 Todos los Temas</a>
+              {topics.map((t) => (
+                <a href={`/tema/${t.slug}`} style="display: block; padding: 0.5rem 1rem; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600; font-family: var(--font-title); transition: all 0.2s; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title={t.title}>
+                  📁 {t.title}
+                </a>
+              ))}
+            </div>
+          </div>
+          
+          <!-- Dropdown Políticos Españoles -->
+          <div class="nav-dropdown" style="position: relative; display: inline-block;">
+            <a href="#" class="nav-link dropdown-toggle" style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem; text-decoration: none;">
+              Políticos <span style="font-size: 0.5rem; transition: transform 0.2s; display: inline-block;">▼</span>
+            </a>
+            <div class="dropdown-menu" style="display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: rgba(7, 9, 19, 0.95); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0px 4px 20px rgba(0, 240, 255, 0.15); min-width: 180px; z-index: 1000; padding: 0.5rem 0; margin-top: 0.5rem; backdrop-filter: blur(16px);">
+              <a href="/programas-politicos" style="display: block; padding: 0.5rem 1rem; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600; font-family: var(--font-title); transition: all 0.2s;">📁 Programas Electorales</a>
+              <a href="/comparador-politico" style="display: block; padding: 0.5rem 1rem; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600; font-family: var(--font-title); transition: all 0.2s;">⚖️ Comparador de Hechos</a>
+              <a href="/bienes-declarados" style="display: block; padding: 0.5rem 1rem; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600; font-family: var(--font-title); transition: all 0.2s;">💼 Bienes y Patrimonios</a>
+            </div>
+          </div>
         </nav>
 
         <!-- Right Elements -->
@@ -142,6 +165,20 @@ const categories = [
   .nav-link:hover {
     color: var(--neon-blue);
     border-bottom-color: var(--neon-blue);
+  }
+
+  .nav-dropdown:hover .dropdown-menu {
+    display: block !important;
+  }
+  
+  .nav-dropdown:hover .dropdown-toggle span {
+    transform: rotate(180deg);
+    color: var(--neon-blue);
+  }
+  
+  .dropdown-menu a:hover {
+    color: var(--neon-blue) !important;
+    background: rgba(0, 240, 255, 0.05);
   }
 
   .footer-links a {

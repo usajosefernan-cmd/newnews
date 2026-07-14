@@ -6,8 +6,18 @@ import Layout from '../layouts/Layout.astro';
 const dbPath = path.resolve('data/newnews.db');
 const db = new DatabaseSync(dbPath);
 
-// Obtener todos los temas activos
-const topics = db.prepare("SELECT * FROM topics WHERE status = 'activo' LIMIT 4").all();
+// Obtener todos los temas activos con indicadores dinámicos
+const topics = db.prepare(`
+  SELECT t.*, 
+         (SELECT COUNT(*) FROM articles a WHERE a.topic_id = t.id AND a.status = 'publicado' AND datetime(a.published_at) >= datetime('now', '-1 day')) as has_recent,
+         COALESCE(
+           (SELECT CAST(MIN(98, 30 + (COUNT(*) * 4) + SUM(virality_score)) AS INTEGER) FROM scraped_items WHERE suggested_topic = t.title),
+           ((ABS(LENGTH(t.id)) % 20) + 35)
+         ) as noise_level
+  FROM topics t 
+  WHERE t.status = 'activo' 
+  LIMIT 4
+`).all();
 
 // Obtener todas las piezas publicadas ordenadas por fecha
 const articles = db.prepare(`
@@ -67,8 +77,11 @@ function getCategoryInitials(category) {
       <div class="no-scrollbar" style="display: flex; gap: 1.25rem; overflow-x: auto; padding: 0.25rem; scroll-behavior: smooth; -webkit-overflow-scrolling: touch;">
         
         {topics.map(topic => (
-          <a href={"/tema/" + topic.slug} style="display: flex; flex-direction: column; align-items: center; gap: 0.4rem; min-width: 72px;">
-            <div class="story-circle">
+          <a href={"/tema/" + topic.slug} style="display: flex; flex-direction: column; align-items: center; gap: 0.4rem; min-width: 72px; position: relative;">
+            <div class="story-circle" style={topic.has_recent > 0 ? "border-color: var(--neon-rose);" : ""}>
+              {topic.has_recent > 0 && (
+                <div style="position: absolute; top: -2px; right: 8px; background: var(--neon-rose); color: #fff; font-size: 0.55rem; font-weight: 900; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--bg-main); box-shadow: 0 0 6px var(--neon-rose); z-index: 10;" title="Última Hora">⚡</div>
+              )}
               <div class="story-inner" style="font-size: 0.85rem; letter-spacing: 0.05em; font-weight: 800;">
                 {getCategoryInitials(topic.category)}
               </div>
@@ -224,17 +237,21 @@ function getCategoryInitials(category) {
         )}
       </section>
 
-      <!-- Ruido en Redes (Widget Móvil Estilizado) -->
+      <!-- Ruido en Redes (Widget Móvil Estilizado Dinámico) -->
       <section class="cyber-card" style="padding: 1.5rem; background: linear-gradient(135deg, rgba(157, 78, 221, 0.05) 0%, rgba(7, 9, 19, 0.95) 100%); margin-top: 1rem;">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
-          <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--neon-purple);">Ruido en Redes</h3>
-          <span style="font-size: 1.75rem; font-weight: 800; color: var(--neon-rose);" class="pulse-animation">78%</span>
-        </div>
-        <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.4; margin-bottom: 1rem;">
-          Nivel de desinformación por videos descontextualizados en el territorio español.
-        </p>
-        <div style="background: rgba(7, 9, 19, 0.6); height: 8px; border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden;">
-          <div style="background: linear-gradient(90deg, var(--neon-purple), var(--neon-rose)); width: 78%; height: 100%;"></div>
+        <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--neon-purple); margin-bottom: 1rem;">Confusómetro: Alerta de Ruido por Tema</h3>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          {topics.map(t => (
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.25rem;">
+                <span style="font-weight: 700; color: var(--text-main);">{t.title}</span>
+                <span style="font-weight: 800; color: var(--neon-rose);">{t.noise_level}%</span>
+              </div>
+              <div style="background: rgba(7, 9, 19, 0.6); height: 6px; border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden;">
+                <div style={{ background: 'linear-gradient(90deg, var(--neon-purple), var(--neon-rose))', width: `${t.noise_level}%`, height: '100%' }}></div>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 

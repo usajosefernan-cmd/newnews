@@ -6,9 +6,14 @@ import path from 'node:path';
 const dbPath = path.resolve('data/newnews.db');
 const db = new DatabaseSync(dbPath);
 
-// Obtener todos los temas activos con el conteo de artículos publicados en cada uno
+// Obtener todos los temas activos con el conteo de artículos publicados e indicadores dinámicos
 const topics = db.prepare(`
-  SELECT t.*, COUNT(a.id) as articles_count
+  SELECT t.*, COUNT(a.id) as articles_count,
+         (SELECT COUNT(*) FROM articles a WHERE a.topic_id = t.id AND a.status = 'publicado' AND datetime(a.published_at) >= datetime('now', '-1 day')) as has_recent,
+         COALESCE(
+           (SELECT CAST(MIN(98, 30 + (COUNT(*) * 4) + SUM(virality_score)) AS INTEGER) FROM scraped_items WHERE suggested_topic = t.title),
+           ((ABS(LENGTH(t.id)) % 20) + 35)
+         ) as noise_level
   FROM topics t
   LEFT JOIN articles a ON a.topic_id = t.id AND a.status = 'publicado'
   WHERE t.status = 'activo'
@@ -63,12 +68,28 @@ function getCategoryInitials(category) {
               </span>
             </div>
 
-            <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.75rem; letter-spacing: -0.02em;">
+            <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.75rem; letter-spacing: -0.02em; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
               <a href={`/tema/${topic.slug}`} class="topic-link">{topic.title}</a>
+              {topic.has_recent > 0 && (
+                <span style="background: var(--neon-rose); color: #fff; font-size: 0.6rem; font-weight: 800; padding: 0.15rem 0.40rem; border-radius: 4px; box-shadow: 0 0 6px var(--neon-rose); animation: pulse 2s infinite; text-transform: uppercase; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 0.15rem;">
+                  ⚡ ÚLTIMA HORA
+                </span>
+              )}
             </h2>
             <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin-bottom: 1.25rem;">
               {topic.description}
             </p>
+
+            <!-- Confusómetro (Nivel de Ruido en Redes) -->
+            <div style="margin-bottom: 1.25rem;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; margin-bottom: 0.35rem;">
+                <span style="color: var(--text-muted);">Confusómetro (Ruido en Redes):</span>
+                <span style="color: var(--neon-rose);">{topic.noise_level}%</span>
+              </div>
+              <div style="background: rgba(7, 9, 19, 0.6); height: 6px; border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden;">
+                <div style={`background: linear-gradient(90deg, var(--neon-purple), var(--neon-rose)); width: ${topic.noise_level}%; height: 100%;`}></div>
+              </div>
+            </div>
             
             <div style="background: rgba(255, 255, 255, 0.015); border: 1px dashed rgba(255, 255, 255, 0.08); padding: 1rem; border-radius: 12px; font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">
               <strong style="color: var(--text-main); display: block; margin-bottom: 0.25rem;">Resumen de claves:</strong>

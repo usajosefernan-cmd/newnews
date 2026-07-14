@@ -227,5 +227,44 @@ db.exec(`
   );
 `);
 
+// Tabla radar_sources (Fuentes dinámicas de monitorización para el radar)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS radar_sources (
+    id TEXT PRIMARY KEY,
+    platform TEXT NOT NULL,
+    name TEXT NOT NULL,
+    url_or_id TEXT NOT NULL,
+    status TEXT DEFAULT 'activo',
+    created_at TEXT NOT NULL
+  );
+`);
+
+// Sembrar fuentes del radar iniciales si no hay ninguna
+const countSources = db.prepare("SELECT COUNT(*) as count FROM radar_sources").get();
+if (countSources.count === 0) {
+  console.log('[Migration] Sembrando fuentes iniciales del radar (RSS, Reddit, Telegram)...');
+  const insertSource = db.prepare(`
+    INSERT INTO radar_sources (id, platform, name, url_or_id, status, created_at)
+    VALUES (?, ?, ?, ?, 'activo', datetime('now'))
+  `);
+  
+  const initialSources = [
+    { id: 'source-rss-gt-es', platform: 'RSS', name: 'Google Trends ES', url_or_id: 'https://trends.google.com/trends/trendingsearches/daily/rss?geo=ES' },
+    { id: 'source-rss-mn-pt', platform: 'RSS', name: 'Menéame Portada', url_or_id: 'https://www.meneame.net/rss' },
+    { id: 'source-rss-mn-ac', platform: 'RSS', name: 'Menéame Activas', url_or_id: 'https://www.meneame.net/rss?status=active' },
+    { id: 'source-rss-em-es', platform: 'RSS', name: 'El Mundo España', url_or_id: 'https://www.elmundo.es/rss/portada.xml' },
+    { id: 'source-rss-ep-na', platform: 'RSS', name: 'El País Nacional', url_or_id: 'https://ep00.epimg.net/rss/elpais/portada.xml' },
+    { id: 'source-rss-abc-es', platform: 'RSS', name: 'ABC España', url_or_id: 'https://www.abc.es/rss/2.0/espana/' },
+    { id: 'source-reddit-sp', platform: 'Reddit', name: 'Reddit SpainPolitics', url_or_id: 'https://www.reddit.com/r/spainpolitics/hot.json?limit=25' },
+    { id: 'source-reddit-es', platform: 'Reddit', name: 'Reddit España', url_or_id: 'https://www.reddit.com/r/es/hot.json?limit=25' },
+    { id: 'source-tg-alvise', platform: 'Telegram', name: 'Alvise Pérez', url_or_id: 'Alviseperez' },
+    { id: 'source-tg-noticias-es', platform: 'Telegram', name: 'Noticias España Oficial', url_or_id: 'noticias_espana_oficial' }
+  ];
+  
+  for (const src of initialSources) {
+    insertSource.run(src.id, src.platform, src.name, src.url_or_id);
+  }
+}
+
 console.log('[Migration] Base de datos e índices creados exitosamente.');
 db.close();
