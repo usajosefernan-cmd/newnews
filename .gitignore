@@ -7,3 +7,8 @@ dist/
 
 # Swarm Loop Engineering Exclusions
 .worktrees/
+
+# SQLite & Syncthing temporaries
+*.db-wal
+*.db-shm
+*~syncthing~*
