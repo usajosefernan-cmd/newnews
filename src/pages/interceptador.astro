@@ -2,115 +2,56 @@
 import Layout from '../layouts/Layout.astro';
 ---
 
-<Layout title="Interceptador de Bulos — Hermes Engine" description="Audita publicaciones virales sospechosas de TikTok, YouTube, Instagram y X contrastando con datos oficiales del BOE y el INE.">
-  <div class="container" style="max-width: 680px; padding: 2rem 1rem;">
+<Layout title="Interceptador de Bulos — Hermes Engine" description="Audita links virales sospechosos de TikTok, YouTube, Instagram y X en caliente con bases de datos del BOE e INE.">
+  <div class="container" style="max-width: 600px; padding: 3rem 1rem;">
     
-    <!-- Hero Section -->
-    <section style="text-align: center; margin-bottom: 3rem; padding-top: 1rem;">
-      <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 50%; background: rgba(0, 240, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.25); color: var(--neon-blue); font-size: 2rem; margin-bottom: 1.25rem; animation: pulse 2s infinite;">
+    <!-- Header/Hero muy corto y moderno -->
+    <section style="text-align: center; margin-bottom: 2.25rem;">
+      <div style="display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.2); color: var(--neon-blue); font-size: 1.75rem; margin-bottom: 1rem; animation: pulse 2.5s infinite;">
         📡
       </div>
-      <h1 style="font-size: 2.25rem; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 0.5rem 0; line-height: 1.1;">
-        Interceptador de <span style="color: var(--neon-blue);">Bulos</span>
+      <h1 style="font-size: 1.85rem; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 0.4rem 0; line-height: 1.1;">
+        Buzón de <span style="color: var(--neon-blue);">Intercepción</span>
       </h1>
-      <p style="color: var(--text-muted); font-size: 1.05rem; line-height: 1.5; max-width: 500px; margin: 0 auto;">
-        El cortafuegos social que audita la desinformación en redes contrastando los hechos con leyes del BOE y datos del INE en tiempo real.
+      <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.45; max-width: 440px; margin: 0 auto;">
+        Pega un enlace sospechoso. Nuestro motor audita su viralidad real y el impacto social del tema contrastándolo de inmediato con el BOE y el INE.
       </p>
     </section>
 
-    <!-- ⚡ ¿CÓMO FUNCIONA EL MOTOR HERMES? (Las 4 Fases) -->
-    <section style="margin-bottom: 3.5rem;">
-      <h2 style="font-size: 1.1rem; font-weight: 800; text-transform: uppercase; color: var(--neon-purple); letter-spacing: 0.1em; margin-bottom: 1.5rem; text-align: left;">
-        ¿Cómo funciona la Refinería IA de Hermes?
-      </h2>
+    <!-- Caja del Formulario Cyberpunk -->
+    <section class="cyber-card" style="padding: 1.85rem; background: linear-gradient(180deg, rgba(7, 9, 19, 0.95) 0%, rgba(18, 22, 41, 0.85) 100%); border-color: var(--neon-blue); box-shadow: 0 10px 30px rgba(0, 240, 255, 0.03);">
       
-      <div style="display: flex; flex-direction: column; gap: 1rem;">
-        
-        <!-- Fase 1 -->
-        <div class="step-card" style="display: flex; gap: 1rem; padding: 1.25rem; background: rgba(18, 22, 41, 0.4); border: 1px solid var(--border-color); border-radius: 12px; transition: all 0.3s ease;">
-          <div style="font-size: 1.5rem; background: rgba(0, 240, 255, 0.1); width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 8px; flex-shrink: 0; color: var(--neon-blue); font-weight: bold;">
-            1
-          </div>
-          <div>
-            <h3 style="font-size: 0.95rem; font-weight: 800; color: var(--text-main); margin: 0 0 0.25rem 0;">Captura e Intercepción</h3>
-            <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.45; margin: 0;">
-              Pega el enlace de una publicación sospechosa de TikTok, YouTube, Instagram o X. El sistema analiza automáticamente metadatos y reproducciones reales.
-            </p>
-          </div>
-        </div>
-
-        <!-- Fase 2 -->
-        <div class="step-card" style="display: flex; gap: 1rem; padding: 1.25rem; background: rgba(18, 22, 41, 0.4); border: 1px solid var(--border-color); border-radius: 12px; transition: all 0.3s ease;">
-          <div style="font-size: 1.5rem; background: rgba(157, 78, 221, 0.1); width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 8px; flex-shrink: 0; color: var(--neon-purple); font-weight: bold;">
-            2
-          </div>
-          <div>
-            <h3 style="font-size: 0.95rem; font-weight: 800; color: var(--text-main); margin: 0 0 0.25rem 0;">Cortafuegos de Impacto (Viralidad)</h3>
-            <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.45; margin: 0;">
-              Si la publicación supera el umbral crítico de **10.000 visualizaciones**, se activa la cola de prioridad de Hermes para evitar la propagación masiva de desinformación.
-            </p>
-          </div>
-        </div>
-
-        <!-- Fase 3 -->
-        <div class="step-card" style="display: flex; gap: 1rem; padding: 1.25rem; background: rgba(18, 22, 41, 0.4); border: 1px solid var(--border-color); border-radius: 12px; transition: all 0.3s ease;">
-          <div style="font-size: 1.5rem; background: rgba(0, 245, 160, 0.1); width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 8px; flex-shrink: 0; color: var(--neon-green); font-weight: bold;">
-            3
-          </div>
-          <div>
-            <h3 style="font-size: 0.95rem; font-weight: 800; color: var(--text-main); margin: 0 0 0.25rem 0;">Auditoría por IA sin Sesgos</h3>
-            <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.45; margin: 0;">
-              El modelo avanzado de IA ligera realiza un análisis contrastivo estricto utilizando únicamente fuentes oficiales primarias (BOE, INE, Banco de España, etc.), eliminando interpretaciones políticas subjetivas.
-            </p>
-          </div>
-        </div>
-
-        <!-- Fase 4 -->
-        <div class="step-card" style="display: flex; gap: 1rem; padding: 1.25rem; background: rgba(18, 22, 41, 0.4); border: 1px solid var(--border-color); border-radius: 12px; transition: all 0.3s ease;">
-          <div style="font-size: 1.5rem; background: rgba(255, 176, 32, 0.1); width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 8px; flex-shrink: 0; color: var(--neon-amber); font-weight: bold;">
-            4
-          </div>
-          <div>
-            <h3 style="font-size: 0.95rem; font-weight: 800; color: var(--text-main); margin: 0 0 0.25rem 0;">Publicación Inmediata en Caliente</h3>
-            <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.45; margin: 0;">
-              Si el desmentido es concluyente, se genera el artículo y se dispara una recompilación instantánea del portal Astro, desplegándose en caliente en la web en menos de 30 segundos.
-            </p>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- 📡 BUZÓN DE INTERCEPCIÓN EN ACCIÓN -->
-    <section class="cyber-card" style="padding: 2rem; background: linear-gradient(180deg, rgba(7, 9, 19, 0.95) 0%, rgba(18, 22, 41, 0.85) 100%); border-color: var(--neon-blue);">
-      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-        <span style="font-size: 1.5rem;">📡</span>
-        <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--neon-blue); margin: 0; letter-spacing: -0.01em;">Buzón de Intercepción</h3>
-      </div>
-      <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.45; margin-bottom: 1.5rem;">
-        Pega tu enlace sospechoso. La plataforma analizará automáticamente su viralidad real y el impacto social del tema para activar la auditoría en caliente.
-      </p>
-
-      <form id="public-report-form" style="display: flex; flex-direction: column; gap: 1rem;">
+      <form id="public-report-form" style="display: flex; flex-direction: column; gap: 1.25rem;">
         
         <div style="display: flex; flex-direction: column; gap: 0.35rem;">
-          <label style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; text-align: left;">Enlace de la publicación sospechosa:</label>
-          <input type="url" id="report-url" placeholder="https://tiktok.com/@user/video/... o https://instagram.com/p/..." required 
-            style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 0.85rem; outline: none; transition: border-color 0.2s;" />
+          <label style="font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.08em; text-align: left;">Enlace de la publicación sospechosa:</label>
+          <input type="url" id="report-url" placeholder="https://tiktok.com/@user/video/... o https://youtube.com/watch?v=..." required 
+            style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.6); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 0.85rem; outline: none; transition: border-color 0.2s; box-sizing: border-box;" />
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 0.35rem;">
-          <label style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; text-align: left;">¿Qué se afirma en el bulo? (Opcional):</label>
-          <textarea id="report-text" placeholder="Ej: Afirman que los menores tutelados cobran una paga de 4.200€ al mes..." rows="3"
-            style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 0.85rem; outline: none; transition: border-color 0.2s; resize: vertical;"></textarea>
+          <label style="font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.08em; text-align: left;">¿Qué se afirma en el bulo? (Opcional):</label>
+          <textarea id="report-text" placeholder="Ej: Afirman que los autónomos tendrán una cuota del 50%..." rows="2"
+            style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.6); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 0.85rem; outline: none; transition: border-color 0.2s; resize: none; box-sizing: border-box;"></textarea>
         </div>
 
-        <button type="submit" class="cyber-btn accent" style="width: 100%; padding: 0.85rem; border-radius: 8px; font-weight: 800; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.05em; margin-top: 0.5rem; cursor: pointer;">
+        <button type="submit" id="submit-btn" class="cyber-btn accent" style="width: 100%; padding: 0.85rem; border-radius: 8px; font-weight: 800; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.08em; cursor: pointer; transition: all 0.2s ease;">
           Interceptar y Auditar Link
         </button>
       </form>
 
-      <div id="report-toast" style="display: none; margin-top: 1.25rem; padding: 0.85rem 1.25rem; border-radius: 8px; font-size: 0.85rem; line-height: 1.4; text-align: left;"></div>
+      <!-- 🖥️ CONSOLA DE LOGS EN VIVO -->
+      <div id="console-wrapper" style="display: none; margin-top: 1.5rem; background: rgba(5, 7, 15, 0.95); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.15rem; font-family: monospace; font-size: 0.75rem; text-align: left; box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.1); max-height: 250px; overflow-y: auto; scroll-behavior: smooth;">
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 240, 255, 0.1); padding-bottom: 0.5rem; margin-bottom: 0.75rem;">
+          <span style="color: var(--neon-blue); font-weight: 800; font-size: 0.7rem; letter-spacing: 0.05em; text-transform: uppercase; display: flex; align-items: center; gap: 0.35rem;">
+            <span class="pulse-dot"></span> CONSOLA DE AUDITORÍA HERMES
+          </span>
+          <span id="console-status" style="color: var(--neon-amber); font-weight: bold; font-size: 0.65rem; text-transform: uppercase;">PROCESANDO...</span>
+        </div>
+        <div id="console-logs" style="display: flex; flex-direction: column; gap: 0.4rem; line-height: 1.4; color: var(--text-muted);">
+          <!-- Logs dinámicos -->
+        </div>
+      </div>
     </section>
 
   </div>
@@ -119,7 +60,10 @@ import Layout from '../layouts/Layout.astro';
 <script is:inline>
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('public-report-form');
-    const toast = document.getElementById('report-toast');
+    const submitBtn = document.getElementById('submit-btn');
+    const consoleWrapper = document.getElementById('console-wrapper');
+    const consoleLogs = document.getElementById('console-logs');
+    const consoleStatus = document.getElementById('console-status');
 
     if (form) {
       form.addEventListener('submit', async (e) => {
@@ -127,11 +71,36 @@ import Layout from '../layouts/Layout.astro';
         const url = document.getElementById('report-url').value;
         const text = document.getElementById('report-text').value;
 
-        toast.style.display = 'block';
-        toast.style.background = 'rgba(0, 240, 255, 0.08)';
-        toast.style.border = '1px solid rgba(0, 240, 255, 0.2)';
-        toast.style.color = 'var(--neon-blue)';
-        toast.innerText = 'Enviando reporte de intercepción a la VPS...';
+        // Desactivar form y mostrar consola
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.5';
+        submitBtn.innerText = 'PROCESANDO ENLACE...';
+        
+        consoleLogs.innerHTML = '';
+        consoleWrapper.style.display = 'block';
+        consoleStatus.innerText = 'ANALIZANDO';
+        consoleStatus.style.color = 'var(--neon-amber)';
+
+        const appendLog = (msg, type = 'info') => {
+          const row = document.createElement('div');
+          row.style.wordBreak = 'break-all';
+          
+          if (type === 'success') {
+            row.style.color = '#00ffc4'; // neon green
+          } else if (type === 'error') {
+            row.style.color = '#ff3366'; // neon rose
+          } else if (type === 'warn') {
+            row.style.color = '#ffb020'; // neon amber
+          } else {
+            row.style.color = '#00f0ff'; // neon blue
+          }
+          
+          row.innerText = `> ${msg}`;
+          consoleLogs.appendChild(row);
+          
+          // Auto scroll
+          consoleWrapper.scrollTop = consoleWrapper.scrollHeight;
+        };
 
         try {
           const response = await fetch('/api/report', {
@@ -142,29 +111,55 @@ import Layout from '../layouts/Layout.astro';
             body: JSON.stringify({ url, text })
           });
 
-          const result = await response.json();
-          if (response.ok && result.success) {
-            toast.style.background = 'rgba(0, 245, 160, 0.08)';
-            toast.style.border = '1px solid rgba(0, 245, 160, 0.2)';
-            toast.style.color = 'var(--neon-green)';
-            toast.innerText = result.message || 'Reportado con éxito.';
-            form.reset();
-          } else {
-            toast.style.background = 'rgba(255, 51, 102, 0.08)';
-            toast.style.border = '1px solid rgba(255, 51, 102, 0.2)';
-            toast.style.color = 'var(--neon-rose)';
-            toast.innerText = result.error || 'Error procesando el reporte.';
+          if (!response.body) {
+            appendLog('Error de conexión: El servidor no devolvió un flujo de datos.', 'error');
+            return;
           }
-        } catch (err) {
-          toast.style.background = 'rgba(255, 51, 102, 0.08)';
-          toast.style.border = '1px solid rgba(255, 51, 102, 0.2)';
-          toast.style.color = 'var(--neon-rose)';
-          toast.innerText = 'Error de conexión con el servidor de base de datos.';
-        }
 
-        setTimeout(() => {
-          toast.style.display = 'none';
-        }, 8000);
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop(); // Mantener remanente incompleto
+
+            for (const line of lines) {
+              if (line.trim()) {
+                try {
+                  const data = JSON.parse(line);
+                  appendLog(data.message, data.status);
+                  
+                  if (data.status === 'success') {
+                    consoleStatus.innerText = 'COMPLETADO';
+                    consoleStatus.style.color = '#00ffc4';
+                  } else if (data.status === 'error') {
+                    consoleStatus.innerText = 'FALLIDO';
+                    consoleStatus.style.color = '#ff3366';
+                  }
+                } catch (jsonErr) {
+                  // Fallback para logs de texto crudo si hubiera
+                  appendLog(line, 'info');
+                }
+              }
+            }
+          }
+          
+          // Limpiar el form
+          form.reset();
+        } catch (err) {
+          appendLog(`Error de conexión con la VPS: ${err.message}`, 'error');
+          consoleStatus.innerText = 'ERROR';
+          consoleStatus.style.color = '#ff3366';
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = '1';
+          submitBtn.innerText = 'Interceptar y Auditar Link';
+        }
       });
     }
   });
@@ -183,10 +178,12 @@ import Layout from '../layouts/Layout.astro';
     }
   }
 
-  .step-card:hover {
-    border-color: var(--neon-blue) !important;
-    background: rgba(18, 22, 41, 0.7) !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0, 240, 255, 0.05);
+  .pulse-dot {
+    width: 6px;
+    height: 6px;
+    background-color: var(--neon-blue);
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse 1.5s infinite;
   }
 </style>
