@@ -54,6 +54,9 @@ const officialSourceCount = (() => {
 
 db.close();
 
+const base = import.meta.env.BASE_URL;
+const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+
 const featuredArticle = articles.length > 0 ? articles[0] : null;
 const remainingArticles = articles.length > 1 ? articles.slice(1) : [];
 const hasArticles = articles.length > 0;
@@ -68,75 +71,75 @@ function getVerdictClass(verdict) {
 
 function getCategoryInitials(category) {
   const c = (category || '').toLowerCase();
-  if (c.includes('migr') || c.includes('socied')) return 'MG';
-  if (c.includes('vivien') || c.includes('okupa')) return 'VV';
-  if (c.includes('impues') || c.includes('ahorr') || c.includes('econ')) return 'EC';
-  if (c.includes('polit') || c.includes('parti')) return 'PL';
-  return 'EX';
+  if (c.includes('inmigr') || c.includes('delin')) return 'MIG';
+  if (c.includes('emple') || c.includes('paro')) return 'EMP';
+  if (c.includes('vivien') || c.includes('okup')) return 'VIV';
+  if (c.includes('infla') || c.includes('ipc') || c.includes('vida')) return 'IPC';
+  if (c.includes('auto') || c.includes('fisc') || c.includes('haci')) return 'AUT';
+  if (c.includes('eco')) return 'ECO';
+  return 'GEN';
 }
 
 function getCategorySlug(category) {
   return (category || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
 }
 
-function getRelativeTime(dateString) {
-  if (!dateString) return 'hace un momento';
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  if (isNaN(diffMs)) return 'hace un momento';
-  const diffMin = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffMin < 1) return 'hace unos segundos';
-  if (diffMin < 60) return `hace ${diffMin} min`;
-  if (diffHours < 24) return `hace ${diffHours} h`;
-  return `hace ${diffDays} días`;
+function getRelativeTime(dateStr) {
+  if (!dateStr) return 'Reciente';
+  try {
+    const pub = new Date(dateStr.replace(' ', 'T'));
+    const diffMs = Date.now() - pub.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 60) return `Hace ${diffMins} min`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `Hace ${diffHours} h`;
+    return pub.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+  } catch (e) {
+    return 'Reciente';
+  }
 }
 
-function formatOriginalDate(dateString) {
-  if (!dateString) return 'Reciente';
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return dateString; // Si no es parseable, devolver como esta
-  return date.toLocaleDateString('es-ES', { 
-    day: '2-digit', 
-    month: '2-digit', 
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+function formatOriginalDate(dateStr) {
+  if (!dateStr) return '';
+  try {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+  } catch(e) {
+    return dateStr;
+  }
 }
 ---
 
-<Layout title="Radar de Desinformación - España" activeNav="radar">
-  <!-- Radar Ticker -->
-  <div class="radar-ticker">
-    <div class="radar-content">
-      <span class="pulse-icon"></span>
-      <div class="ticker-wrapper" style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
-        <div class="ticker-track">
-          <span>NEWNEWS: Solo datos oficiales. Sin intermediarios. Sin fact-checkers.</span>
-          <span>&bull;</span>
-          <span>FUENTES: BOE · INE · SEPE · Congreso · Tribunal Supremo · Banco de España</span>
-          <span>&bull;</span>
-          <span>{topics.length} EXPEDIENTES ACTIVOS · {officialSourceCount} FUENTES OFICIALES INDEXADAS</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="container" style="padding-top: 1.5rem; padding-bottom: 5rem;">
+<Layout title="Radar de Desmentidos y Auditoría en Vivo">
+  <div class="container" style="padding-top: 1.5rem; padding-bottom: 3rem; max-width: 680px;">
     
-    <!-- Expedientes Activos (Stories) -->
+    <!-- ═══ HEADER DEL PORTAL ═══ -->
+    <section style="margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+        <span class="pulse-dot" style="font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--neon-blue); letter-spacing: 0.15em; display: inline-flex; align-items: center; gap: 0.5rem;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--neon-blue); display: inline-block;"></span>
+          Radar de Actividad en Vivo
+        </span>
+        <span style="font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-title); font-weight: 700;">
+          {officialSourceCount} Fuentes Primarias Indexadas
+        </span>
+      </div>
+      <h1 style="font-size: 1.6rem; font-weight: 900; letter-spacing: -0.03em; margin: 0; line-height: 1.2; color: #ffffff;">
+        ¿Es información real, opinión sesgada o promoción oculta?
+      </h1>
+      <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.45; margin-top: 0.5rem;">
+        Nuestros motores analizan la viralidad de las afirmaciones que circulan en TikTok, YouTube y X, evaluando la presencia de enlaces de afiliados y contrastando los datos con registros oficiales de España.
+      </p>
+    </section>
+
+    <!-- ═══ SECCIÓN DE "STORIES" (TEMAS ACTIVOS) ═══ -->
     <section style="margin-bottom: 2rem;">
-      <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.1em; display: block; margin-bottom: 0.75rem; padding-left: 0.25rem;">Expedientes Activos</span>
-      <div class="no-scrollbar" style="display: flex; gap: 1.25rem; overflow-x: auto; padding: 0.25rem; scroll-behavior: smooth; -webkit-overflow-scrolling: touch;">
+      <div class="no-scrollbar" style="display: flex; gap: 1rem; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 0.5rem;">
         
-        {topics.map(topic => (
-          <a href={"/tema/" + topic.slug} style="display: flex; flex-direction: column; align-items: center; gap: 0.4rem; min-width: 72px; position: relative;">
-            <div class="story-circle" style={topic.has_recent > 0 ? { borderColor: 'var(--neon-rose)' } : {}}>
-              {topic.has_recent > 0 && (
+        {topics.map((topic: any) => (
+          <a href={`${cleanBase}/tema/${topic.slug}`} style="display: flex; flex-direction: column; align-items: center; gap: 0.4rem; min-width: 72px;">
+            <div class={`story-circle ${topic.has_recent ? 'active' : ''}`}>
+              {topic.has_recent && (
                 <div style="position: absolute; top: -2px; right: 8px; background: var(--neon-rose); color: #fff; font-size: 0.55rem; font-weight: 900; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--bg-main); box-shadow: 0 0 6px var(--neon-rose); z-index: 10;" title="Última Hora">⚡</div>
               )}
               <div class="story-inner" style="font-size: 0.85rem; letter-spacing: 0.05em; font-weight: 800;">
@@ -149,7 +152,7 @@ function formatOriginalDate(dateString) {
           </a>
         ))}
 
-        <a href="/temas" style="display: flex; flex-direction: column; align-items: center; gap: 0.4rem; min-width: 72px;">
+        <a href={`${cleanBase}/temas`} style="display: flex; flex-direction: column; align-items: center; gap: 0.4rem; min-width: 72px;">
           <div class="story-circle" style="background: linear-gradient(135deg, var(--border-color), rgba(255,255,255,0.2));">
             <div class="story-inner" style="color: var(--text-muted); font-size: 0.85rem; font-weight: 800;">
               ALL
@@ -166,9 +169,9 @@ function formatOriginalDate(dateString) {
     <!-- Selector de Categorías -->
     <section style="margin: 0.5rem 0 1.5rem;">
       <div class="no-scrollbar" style="display: flex; gap: 0.5rem; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 0.25rem;">
-        <a href="/" class="cyber-btn" style="padding: 0.4rem 1rem; font-size: 0.75rem; border-radius: 30px; background: rgba(0, 240, 255, 0.06); border-color: rgba(0,240,255,0.2); color: var(--neon-blue); white-space: nowrap;">Todos los Expedientes</a>
+        <a href={cleanBase || "/"} class="cyber-btn" style="padding: 0.4rem 1rem; font-size: 0.75rem; border-radius: 30px; background: rgba(0, 240, 255, 0.06); border-color: rgba(0,240,255,0.2); color: var(--neon-blue); white-space: nowrap;">Todos los Expedientes</a>
         {categories.map(c => (
-          <a href={"/categoria/" + c.slug} class="cyber-btn" style="padding: 0.4rem 1rem; font-size: 0.75rem; border-radius: 30px; white-space: nowrap; color: var(--text-main); border-color: rgba(255,255,255,0.1);">
+          <a href={`${cleanBase}/categoria/${c.slug}`} class="cyber-btn" style="padding: 0.4rem 1rem; font-size: 0.75rem; border-radius: 30px; white-space: nowrap; color: var(--text-main); border-color: rgba(255,255,255,0.1);">
             📁 {c.name}
           </a>
         ))}
@@ -186,17 +189,17 @@ function formatOriginalDate(dateString) {
               <div class={"cyber-card " + getVerdictClass(featuredArticle.verdict)} style="padding: 1.75rem; background: linear-gradient(180deg, rgba(18, 22, 41, 0.8) 0%, rgba(7, 9, 19, 0.95) 100%);">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
                   <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <a href={"/categoria/" + getCategorySlug(featuredArticle.category)} style="text-decoration: none;" title={`Categoría: ${featuredArticle.category}`}>
+                    <a href={`${cleanBase}/categoria/${getCategorySlug(featuredArticle.category)}`} style="text-decoration: none;" title={`Categoría: ${featuredArticle.category}`}>
                       <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(0, 240, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.25); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; color: var(--neon-blue);">
                         {getCategoryInitials(featuredArticle.category)}
                       </div>
                     </a>
                     <div>
-                      <a href={"/tema/" + featuredArticle.topic_slug} style="font-size: 0.85rem; font-weight: 700; color: var(--text-main); display: block;">
+                      <a href={`${cleanBase}/tema/${featuredArticle.topic_slug}`} style="font-size: 0.85rem; font-weight: 700; color: var(--text-main); display: block;">
                         {featuredArticle.topic_title}
                       </a>
                       <span style="font-size: 0.7rem; color: var(--text-muted); display: block;">
-                        Categoría: <a href={"/categoria/" + getCategorySlug(featuredArticle.category)} style="color: var(--neon-blue); text-decoration: none; font-weight: 700;">{featuredArticle.category}</a> &bull; Incorporado: <strong style="color: var(--neon-blue);">{getRelativeTime(featuredArticle.published_at)}</strong>
+                        Categoría: <a href={`${cleanBase}/categoria/${getCategorySlug(featuredArticle.category)}`} style="color: var(--neon-blue); text-decoration: none; font-weight: 700;">{featuredArticle.category}</a> &bull; Incorporado: <strong style="color: var(--neon-blue);">{getRelativeTime(featuredArticle.published_at)}</strong>
                       </span>
                     </div>
                   </div>
@@ -206,7 +209,7 @@ function formatOriginalDate(dateString) {
                 </div>
 
                 <div style="margin-bottom: 1.5rem;">
-                  <a href={"/noticia/" + featuredArticle.slug}>
+                  <a href={`${cleanBase}/noticia/${featuredArticle.slug}`}>
                     <h2 style="font-size: 1.75rem; line-height: 1.2; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.75rem; color: var(--text-main);">
                       {featuredArticle.title}
                     </h2>
@@ -230,7 +233,7 @@ function formatOriginalDate(dateString) {
                       <span> &bull; Post original: <strong style="color: var(--text-main);">{formatOriginalDate(featuredArticle.origin_date)}</strong></span>
                     )}
                   </span>
-                  <a href={"/noticia/" + featuredArticle.slug} class="cyber-btn accent" style="padding: 0.5rem 1.25rem; font-size: 0.75rem; border-radius: 12px;">
+                  <a href={`${cleanBase}/noticia/${featuredArticle.slug}`} class="cyber-btn accent" style="padding: 0.5rem 1.25rem; font-size: 0.75rem; border-radius: 12px;">
                     Verificar &rarr;
                   </a>
                 </div>
@@ -245,17 +248,17 @@ function formatOriginalDate(dateString) {
               <div class={"cyber-card " + getVerdictClass(art.verdict)} style="padding: 1.5rem; background: rgba(18, 22, 41, 0.45);">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
                   <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <a href={"/categoria/" + getCategorySlug(art.category)} style="text-decoration: none;" title={`Categoría: ${art.category}`}>
+                    <a href={`${cleanBase}/categoria/${getCategorySlug(art.category)}`} style="text-decoration: none;" title={`Categoría: ${art.category}`}>
                       <div style="width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; color: var(--text-muted);">
                         {getCategoryInitials(art.category)}
                       </div>
                     </a>
                     <div>
-                      <a href={"/tema/" + art.topic_slug} style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); display: block;">
+                      <a href={`${cleanBase}/tema/${art.topic_slug}`} style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); display: block;">
                         {art.topic_title}
                       </a>
                       <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">
-                        Categoría: <a href={"/categoria/" + getCategorySlug(art.category)} style="color: var(--neon-purple); text-decoration: none; font-weight: 700;">{art.category}</a> &bull; {getRelativeTime(art.published_at)}
+                        Categoría: <a href={`${cleanBase}/categoria/${getCategorySlug(art.category)}`} style="color: var(--neon-purple); text-decoration: none; font-weight: 700;">{art.category}</a> &bull; {getRelativeTime(art.published_at)}
                       </span>
                     </div>
                   </div>
@@ -264,7 +267,7 @@ function formatOriginalDate(dateString) {
                   </span>
                 </div>
                 <div style="margin-bottom: 1.25rem;">
-                  <a href={"/noticia/" + art.slug}>
+                  <a href={`${cleanBase}/noticia/${art.slug}`}>
                     <h3 style="font-size: 1.35rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.5rem; color: var(--text-main);">
                       {art.title}
                     </h3>
@@ -280,7 +283,7 @@ function formatOriginalDate(dateString) {
                       <span> &bull; Post: <strong style="color: var(--text-main);">{formatOriginalDate(art.origin_date)}</strong></span>
                     )}
                   </span>
-                  <a href={"/noticia/" + art.slug} class="cyber-btn" style="padding: 0.35rem 0.85rem; font-size: 0.7rem; border-radius: 10px; color: var(--neon-blue); border-color: rgba(0, 240, 255, 0.15);">
+                  <a href={`${cleanBase}/noticia/${art.slug}`} class="cyber-btn" style="padding: 0.35rem 0.85rem; font-size: 0.7rem; border-radius: 10px; color: var(--neon-blue); border-color: rgba(0, 240, 255, 0.15);">
                     Verificar &rarr;
                   </a>
                 </div>
@@ -299,10 +302,10 @@ function formatOriginalDate(dateString) {
               El radar está monitorizando redes en busca de bulos virales. Mientras tanto, explora los expedientes temáticos.
             </p>
             <div class="empty-state-actions">
-              <a href="/temas" class="cyber-btn accent" style="border-radius: 12px; padding: 0.75rem 1.5rem;">
+              <a href={`${cleanBase}/temas`} class="cyber-btn accent" style="border-radius: 12px; padding: 0.75rem 1.5rem;">
                 Explorar Expedientes
               </a>
-              <a href="/comparador-politico" class="cyber-btn" style="border-radius: 12px; padding: 0.75rem 1.5rem;">
+              <a href={`${cleanBase}/comparador-politico`} class="cyber-btn" style="border-radius: 12px; padding: 0.75rem 1.5rem;">
                 Comparador Político
               </a>
             </div>
@@ -327,20 +330,21 @@ function formatOriginalDate(dateString) {
                     </a>
                   </div>
                 ))}
-                    <!-- ⚡ TEASER DEL BUZÓN DE INTERCEPCIÓN -->
-      <section class="cyber-card" style="padding: 1.75rem; background: linear-gradient(185deg, rgba(7, 9, 19, 0.95) 0%, rgba(18, 22, 41, 0.8) 100%); border-color: var(--neon-blue); margin-top: 1rem; text-align: left; position: relative; overflow: hidden; transition: all 0.3s ease;">
-        <div style="position: absolute; top: -20px; right: -20px; font-size: 5rem; opacity: 0.05; pointer-events: none;">📡</div>
-        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-          <span style="font-size: 1.5rem;">📡</span>
-          <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--neon-blue); margin: 0; letter-spacing: -0.01em;">Buzón de Intercepción</h3>
-        </div>
-        <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.45; margin-bottom: 1.25rem; max-width: 95%;">
-          ¿Has detectado un bulo sospechoso o una publicación viral en TikTok, YouTube, Instagram o X? Envía el enlace al radar. Nuestro motor contrastará los hechos con las leyes vigentes del BOE y los datos macroeconómicos del INE de forma neutral.
-        </p>
-        <a href="/interceptor" class="cyber-btn accent" style="display: inline-flex; align-items: center; justify-content: center; width: 100%; padding: 0.75rem; border-radius: 8px; font-weight: 800; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; text-decoration: none; box-sizing: border-box; text-align: center;">
-          Acceder al Interceptor &rarr;
-        </a>
-      </section>
+                
+                <!-- ⚡ TEASER DEL BUZÓN DE INTERCEPCIÓN -->
+                <section class="cyber-card" style="padding: 1.75rem; background: linear-gradient(185deg, rgba(7, 9, 19, 0.95) 0%, rgba(18, 22, 41, 0.8) 100%); border-color: var(--neon-blue); margin-top: 1rem; text-align: left; position: relative; overflow: hidden; transition: all 0.3s ease;">
+                  <div style="position: absolute; top: -20px; right: -20px; font-size: 5rem; opacity: 0.05; pointer-events: none;">📡</div>
+                  <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                    <span style="font-size: 1.5rem;">📡</span>
+                    <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--neon-blue); margin: 0; letter-spacing: -0.01em;">Buzón de Intercepción</h3>
+                  </div>
+                  <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.45; margin-bottom: 1.25rem; max-width: 95%;">
+                    ¿Has detectado un bulo sospechoso o una publicación viral en TikTok, YouTube, Instagram o X? Envía el enlace al radar. Nuestro motor contrastará los hechos con las leyes vigentes del BOE y los datos macroeconómicos del INE de forma neutral.
+                  </p>
+                  <a href={`${cleanBase}/interceptor`} class="cyber-btn accent" style="display: inline-flex; align-items: center; justify-content: center; width: 100%; padding: 0.75rem; border-radius: 8px; font-weight: 800; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; text-decoration: none; box-sizing: border-box; text-align: center;">
+                    Acceder al Interceptor &rarr;
+                  </a>
+                </section>
               </div>
             </section>
           )}
@@ -405,7 +409,7 @@ function formatOriginalDate(dateString) {
         <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.4; margin-bottom: 1rem; max-width: 400px; margin-left: auto; margin-right: auto;">
           Contrasta de forma objetiva lo que prometen los partidos políticos frente a los datos reales y leyes vigentes.
         </p>
-        <a href="/comparador-politico" class="cyber-btn accent" style="width: 100%; max-width: 250px; border-radius: 12px; font-size: 0.75rem;">
+        <a href={`${cleanBase}/comparador-politico`} class="cyber-btn accent" style="width: 100%; max-width: 250px; border-radius: 12px; font-size: 0.75rem;">
           Comparar Programas
         </a>
       </section>

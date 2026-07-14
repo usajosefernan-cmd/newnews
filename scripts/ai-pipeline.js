@@ -319,7 +319,6 @@ Devuelve un JSON válido con la siguiente estructura:
       } else {
         throw new Error('Sin API Key');
       }
-      }
     } catch (err) {
       // 2. Fallback Inteligente Local con datos reales de actualidad recopilados
       console.log('  -> Sin API Key de Gemini. Procesando localmente con base de datos de desmentidos de España...');
