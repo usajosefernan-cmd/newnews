@@ -104,7 +104,8 @@ async function processItems() {
     if (s.includes('precio') || s.includes('inflac') || s.includes('ipc') || s.includes('cesta')) return 't-inflacion';
     if (s.includes('paro') || s.includes('empleo') || s.includes('trabaj') || s.includes('fijo')) return 't-empleo';
     if (s.includes('autonom') || s.includes('fiscal') || s.includes('cuota') || s.includes('hacienda')) return 't-autonomos';
-    return 't-franco'; // Fallback por defecto
+    if (s.includes('econom') || s.includes('sociedad') || s.includes('general')) return 't-economia';
+    return 't-economia'; // Fallback por defecto
   };
 
   for (const item of pendingItems) {

@@ -703,13 +703,13 @@ async function runRadar() {
       // Clasificación mejorada del tema
       let suggestedTopic = 'Economía y Sociedad';
       const combined = titleLower + ' ' + descLower;
-      if (combined.includes('franco') || combined.includes('memoria histórica') || combined.includes('exhumación')) suggestedTopic = 'Mitos y Leyendas del Franquismo';
-      else if (combined.includes('mena') || combined.includes('inmigr') || combined.includes('extranj') || combined.includes('frontera')) suggestedTopic = 'Inmigración, Delincuencia y Ayudas';
+      if (/\bfranco\w*\b/i.test(combined) || combined.includes('memoria histórica') || combined.includes('exhumación')) suggestedTopic = 'Mitos y Leyendas del Franquismo';
+      else if (/\bmena\w*\b/i.test(combined) || combined.includes('inmigr') || combined.includes('extranj') || combined.includes('frontera')) suggestedTopic = 'Inmigración, Delincuencia y Ayudas';
       else if (combined.includes('begoña') || combined.includes('peinado')) suggestedTopic = 'Investigación Judicial a Begoña Gómez';
       else if (combined.includes('koldo') || combined.includes('ábalos') || combined.includes('mascarilla')) suggestedTopic = 'Caso Koldo y Sentencia del Tribunal Supremo';
       else if (combined.includes('okupa') || combined.includes('vivienda') || combined.includes('alquiler') || combined.includes('hipoteca')) suggestedTopic = 'Vivienda y Okupación';
       else if (combined.includes('amnistía') || combined.includes('procés') || combined.includes('puigdemont')) suggestedTopic = 'Ley de Amnistía y Procés';
-      else if (combined.includes('paro') || combined.includes('empleo') || combined.includes('sepe') || combined.includes('fijo discontinuo')) suggestedTopic = 'Empleo y Cifras de Paro';
+      else if (/\bparo\b/i.test(combined) || combined.includes('empleo') || combined.includes('sepe') || combined.includes('fijo discontinuo')) suggestedTopic = 'Empleo y Cifras de Paro';
       else if (combined.includes('autónomo') || combined.includes('irpf') || combined.includes('hacienda') || combined.includes('cuota')) suggestedTopic = 'Autónomos y Fiscalidad';
       else if (combined.includes('inflación') || combined.includes('iva') || combined.includes('precio') || combined.includes('cesta')) suggestedTopic = 'Inflación y Coste de Vida';
 

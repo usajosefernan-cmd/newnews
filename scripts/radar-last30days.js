@@ -21,9 +21,9 @@ function getSuggestedTopic(text) {
   const t = (text || '').toLowerCase();
   if (t.includes('okupa') || t.includes('vivienda') || t.includes('alquiler')) return 'Vivienda y Okupación';
   if (t.includes('koldo') || t.includes('ábalos') || t.includes('mascarilla') || t.includes('corrupción')) return 'Caso Koldo y Contratos';
-  if (t.includes('migra') || t.includes('mena') || t.includes('frontera') || t.includes('extranjer')) return 'Inmigración y Fronteras';
+  if (t.includes('migra') || /\bmena\w*\b/i.test(t) || t.includes('frontera') || t.includes('extranjer')) return 'Inmigración y Fronteras';
   if (t.includes('impues') || t.includes('hacienda') || t.includes('fiscal') || t.includes('ahorro')) return 'Impuestos y Cuotas';
-  if (t.includes('paro') || t.includes('empleo') || t.includes('trabaj') || t.includes('fijo')) return 'Desempleo y Fijos Discontinuos';
+  if (/\bparo\b/i.test(t) || t.includes('empleo') || t.includes('trabaj') || t.includes('fijo')) return 'Desempleo y Fijos Discontinuos';
   if (t.includes('precio') || t.includes('inflac') || t.includes('cesta') || t.includes('súper')) return 'Precios e Inflación';
   if (t.includes('pension') || t.includes('jubila') || t.includes('seguridad social')) return 'Pensiones y Jubilación';
   return 'General';
