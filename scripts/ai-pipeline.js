@@ -213,7 +213,8 @@ async function callGemini(promptText) {
         body: JSON.stringify({
           model: 'google/gemini-2.5-flash',
           messages: [{ role: 'user', content: promptText }],
-          response_format: { type: 'json_object' }
+          response_format: { type: 'json_object' },
+          max_tokens: 2000
         })
       });
 
@@ -227,9 +228,10 @@ async function callGemini(promptText) {
             'Authorization': `Bearer ${orKey}`
           },
           body: JSON.stringify({
-            model: 'meta-llama/llama-3.1-8b-instruct:free',
+            model: 'meta-llama/llama-3.1-8b-instruct',
             messages: [{ role: 'user', content: promptText }],
-            response_format: { type: 'json_object' }
+            response_format: { type: 'json_object' },
+            max_tokens: 2000
           })
         });
       }
@@ -379,7 +381,7 @@ Devuelve un JSON válido con la siguiente estructura:
       }
     } catch (err) {
       // 2. Fallback Inteligente Local con datos reales de actualidad recopilados
-      console.log('  -> Sin API Key de Gemini. Procesando localmente con base de datos de desmentidos de España...');
+      console.log('  -> Fallback a local debido a error:', err.message);
       
       let matchedKey = null;
       if (claimLower.includes('franco') || textLower.includes('franco')) matchedKey = 'franco';
