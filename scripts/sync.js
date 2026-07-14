@@ -21,7 +21,7 @@ function runCommand(command, description) {
 }
 
 // 1. Ejecutar Radar Cron para capturar tendencias y debates
-const radarSuccess = runCommand('node scripts/radar-cron.js', 'Ejecutando Radar Cron (Escaneo de feeds RSS, Reddit, Telegram)');
+const radarSuccess = runCommand('node scripts/radar-last30days.js', 'Ejecutando Radar Cron (Escaneo de redes con last30days)');
 
 if (!radarSuccess) {
   console.error('⚠️ Deteniendo pipeline debido a un fallo en el Radar.');

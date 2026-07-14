@@ -57,6 +57,8 @@ db.exec(`
     human_review_required INTEGER DEFAULT 1,
     published_at TEXT,
     origin_date TEXT,
+    multimedia_url TEXT,
+    multimedia_type TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     FOREIGN KEY(topic_id) REFERENCES topics(id) ON DELETE SET NULL
@@ -65,9 +67,13 @@ db.exec(`
 
 try {
   db.exec("ALTER TABLE articles ADD COLUMN origin_date TEXT;");
-} catch (e) {
-  // Columna ya existe
-}
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE articles ADD COLUMN multimedia_url TEXT;");
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE articles ADD COLUMN multimedia_type TEXT;");
+} catch (e) {}
 
 // Tabla sources (Fuentes originales de los desmentidos)
 db.exec(`
@@ -98,9 +104,16 @@ db.exec(`
     virality_score REAL DEFAULT 0.0,
     risk_score REAL DEFAULT 0.0,
     status TEXT DEFAULT 'pendiente',
+    origin_date TEXT,
     created_at TEXT NOT NULL
   );
 `);
+
+try {
+  db.exec("ALTER TABLE scraped_items ADD COLUMN origin_date TEXT;");
+} catch (e) {
+  // Columna ya existe
+}
 
 // Tabla social_posts (Formateado para RRSS)
 db.exec(`
@@ -246,31 +259,58 @@ db.exec(`
   );
 `);
 
-// Sembrar fuentes del radar iniciales si no hay ninguna
-const countSources = db.prepare("SELECT COUNT(*) as count FROM radar_sources").get();
-if (countSources.count === 0) {
-  console.log('[Migration] Sembrando fuentes iniciales del radar (RSS, Reddit, Telegram)...');
-  const insertSource = db.prepare(`
-    INSERT INTO radar_sources (id, platform, name, url_or_id, status, created_at)
-    VALUES (?, ?, ?, ?, 'activo', datetime('now'))
-  `);
-  
-  const initialSources = [
-    { id: 'source-rss-gt-es', platform: 'RSS', name: 'Google Trends ES', url_or_id: 'https://trends.google.es/trends/trendingsearches/daily/rss?geo=ES' },
-    { id: 'source-rss-mn-pt', platform: 'RSS', name: 'Menéame Portada', url_or_id: 'https://www.meneame.net/rss' },
-    { id: 'source-rss-mn-ac', platform: 'RSS', name: 'Menéame Activas', url_or_id: 'https://www.meneame.net/rss?status=active' },
-    { id: 'source-rss-em-es', platform: 'RSS', name: 'El Mundo España', url_or_id: 'https://www.elmundo.es/rss/portada.xml' },
-    { id: 'source-rss-ep-na', platform: 'RSS', name: 'El País Nacional', url_or_id: 'https://ep00.epimg.net/rss/elpais/portada.xml' },
-    { id: 'source-rss-abc-es', platform: 'RSS', name: 'ABC España', url_or_id: 'https://www.abc.es/rss/2.0/espana/' },
-    { id: 'source-reddit-sp', platform: 'Reddit', name: 'Reddit SpainPolitics', url_or_id: 'https://www.reddit.com/r/spainpolitics/hot.json?limit=25' },
-    { id: 'source-reddit-es', platform: 'Reddit', name: 'Reddit España', url_or_id: 'https://www.reddit.com/r/es/hot.json?limit=25' },
-    { id: 'source-tg-alvise', platform: 'Telegram', name: 'Alvise Pérez', url_or_id: 'Alviseperez' },
-    { id: 'source-tg-noticias-es', platform: 'Telegram', name: 'Noticias España Oficial', url_or_id: 'noticias_espana_oficial' }
-  ];
-  
-  for (const src of initialSources) {
-    insertSource.run(src.id, src.platform, src.name, src.url_or_id);
-  }
+// Tabla verification_logs (Registro completo de búsquedas manuales de usuarios e IA)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS verification_logs (
+    id TEXT PRIMARY KEY,
+    query_text TEXT NOT NULL,
+    ip_address TEXT,
+    status TEXT NOT NULL,
+    verdict TEXT,
+    scraped_metadata_json TEXT,
+    execution_log TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+`);
+
+// Sembrar fuentes del radar iniciales si no hay ninguna o añadir las que falten
+console.log('[Migration] Sembrando y actualizando fuentes del radar (RSS, Reddit, Telegram)...');
+const insertSource = db.prepare(`
+  INSERT OR IGNORE INTO radar_sources (id, platform, name, url_or_id, status, created_at)
+  VALUES (?, ?, ?, ?, 'activo', datetime('now'))
+`);
+
+const initialSources = [
+  { id: 'source-rss-gt-es', platform: 'RSS', name: 'Google Trends ES', url_or_id: 'https://trends.google.es/trends/trendingsearches/daily/rss?geo=ES' },
+  { id: 'source-rss-mn-pt', platform: 'RSS', name: 'Menéame Portada', url_or_id: 'https://www.meneame.net/rss' },
+  { id: 'source-rss-mn-ac', platform: 'RSS', name: 'Menéame Activas', url_or_id: 'https://www.meneame.net/rss?status=active' },
+  { id: 'source-rss-em-es', platform: 'RSS', name: 'El Mundo España', url_or_id: 'https://www.elmundo.es/rss/portada.xml' },
+  { id: 'source-rss-ep-na', platform: 'RSS', name: 'El País Nacional', url_or_id: 'https://ep00.epimg.net/rss/elpais/portada.xml' },
+  { id: 'source-rss-abc-es', platform: 'RSS', name: 'ABC España', url_or_id: 'https://www.abc.es/rss/2.0/espana/' },
+  { id: 'source-rss-ok', platform: 'RSS', name: 'OkDiario', url_or_id: 'https://okdiario.com/feed' },
+  { id: 'source-rss-ed', platform: 'RSS', name: 'El Debate', url_or_id: 'https://www.eldebate.com/feed/index.xml' },
+  { id: 'source-rss-to', platform: 'RSS', name: 'The Objective', url_or_id: 'https://theobjective.com/feed/' },
+  { id: 'source-rss-gaceta', platform: 'RSS', name: 'La Gaceta', url_or_id: 'https://gaceta.es/feed/' },
+  { id: 'source-rss-ld', platform: 'RSS', name: 'Libertad Digital', url_or_id: 'https://www.libertaddigital.com/rss/' },
+  { id: 'source-rss-vp', platform: 'RSS', name: 'Vozpópuli', url_or_id: 'https://www.vozpopuli.com/rss/' },
+  { id: 'source-rss-lv', platform: 'RSS', name: 'La Vanguardia', url_or_id: 'https://www.lavanguardia.com/rss/home.xml' },
+  { id: 'source-rss-ec', platform: 'RSS', name: 'El Confidencial', url_or_id: 'https://rss.elconfidencial.com/espana/' },
+  { id: 'source-rss-ed-es', platform: 'RSS', name: 'eldiario.es', url_or_id: 'https://www.eldiario.es/rss/' },
+  { id: 'source-rss-hp', platform: 'RSS', name: 'HuffPost España', url_or_id: 'https://www.huffingtonpost.es/feeds/index.xml' },
+  { id: 'source-rss-20m', platform: 'RSS', name: '20Minutos', url_or_id: 'https://www.20minutos.es/rss/' },
+  { id: 'source-rss-lr', platform: 'RSS', name: 'La Razón', url_or_id: 'https://www.larazon.es/rss/portada.xml' },
+  { id: 'source-rss-pb', platform: 'RSS', name: 'Público', url_or_id: 'https://www.publico.es/rss/' },
+  { id: 'source-rss-rtve', platform: 'RSS', name: 'RTVE Noticias', url_or_id: 'https://www.rtve.es/rss/temas_noticias.xml' },
+  { id: 'source-rss-eurp', platform: 'RSS', name: 'Europa Press', url_or_id: 'https://www.europapress.es/rss/rss.aspx' },
+  { id: 'source-rss-sm', platform: 'RSS', name: 'Servimedia', url_or_id: 'https://www.servimedia.es/rss' },
+  { id: 'source-rss-efe', platform: 'RSS', name: 'Agencia EFE', url_or_id: 'https://www.efe.com/feed/' },
+  { id: 'source-reddit-sp', platform: 'Reddit', name: 'Reddit SpainPolitics', url_or_id: 'https://www.reddit.com/r/spainpolitics/hot.json?limit=25' },
+  { id: 'source-reddit-es', platform: 'Reddit', name: 'Reddit España', url_or_id: 'https://www.reddit.com/r/es/hot.json?limit=25' },
+  { id: 'source-tg-noticias-es', platform: 'Telegram', name: 'Noticias España Oficial', url_or_id: 'noticias_espana_oficial' }
+];
+
+for (const src of initialSources) {
+  insertSource.run(src.id, src.platform, src.name, src.url_or_id);
 }
 
 console.log('[Migration] Base de datos e índices creados exitosamente.');

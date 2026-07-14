@@ -117,6 +117,26 @@ async function analyzeYouTube(url) {
       result.authorUrl = data.author_url || '';
       result.imageUrl = data.thumbnail_url || '';
       result.description = `Vídeo de YouTube por ${data.author_name || 'desconocido'}`;
+      result.views = 0;
+
+      // Intentar obtener visitas reales del HTML del video
+      try {
+        const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
+        const watchResp = await fetch(watchUrl, { headers: BROWSER_HEADERS });
+        if (watchResp.ok) {
+          const html = await watchResp.text();
+          const viewMatch = html.match(/<meta[^>]*itemprop="interactionCount"[^>]*content="(\d+)"/i);
+          if (viewMatch) {
+            result.views = parseInt(viewMatch[1]);
+          } else {
+            const viewsRegex = /"viewCount":\s*"(\d+)"/i;
+            const viewsMatch = html.match(viewsRegex);
+            if (viewsMatch) result.views = parseInt(viewsMatch[1]);
+          }
+        }
+      } catch (e) {
+        // Ignorar fallo de scraping de vistas y usar oembed
+      }
     } else {
       result.error = `YouTube oEmbed respondió con ${resp.status}`;
     }

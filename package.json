@@ -9,9 +9,11 @@
     "preview": "astro preview --host 0.0.0.0 --port 4321",
     "db:migrate": "node scripts/migrate.js",
     "db:seed": "node scripts/import-political.js",
-    "radar": "node scripts/radar-cron.js",
+    "radar": "node scripts/hermes-cron.js",
+    "radar:legacy": "node scripts/radar-cron.js",
     "ai:pipeline": "node scripts/ai-pipeline.js",
-    "sync": "node scripts/sync.js"
+    "sync": "node scripts/sync.js",
+    "cron:hermes": "node scripts/hermes-cron.js"
   },
   "dependencies": {
     "@astrojs/node": "^8.3.0",

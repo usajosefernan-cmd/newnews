@@ -40,8 +40,8 @@ try {
   // 2. Inserción de articles
   if (seedData.articles && seedData.articles.length > 0) {
     const insertArticle = db.prepare(`
-      INSERT OR REPLACE INTO articles (id, topic_id, slug, title, subtitle, claim, origin_platform, origin_url, origin_summary, category, verdict, confidence, summary, explanation, what_is_true, what_is_false, what_lacks_context, what_is_not_proven, status, human_review_required, published_at, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+      INSERT OR REPLACE INTO articles (id, topic_id, slug, title, subtitle, claim, origin_platform, origin_url, origin_summary, category, verdict, confidence, summary, explanation, what_is_true, what_is_false, what_lacks_context, what_is_not_proven, status, human_review_required, published_at, origin_date, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
     `);
 
     seedData.articles.forEach(a => {
@@ -66,7 +66,8 @@ try {
         a.what_is_not_proven,
         a.status || 'borrador',
         a.human_review_required !== undefined ? a.human_review_required : 1,
-        a.published_at || null
+        a.published_at || null,
+        a.origin_date || a.published_at || new Date().toISOString()
       );
     });
     console.log(`  -> ${seedData.articles.length} artículos importados.`);

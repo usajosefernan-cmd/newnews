@@ -65,13 +65,14 @@ if (Astro.request.method === 'POST') {
       const topicId = data.get('topic_id')?.toString() || '';
       const status = data.get('status')?.toString() || 'borrador';
 
+      const originDate = data.get('origin_date')?.toString() || new Date().toISOString();
       db.prepare(`
         UPDATE articles 
         SET title = ?, subtitle = ?, verdict = ?, explanation = ?, 
             what_is_true = ?, what_is_false = ?, what_lacks_context = ?, what_is_not_proven = ?,
-            topic_id = ?, status = ?, updated_at = datetime('now')
+            topic_id = ?, status = ?, origin_date = ?, updated_at = datetime('now')
         WHERE id = ?
-      `).run(title, subtitle, verdict, explanation, whatIsTrue, whatIsFalse, whatLacksContext, whatIsNotProven, topicId, status, articleId);
+      `).run(title, subtitle, verdict, explanation, whatIsTrue, whatIsFalse, whatLacksContext, whatIsNotProven, topicId, status, originDate, articleId);
 
       message = `✓ Artículo "${title.substring(0, 45)}..." actualizado correctamente.`;
       messageType = 'success';
@@ -104,13 +105,14 @@ if (Astro.request.method === 'POST') {
           ? (db.prepare("SELECT category FROM topics WHERE id = ?").get(topicId)?.category || 'General')
           : 'General';
 
+        const originDate = data.get('origin_date')?.toString() || new Date().toISOString();
         db.prepare(`
-          INSERT INTO articles (id, topic_id, slug, title, subtitle, claim, origin_platform, origin_url, origin_summary, category, verdict, confidence, summary, explanation, what_is_true, what_is_false, what_lacks_context, what_is_not_proven, status, human_review_required, published_at, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, '', ?, ?, 'Alta', ?, ?, ?, ?, ?, ?, ?, 0, ?, datetime('now'), datetime('now'))
+          INSERT INTO articles (id, topic_id, slug, title, subtitle, claim, origin_platform, origin_url, origin_summary, category, verdict, confidence, summary, explanation, what_is_true, what_is_false, what_lacks_context, what_is_not_proven, status, human_review_required, published_at, origin_date, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, '', ?, ?, 'Alta', ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, datetime('now'), datetime('now'))
         `).run(
           id, topicId || null, slug, title, subtitle, claim, originPlatform, originUrl,
           category, verdict, subtitle, explanation, whatIsTrue, whatIsFalse, whatLacksContext, whatIsNotProven,
-          status, status === 'publicado' ? new Date().toISOString() : null
+          status, status === 'publicado' ? new Date().toISOString() : null, originDate
         );
 
         message = `✓ Nuevo análisis de desmentido "${title}" guardado correctamente en la base de datos.`;
@@ -169,8 +171,16 @@ if (Astro.request.method === 'POST') {
           VALUES (?, ?, ?, ?, 'Administrador', '{}', ?, 'General', 10.0, 8.0, 'pendiente', datetime('now'))
         `).run(id, platform, url, claim, claim);
 
-        message = `✓ Nuevo claim insertado en la cola del radar. Ejecuta el pipeline de IA para procesarlo.`;
-        messageType = 'success';
+        try {
+          execSync('node scripts/ai-pipeline.js', { encoding: 'utf-8', env: process.env });
+          execSync('node scripts/sync.js', { encoding: 'utf-8', env: process.env });
+          execSync('npm run build', { encoding: 'utf-8', env: process.env });
+          message = `✓ Reclamación procesada: desmentido por IA redactado e hilo publicado directamente en la web.`;
+          messageType = 'success';
+        } catch (e: any) {
+          message = `⚠️ Reclamación insertada, pero falló la compilación inmediata: ${e.message}`;
+          messageType = 'error';
+        }
       }
     }
     else if (action === 'add_radar_source') {
@@ -225,6 +235,7 @@ if (Astro.request.method === 'POST') {
       const description = data.get('description')?.toString() || '';
       const author = data.get('author')?.toString() || 'Editor';
       const topicId = data.get('topic_id')?.toString() || '';
+      const imageUrl = data.get('imageUrl')?.toString() || '';
 
       if (url.trim().length > 5) {
         const id = `manual-url-${Date.now()}`;
@@ -232,13 +243,23 @@ if (Astro.request.method === 'POST') {
           ? (db.prepare("SELECT title FROM topics WHERE id = ?").get(topicId)?.title || 'General')
           : 'General';
 
+        const metricsJson = JSON.stringify({ score: 100, comments: 0, imageUrl: imageUrl || null });
+
         db.prepare(`
           INSERT INTO scraped_items (id, platform, url, text, author_public_name, metrics_json, detected_claim, suggested_topic, virality_score, risk_score, status, created_at)
-          VALUES (?, ?, ?, ?, ?, '{}', ?, ?, 10.0, 8.0, 'pendiente', datetime('now'))
-        `).run(id, platform, url, `${title}\n\n${description}`, author, title || description.substring(0, 200), topicTitle);
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 10.0, 8.0, 'pendiente', datetime('now'))
+        `).run(id, platform, url, `${title}\n\n${description}`, author, metricsJson, title || description.substring(0, 200), topicTitle);
 
-        message = `✅ URL insertada en el radar: "${title.substring(0, 60)}" [${platform}] → Tema: ${topicTitle}`;
-        messageType = 'success';
+        try {
+          execSync('node scripts/ai-pipeline.js', { encoding: 'utf-8', env: process.env });
+          execSync('node scripts/sync.js', { encoding: 'utf-8', env: process.env });
+          execSync('npm run build', { encoding: 'utf-8', env: process.env });
+          message = `✅ URL procesada: desmentido por IA redactado e hilo publicado directamente en la web.`;
+          messageType = 'success';
+        } catch (e: any) {
+          message = `⚠️ URL insertada, pero falló la compilación inmediata: ${e.message}`;
+          messageType = 'error';
+        }
         urlCheckResult = null;
       }
     }
@@ -551,6 +572,8 @@ const allDeclarations = db.prepare(`
   ORDER BY ad.person_name
 `).all() as any[];
 
+const verificationLogs = db.prepare("SELECT * FROM verification_logs ORDER BY created_at DESC").all() as any[];
+
 db.close();
 
 // Mapa de veredicto a color neón
@@ -615,6 +638,7 @@ const getVerdictClass = (verdict) => {
       <button class="admin-tab-btn" data-target="pane-temas">📁 Expedientes</button>
       <button class="admin-tab-btn" data-target="pane-politica">🏛️ Auditoría Política</button>
       <button class="admin-tab-btn" data-target="pane-radar">📡 Radar & Scrapers</button>
+      <button class="admin-tab-btn" data-target="pane-verificaciones">🔍 Logs de Búsqueda ({verificationLogs.length})</button>
     </nav>
 
     <!-- CONTENEDORES DE PANELES DE PESTAÑA -->
@@ -837,7 +861,7 @@ const getVerdictClass = (verdict) => {
                 <input type="text" id="inp-claim" name="claim" required placeholder="Ej: 'El gobierno le da 4.200 euros en metálico al mes a cada MENA'" class="edit-input" />
               </div>
 
-              <div class="form-grid">
+              <div class="form-grid-3" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                 <div class="form-group">
                   <label>Red Social / Origen:</label>
                   <input type="text" id="inp-platform" name="origin_platform" placeholder="X (Twitter), TikTok, YouTube, Telegram..." class="edit-input" />
@@ -845,6 +869,10 @@ const getVerdictClass = (verdict) => {
                 <div class="form-group">
                   <label>Enlace al post original (URL real):</label>
                   <input type="url" id="inp-url" name="origin_url" placeholder="https://x.com/user/status/123" class="edit-input" />
+                </div>
+                <div class="form-group">
+                  <label>Fecha de Publicación Original:</label>
+                  <input type="datetime-local" id="inp-origdate" name="origin_date" class="edit-input" />
                 </div>
               </div>
 
@@ -1033,7 +1061,7 @@ const getVerdictClass = (verdict) => {
                       </div>
                     </div>
 
-                    <div class="form-grid">
+                    <div class="form-grid-3" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                       <div class="form-group">
                         <label>Expediente:</label>
                         <select name="topic_id" class="edit-input">
@@ -1049,6 +1077,10 @@ const getVerdictClass = (verdict) => {
                           <option value="publicado" selected={art.status === 'publicado'}>Publicado (Visible)</option>
                           <option value="borrador" selected={art.status === 'borrador'}>Despublicar (Ocultar)</option>
                         </select>
+                      </div>
+                      <div class="form-group">
+                        <label>Fecha de Publicación Original:</label>
+                        <input type="datetime-local" name="origin_date" value={art.origin_date ? art.origin_date.replace(' ', 'T').substring(0, 16) : ''} class="edit-input" />
                       </div>
                     </div>
 
@@ -1414,6 +1446,9 @@ const getVerdictClass = (verdict) => {
                   <div style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.5rem;">
                     <div>Plataforma: <strong>{urlCheckResult.platform}</strong></div>
                     <div>Autor: <strong>{urlCheckResult.author}</strong></div>
+                    {urlCheckResult.views !== undefined && urlCheckResult.views > 0 && (
+                      <div>Visualizaciones: <strong style="color: var(--neon-blue);">{urlCheckResult.views.toLocaleString('es-ES')}</strong></div>
+                    )}
                     <div>Título/Texto: <em>"{urlCheckResult.title}"</em></div>
                   </div>
                   
@@ -1424,7 +1459,8 @@ const getVerdictClass = (verdict) => {
                     <input type="hidden" name="title" value={urlCheckResult.title || ''} />
                     <input type="hidden" name="description" value={urlCheckResult.description || ''} />
                     <input type="hidden" name="author" value={urlCheckResult.author || 'Editor'} />
-                    <button type="submit" class="cyber-btn accent" style="width: 100%;">Confirmar e Insertar en Radar</button>
+                    <input type="hidden" name="imageUrl" value={urlCheckResult.imageUrl || ''} />
+                    <button type="submit" class="cyber-btn accent" style="width: 100%;">Confirmar y Publicar Desmentido</button>
                   </form>
                 </div>
               )}
@@ -1528,6 +1564,61 @@ const getVerdictClass = (verdict) => {
             </div>
 
           </div>
+        </div>
+      </div>
+
+      <!-- PESTAÑA 8: LOGS DE BÚSQUEDA DE USUARIOS -->
+      <div id="pane-verificaciones" class="admin-tab-panel">
+        <h2 class="section-title">🔍 Registro de Verificaciones del Buscador Manual</h2>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 2rem;">
+          Historial completo de auditorías y búsquedas en caliente iniciadas por los usuarios desde la portada. Muestra exactamente el flujo de ejecución de la IA y el Scraper.
+        </p>
+
+        <div class="cards-list">
+          {verificationLogs.map(log => (
+            <div class="cyber-card" style="padding: 1.5rem; margin-bottom: 1.5rem; border-color: var(--neon-purple);">
+              <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                <div>
+                  <span style="font-size: 0.8rem; font-weight: bold; background: rgba(157, 78, 221, 0.1); color: var(--neon-purple); padding: 0.2rem 0.5rem; border-radius: 4px; margin-right: 0.5rem;">
+                    {log.status}
+                  </span>
+                  <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: bold;">
+                    IP/Origen: {log.ip_address}
+                  </span>
+                </div>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">
+                  {new Date(log.created_at).toLocaleString('es-ES')}
+                </span>
+              </div>
+
+              <div style="margin-bottom: 1rem;">
+                <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); display: block; font-weight: bold; margin-bottom: 0.25rem;">Consulta del usuario:</span>
+                <strong style="font-size: 1.15rem; color: var(--text-main); font-family: var(--font-title);">{log.query_text}</strong>
+              </div>
+
+              {log.verdict && (
+                <div style="margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                  <span style="font-size: 0.85rem; color: var(--text-muted);">Veredicto IA:</span>
+                  <span class={`verdict-badge ${log.verdict.toLowerCase().replace(' ', '-')}`}>
+                    {log.verdict}
+                  </span>
+                </div>
+              )}
+
+              <details class="accordion-edit" style="background: rgba(0,0,0,0.15); border-radius: 6px; border: 1px solid rgba(255,255,255,0.03);">
+                <summary style="font-family: monospace; font-size: 0.85rem; color: var(--neon-blue); padding: 0.5rem 1rem; cursor: pointer;">
+                  📟 Ver Log de Ejecución del Servidor ({log.execution_log ? log.execution_log.split('\n').length : 0} líneas)
+                </summary>
+                <div style="background: #020308; padding: 1rem; border-radius: 0 0 6px 6px; font-family: monospace; font-size: 0.8rem; color: #a5b4fc; line-height: 1.5; max-height: 300px; overflow-y: auto; white-space: pre-wrap; border-top: 1px solid rgba(255,255,255,0.05);">
+                  {log.execution_log}
+                </div>
+              </details>
+            </div>
+          ))}
+
+          {verificationLogs.length === 0 && (
+            <p class="empty-state">No hay registros de verificación manual todavía.</p>
+          )}
         </div>
       </div>
 

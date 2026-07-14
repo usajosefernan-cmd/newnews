@@ -65,6 +65,20 @@ async function fetchRssFeed(feed) {
         const link = linkMatch[1].trim();
         const description = descMatch ? descMatch[1].trim().replace(/<\/?[^>]+(>|$)/g, "").substring(0, 300) : '';
         
+        let imageUrl = null;
+        const enclosureMatch = itemContent.match(/<enclosure[^>]*url="([^"]+)"/i);
+        if (enclosureMatch) {
+          imageUrl = enclosureMatch[1];
+        } else {
+          const mediaMatch = itemContent.match(/<media:content[^>]*url="([^"]+)"/i) || itemContent.match(/<media:thumbnail[^>]*url="([^"]+)"/i);
+          if (mediaMatch) {
+            imageUrl = mediaMatch[1];
+          } else if (descMatch) {
+            const imgHtmlMatch = descMatch[1].match(/<img[^>]*src="([^"]+)"/i);
+            if (imgHtmlMatch) imageUrl = imgHtmlMatch[1];
+          }
+        }
+
         items.push({
           title,
           link,
@@ -72,7 +86,9 @@ async function fetchRssFeed(feed) {
           platform: feed.platform,
           author: feed.platform + ' RSS',
           score: feed.platform === 'Menéame' ? 150 : 50, // Ponderación de partida
-          comments: feed.platform === 'Menéame' ? 40 : 10
+          comments: feed.platform === 'Menéame' ? 40 : 10,
+          origin_date: pubDateMatch ? new Date(pubDateMatch[1].trim()).toISOString() : new Date().toISOString(),
+          imageUrl: imageUrl || null
         });
       }
     }
@@ -106,6 +122,13 @@ async function fetchRedditFeed(feed) {
           if (diffHours > 24) continue; // Solo 24 horas
         }
 
+        let imageUrl = null;
+        if (post.thumbnail && post.thumbnail.startsWith('http')) {
+          imageUrl = post.thumbnail;
+        } else if (post.url && (post.url.endsWith('.jpg') || post.url.endsWith('.png') || post.url.endsWith('.jpeg') || post.url.endsWith('.gif'))) {
+          imageUrl = post.url;
+        }
+
         items.push({
           title: post.title || '',
           link: `https://www.reddit.com${post.permalink}`,
@@ -113,7 +136,9 @@ async function fetchRedditFeed(feed) {
           platform: 'Reddit',
           author: `u/${post.author || 'desconocido'}`,
           score: post.score || 0,
-          comments: post.num_comments || 0
+          comments: post.num_comments || 0,
+          origin_date: post.created_utc ? new Date(post.created_utc * 1000).toISOString() : new Date().toISOString(),
+          imageUrl: imageUrl || null
         });
       }
     }
@@ -185,6 +210,9 @@ async function fetchTelegramChannel(channel) {
         const firstLine = textContent.split('\n')[0] || '';
         const title = firstLine.substring(0, 100) || 'Post de Telegram';
 
+        const photoMatch = block.match(/tgme_widget_message_photo_wrap[^>]*style="[^"]*background-image:url\('([^']+)'\)/i) || block.match(/background-image:url\('([^']+)'\)/i);
+        const imageUrl = photoMatch ? photoMatch[1] : null;
+
         items.push({
           title,
           link,
@@ -193,7 +221,9 @@ async function fetchTelegramChannel(channel) {
           author: channel.name,
           score: views,
           comments: 0,
-          views: views
+          views: views,
+          origin_date: dateMatch ? new Date(dateMatch[1]).toISOString() : new Date().toISOString(),
+          imageUrl: imageUrl || null
         });
       }
     }
@@ -251,6 +281,17 @@ async function fetchNitterFeed(feed) {
           const title = titleMatch[1].trim().replace(/<\/?[^>]+(>|$)/g, '');
           const description = descMatch ? descMatch[1].trim().replace(/<\/?[^>]+(>|$)/g, '').substring(0, 300) : '';
           
+          let imageUrl = null;
+          if (descMatch) {
+            const imgHtmlMatch = descMatch[1].match(/<img[^>]*src="([^"]+)"/i);
+            if (imgHtmlMatch) {
+              imageUrl = imgHtmlMatch[1];
+              if (imageUrl.startsWith('/')) {
+                imageUrl = instance + imageUrl;
+              }
+            }
+          }
+
           items.push({
             title: title.substring(0, 200),
             link,
@@ -258,7 +299,9 @@ async function fetchNitterFeed(feed) {
             platform: 'X',
             author: `@${feed.username}`,
             score: 100,
-            comments: 0
+            comments: 0,
+            origin_date: pubDateMatch ? new Date(pubDateMatch[1].trim()).toISOString() : new Date().toISOString(),
+            imageUrl: imageUrl || null
           });
         }
       }
@@ -277,6 +320,148 @@ async function fetchNitterFeed(feed) {
     console.log(`[Radar Motor] ⚠️ No se pudo acceder a X/@${feed.username} vía Nitter.`);
   }
   return items;
+}
+
+async function fetchNitterSearch(query) {
+  const items = [];
+  const nitterInstances = [
+    'https://nitter.privacydev.net',
+    'https://nitter.poast.org',
+    'https://nitter.woodland.cafe'
+  ];
+  
+  for (const instance of nitterInstances) {
+    try {
+      const rssUrl = `${instance}/search/rss?q=${encodeURIComponent(query)}`;
+      console.log(`[Radar Motor] Buscando en X (Nitter): "${query}" vía ${instance}...`);
+      const response = await fetch(rssUrl, { 
+        headers: userAgentHeader,
+        signal: AbortSignal.timeout(4000)
+      });
+      
+      if (!response.ok) continue;
+      
+      const xml = await response.text();
+      const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+      const matches = xml.matchAll(itemRegex);
+      
+      for (const match of matches) {
+        const itemContent = match[1];
+        const titleMatch = itemContent.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/) || itemContent.match(/<title>([\s\S]*?)<\/title>/);
+        const linkMatch = itemContent.match(/<link>([\s\S]*?)<\/link>/);
+        const descMatch = itemContent.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/) || itemContent.match(/<description>([\s\S]*?)<\/description>/);
+        const pubDateMatch = itemContent.match(/<pubDate>([\s\S]*?)<\/pubDate>/);
+        
+        if (titleMatch && linkMatch) {
+          if (pubDateMatch) {
+            const pubDate = new Date(pubDateMatch[1].trim());
+            const diffHours = (new Date().getTime() - pubDate.getTime()) / (1000 * 60 * 60);
+            if (diffHours > 24) continue;
+          }
+
+          let link = linkMatch[1].trim();
+          link = link.replace(new RegExp(instance.replace('https://', '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), 'x.com');
+          
+          const title = titleMatch[1].trim().replace(/<\/?[^>]+(>|$)/g, '');
+          const description = descMatch ? descMatch[1].trim().replace(/<\/?[^>]+(>|$)/g, '').substring(0, 300) : '';
+          
+          let imageUrl = null;
+          if (descMatch) {
+            const imgHtmlMatch = descMatch[1].match(/<img[^>]*src="([^"]+)"/i);
+            if (imgHtmlMatch) {
+              imageUrl = imgHtmlMatch[1];
+              if (imageUrl.startsWith('/')) {
+                imageUrl = instance + imageUrl;
+              }
+            }
+          }
+
+          items.push({
+            title: title.substring(0, 200),
+            link,
+            description,
+            platform: 'X',
+            author: 'X User',
+            score: 100,
+            comments: 5,
+            origin_date: pubDateMatch ? new Date(pubDateMatch[1].trim()).toISOString() : new Date().toISOString(),
+            imageUrl: imageUrl || null
+          });
+        }
+      }
+      
+      if (items.length > 0) {
+        break;
+      }
+    } catch (err) {
+      continue;
+    }
+  }
+  return items;
+}
+
+async function fetchRedditSearch(query) {
+  const items = [];
+  try {
+    const url = `https://www.reddit.com/search.json?q=${encodeURIComponent(query + ' (site:reddit.com/r/es OR site:reddit.com/r/spainpolitics OR site:reddit.com/r/spain)')}&sort=new&limit=8`;
+    console.log(`[Radar Motor] Buscando en Reddit: "${query}"...`);
+    const response = await fetch(url, { headers: userAgentHeader });
+    if (response.ok) {
+      const data = await response.json();
+      const children = data?.data?.children || [];
+      for (const child of children) {
+        const post = child.data;
+        if (post && !post.pinned && !post.stickied) {
+          if (post.created_utc) {
+            const createdMs = post.created_utc * 1000;
+            const diffHours = (new Date().getTime() - createdMs) / (1000 * 60 * 60);
+            if (diffHours > 24) continue;
+          }
+          let imageUrl = null;
+          if (post.thumbnail && post.thumbnail.startsWith('http')) {
+            imageUrl = post.thumbnail;
+          } else if (post.url && (post.url.endsWith('.jpg') || post.url.endsWith('.png') || post.url.endsWith('.jpeg'))) {
+            imageUrl = post.url;
+          }
+          items.push({
+            title: post.title || '',
+            link: `https://www.reddit.com${post.permalink}`,
+            description: post.selftext || '',
+            platform: 'Reddit',
+            author: `u/${post.author || 'desconocido'}`,
+            score: post.score || 0,
+            comments: post.num_comments || 0,
+            origin_date: post.created_utc ? new Date(post.created_utc * 1000).toISOString() : new Date().toISOString(),
+            imageUrl: imageUrl || null
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.log(`[Radar Motor] Error buscando en Reddit para "${query}":`, err.message);
+  }
+  return items;
+}
+
+function parseYouTubeRelativeTime(timeText) {
+  const now = new Date();
+  if (!timeText) return now.toISOString();
+  
+  const cleanText = timeText.toLowerCase();
+  const match = cleanText.match(/(\d+)/);
+  if (!match) return now.toISOString();
+  
+  const value = parseInt(match[1]);
+  if (cleanText.includes('segundo')) {
+    now.setSeconds(now.getSeconds() - value);
+  } else if (cleanText.includes('minuto')) {
+    now.setMinutes(now.getMinutes() - value);
+  } else if (cleanText.includes('hora')) {
+    now.setHours(now.getHours() - value);
+  } else if (cleanText.includes('día') || cleanText.includes('dia')) {
+    now.setDate(now.getDate() - value);
+  }
+  return now.toISOString();
 }
 
 async function fetchYouTubeSearch(query) {
@@ -332,6 +517,9 @@ async function fetchYouTubeSearch(query) {
         continue; // Descartar si es de hace semanas, meses o años
       }
 
+      const thumbnails = video?.thumbnail?.thumbnails || [];
+      const imageUrl = thumbnails.length > 0 ? thumbnails[thumbnails.length - 1]?.url : `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+
       items.push({
         title,
         link: `https://www.youtube.com/watch?v=${videoId}`,
@@ -340,7 +528,9 @@ async function fetchYouTubeSearch(query) {
         author,
         score: views,
         comments: 0,
-        views: views
+        views: views,
+        origin_date: parseYouTubeRelativeTime(timeText),
+        imageUrl: imageUrl || null
       });
     }
     console.log(`[Radar Motor] -> YouTube "${query}": Detectados ${items.length} videos de las últimas 24h.`);
@@ -348,6 +538,29 @@ async function fetchYouTubeSearch(query) {
     console.log(`[Radar Motor] ❌ Error buscando en YouTube para "${query}":`, err.message);
   }
   return items;
+}
+
+async function getGoogleTrendsQueries() {
+  const queries = [];
+  try {
+    const url = 'https://trends.google.es/trends/trendingsearches/daily/rss?geo=ES';
+    const response = await fetch(url, { headers: userAgentHeader });
+    if (response.ok) {
+      const xml = await response.text();
+      const matches = xml.matchAll(/<title>([\s\S]*?)<\/title>/g);
+      for (const match of matches) {
+        const term = match[1].trim()
+          .replace(/&lt;!\[CDATA\[|\]\]&gt;/g, '')
+          .replace(/<!\[CDATA\[|\]\]>/g, '');
+        if (term && !term.toLowerCase().includes('trends') && term.length < 60) {
+          queries.push(term);
+        }
+      }
+    }
+  } catch (err) {
+    console.log('[Radar Motor] ❌ No se pudieron cargar tendencias dinámicas:', err.message);
+  }
+  return queries;
 }
 
 async function runRadar() {
@@ -381,8 +594,8 @@ async function runRadar() {
   console.log(`[Radar Motor] Fuentes cargadas: ${rssFeeds.length} RSS, ${redditFeeds.length} Reddit, ${telegramChannels.length} Telegram, ${xAccounts.length} X.`);
 
   const insertScrapedItem = db.prepare(`
-    INSERT OR IGNORE INTO scraped_items (id, platform, url, text, author_public_name, metrics_json, detected_claim, suggested_topic, virality_score, risk_score, status, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente', datetime('now'))
+    INSERT OR IGNORE INTO scraped_items (id, platform, url, text, author_public_name, metrics_json, detected_claim, suggested_topic, virality_score, risk_score, status, origin_date, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente', ?, datetime('now'))
   `);
 
   let insertedCount = 0;
@@ -412,11 +625,27 @@ async function runRadar() {
     allItems.push(...xItems);
   }
 
-  // 3.5 Cargar videos de YouTube buscando keywords virales de España
-  const ytQueries = ['bulo España', 'okupa España', 'inmigración España ayudas', 'Begoña Gómez juicio', 'Koldo mascarillas'];
-  for (const query of ytQueries) {
+  // 3.5 Búsquedas dinámicas y virales en YouTube, X (Twitter vía Nitter) y Reddit usando keywords y tendencias de Google Trends
+  const baseQueries = ['bulo España', 'okupa España', 'inmigración España ayudas', 'Begoña Gómez juicio', 'Koldo mascarillas'];
+  const dynamicTrends = await getGoogleTrendsQueries();
+  console.log(`[Radar Motor] Tendencias dinámicas de Google Trends cargadas: [${dynamicTrends.join(', ')}]`);
+  
+  const trendQueries = dynamicTrends.map(t => `${t} bulo`);
+  const combinedQueries = [...baseQueries, ...dynamicTrends.slice(0, 4), ...trendQueries.slice(0, 4)];
+  const uniqueQueries = [...new Set(combinedQueries)];
+
+  for (const query of uniqueQueries) {
+    // Buscar en YouTube
     const ytItems = await fetchYouTubeSearch(query);
     allItems.push(...ytItems);
+
+    // Buscar en X/Twitter (Nitter Search)
+    const xSearchItems = await fetchNitterSearch(query);
+    allItems.push(...xSearchItems);
+
+    // Buscar en Reddit (Reddit Search API)
+    const redditSearchItems = await fetchRedditSearch(query);
+    allItems.push(...redditSearchItems);
   }
 
   // 4. Procesar y filtrar items
@@ -515,11 +744,12 @@ async function runRadar() {
           item.link,
           `${item.title}\n\n${item.description}`,
           item.author,
-          JSON.stringify({ score: item.score, comments: item.comments }),
+          JSON.stringify({ score: item.score, comments: item.comments, imageUrl: item.imageUrl || null }),
           item.title,
           suggestedTopic,
           viralityScore,
-          riskScore
+          riskScore,
+          item.origin_date || new Date().toISOString()
         );
         insertedCount++;
       } catch (dbErr) {
