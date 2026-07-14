@@ -127,6 +127,93 @@ async function analyzeYouTube(url) {
   return result;
 }
 
+async function analyzeTikTok(url) {
+  const result = { platform: 'TikTok', isAccessible: false, rawUrl: url };
+  try {
+    const oembedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`;
+    const resp = await fetch(oembedUrl, { headers: BROWSER_HEADERS });
+    if (resp.ok) {
+      const data = await resp.json();
+      result.isAccessible = true;
+      result.title = data.title || '';
+      result.author = data.author_name || '';
+      result.authorUrl = data.author_url || '';
+      result.imageUrl = data.thumbnail_url || '';
+      result.description = `Publicación de TikTok de ${data.author_name || 'usuario'}`;
+    } else {
+      result.error = `TikTok oEmbed respondió con ${resp.status}`;
+    }
+  } catch (err) {
+    result.error = `Error conectando con TikTok: ${err.message}`;
+  }
+  return result;
+}
+
+async function analyzeReddit(url) {
+  const result = { platform: 'Reddit', isAccessible: false, rawUrl: url };
+  try {
+    const headers = {
+      ...BROWSER_HEADERS,
+      'User-Agent': 'Mozilla/5.0 NEWNEWS-RadarBot/1.0.0 (contact: admin@newnews.es)'
+    };
+    let cleanUrl = url.split('?')[0];
+    if (cleanUrl.endsWith('/')) {
+      cleanUrl = cleanUrl.slice(0, -1);
+    }
+    const jsonUrl = `${cleanUrl}.json`;
+
+    const resp = await fetch(jsonUrl, { headers });
+    if (resp.ok) {
+      const data = await resp.json();
+      const post = data?.[0]?.data?.children?.[0]?.data;
+      if (post) {
+        result.isAccessible = true;
+        result.title = post.title || '';
+        result.description = post.selftext || '';
+        result.author = `u/${post.author || 'desconocido'}`;
+        result.postId = post.id;
+        result.views = `${post.ups || 0} upvotes | ${post.num_comments || 0} comentarios`;
+        if (post.thumbnail && post.thumbnail.startsWith('http')) {
+          result.imageUrl = post.thumbnail;
+        }
+      } else {
+        result.error = 'No se encontraron datos del post en el JSON de Reddit';
+      }
+    } else {
+      result.error = `Reddit respondió con ${resp.status}`;
+    }
+  } catch (err) {
+    result.error = `Error conectando con Reddit: ${err.message}`;
+  }
+  return result;
+}
+
+async function analyzeInstagram(url) {
+  const result = { platform: 'Instagram', isAccessible: false, rawUrl: url };
+  try {
+    const oembedUrl = `https://open.instagram.com/oembed/?url=${encodeURIComponent(url)}`;
+    const resp = await fetch(oembedUrl, { headers: BROWSER_HEADERS });
+    if (resp.ok) {
+      const data = await resp.json();
+      result.isAccessible = true;
+      result.title = data.title || '';
+      result.author = data.author_name || '';
+      result.authorUrl = data.author_url || '';
+      result.imageUrl = data.thumbnail_url || '';
+      result.description = `Publicación de Instagram de ${data.author_name || 'usuario'}`;
+    } else {
+      const generic = await analyzeGenericUrl(url, 'Instagram');
+      if (generic.isAccessible) {
+        return generic;
+      }
+      result.error = `Instagram oEmbed respondió con ${resp.status}`;
+    }
+  } catch (err) {
+    result.error = `Error conectando con Instagram: ${err.message}`;
+  }
+  return result;
+}
+
 async function analyzeTelegram(url) {
   const result = { platform: 'Telegram', isAccessible: false, rawUrl: url };
 
@@ -349,6 +436,15 @@ export async function analyzeUrl(url) {
       break;
     case 'X (Twitter)':
       result = await analyzeTwitter(url);
+      break;
+    case 'TikTok':
+      result = await analyzeTikTok(url);
+      break;
+    case 'Reddit':
+      result = await analyzeReddit(url);
+      break;
+    case 'Instagram':
+      result = await analyzeInstagram(url);
       break;
     default:
       result = await analyzeGenericUrl(url, platform);

@@ -429,7 +429,7 @@ const educationalCards = {
       ` 
     }
   ],
-  'reforma-ley-extranjeria-menores': [
+  'menores-extranjeros-no-acompanados': [
     { 
       title: '1. Canarias y Ceuta al límite del Colapso', 
       text: '', 
@@ -484,162 +484,186 @@ const educationalCards = {
       ` 
     }
   ],
-  'concierto-economico-catalunya': [
-    { 
-      title: '1. Régimen Común vs Régimen de Concierto Especial', 
-      text: '', 
+  'inflacion-y-coste-de-vida': [
+    {
+      title: '1. Cesta de la Compra y el IVA (RDL 20/2022)',
+      text: '',
       htmlContent: `
-        <p style="margin-bottom: 0.5rem;">Comparativa de financiación de las Comunidades Autónomas según la LOFCA:</p>
+        <p style="margin-bottom: 0.5rem;">La reducción del tipo impositivo de alimentos básicos es un pilar gubernamental frente al IPC:</p>
+        <ul style="padding-left: 1.25rem; margin-bottom: 0.5rem; display: flex; flex-direction: column; gap: 0.35rem;">
+          <li><strong>IVA al 0%</strong>: Pan, harinas panificables, leche, quesos, huevos, frutas, verduras, legumbres y cereales.</li>
+          <li><strong>IVA al 4% / 5%</strong>: Aceite de oliva y pastas alimenticias. El aceite se asimila a producto básico en 2024.</li>
+          <li>La Comisión Europea vigila que las cadenas trasladen el 100% de la rebaja al precio de venta final al público.</li>
+        </ul>
+      `
+    },
+    {
+      title: '2. Medición Oficial del IPC y Ponderación del INE',
+      text: '',
+      htmlContent: `
+        <p style="margin-bottom: 0.5rem;">El Índice de Precios de Consumo (IPC) mide la evolución de la inflación mensual según estándares de la UE:</p>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 0.5rem; margin-bottom: 0.5rem; text-align: left;">
+          <thead>
+            <tr style="border-bottom: 2px solid rgba(0, 240, 255, 0.25);">
+              <th style="padding: 0.4rem; color: var(--neon-blue);">Grupo</th>
+              <th style="padding: 0.4rem; color: var(--neon-blue);">Ponderación IPC</th>
+              <th style="padding: 0.4rem; color: var(--neon-blue);">Criterio de Inclusión</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <td style="padding: 0.4rem; font-weight: bold;">Alimentos</td>
+              <td style="padding: 0.4rem;">19.5%</td>
+              <td style="padding: 0.4rem;">Cesta de compra de hogares comunes</td>
+            </tr>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <td style="padding: 0.4rem; font-weight: bold;">Vivienda y Suministros</td>
+              <td style="padding: 0.4rem;">12.3%</td>
+              <td style="padding: 0.4rem;">Gas, luz, agua y rentas del alquiler</td>
+            </tr>
+            <tr>
+              <td style="padding: 0.4rem; font-weight: bold;">Transporte</td>
+              <td style="padding: 0.4rem;">13.8%</td>
+              <td style="padding: 0.4rem;">Precios de combustibles y billetes públicos</td>
+            </tr>
+          </tbody>
+        </table>
+      `
+    }
+  ],
+  'empleo-y-cifras-de-paro': [
+    {
+      title: '1. Los Contratos Fijos-Discontinuos (Art. 16 ET)',
+      text: '',
+      htmlContent: `
+        <p style="margin-bottom: 0.5rem;">La reforma laboral de 2021 prohibió los contratos de obra y servicio y modificó el estatus del empleo estacional:</p>
+        <ul style="padding-left: 1.25rem; margin-bottom: 0.5rem; display: flex; flex-direction: column; gap: 0.35rem;">
+          <li><strong>Estatus del Trabajador</strong>: Pasa a tener un contrato indefinido y computa como afiliado activo durante los meses de actividad.</li>
+          <li><strong>Periodos de inactividad</strong>: El contrato sigue vigente pero suspendido, pudiendo cobrar subsidios por desempleo si cumple requisitos, sin figurar en el paro registrado del SEPE (salvo como demandante con relación laboral).</li>
+        </ul>
+      `
+    },
+    {
+      title: '2. Tasa de Paro Registrado vs EPA (Criterio OIT)',
+      text: '',
+      htmlContent: `
+        <p style="margin-bottom: 0.5rem;">Diferencias entre los dos principales indicadores de desempleo oficiales en España:</p>
         <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 0.5rem; margin-bottom: 0.5rem; text-align: left;">
           <thead>
             <tr style="border-bottom: 2px solid rgba(0, 240, 255, 0.25);">
               <th style="padding: 0.4rem; color: var(--neon-blue);">Característica</th>
-              <th style="padding: 0.4rem; color: var(--neon-blue);">Régimen Común (CCAA ordinarias)</th>
-              <th style="padding: 0.4rem; color: var(--neon-blue);">Régimen de Concierto (Euskadi/Navarra)</th>
+              <th style="padding: 0.4rem; color: var(--neon-blue);">Paro Registrado (SEPE)</th>
+              <th style="padding: 0.4rem; color: var(--neon-blue);">EPA (INE / OIT)</th>
             </tr>
           </thead>
           <tbody>
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-              <td style="padding: 0.4rem; font-weight: bold;">Recaudación</td>
-              <td style="padding: 0.4rem;">Recauda el Estado y reparte una parte (IRPF, IVA)</td>
-              <td style="padding: 0.4rem; color: var(--neon-green);">Recaudan el 100% las Haciendas Forales</td>
+              <td style="padding: 0.4rem; font-weight: bold;">Origen</td>
+              <td style="padding: 0.4rem;">Registros administrativos de oficinas públicas</td>
+              <td style="padding: 0.4rem;">Encuesta trimestral a 65.000 hogares</td>
             </tr>
             <tr>
-              <td style="padding: 0.4rem; font-weight: bold;">Solidaridad</td>
-              <td style="padding: 0.4rem;">Sujeto a fondos de redistribución interterritorial</td>
-              <td style="padding: 0.4rem; color: var(--neon-rose);">Pagan un "cupo" por servicios comunes del Estado</td>
+              <td style="padding: 0.4rem; font-weight: bold;">Homologación</td>
+              <td style="padding: 0.4rem; color: var(--neon-rose);">Nacional, sujeta a exclusiones administrativas</td>
+              <td style="padding: 0.4rem; color: var(--neon-green);">Europea (Eurostat), mide búsqueda activa real</td>
             </tr>
           </tbody>
         </table>
-      ` 
-    },
-    { 
-      title: '2. El Pacto Singular (IRPF, IVA e Impuestos Especiales)', 
-      text: '', 
-      htmlContent: `
-        <p style="margin-bottom: 0.5rem;">El acuerdo para la investidura en Cataluña de julio de 2024 contempla:</p>
-        <ul style="padding-left: 1.25rem; margin-bottom: 0.5rem; display: flex; flex-direction: column; gap: 0.35rem;">
-          <li>Que la Agencia Tributaria de Cataluña recaude el 100% de los impuestos generados en el territorio (empezando por el IRPF en 2026).</li>
-          <li>El pago de una aportación al Estado integrada por: la retribución por los servicios prestados por el Estado en Cataluña y una cuota de solidaridad interterritorial.</li>
-        </ul>
-      ` 
-    },
-    { 
-      title: '3. El Límite de la Ordinalidad', 
-      text: '', 
-      htmlContent: `
-        <p style="margin-bottom: 0.5rem;">El concepto clave de solidaridad del acuerdo catalán es el <strong>principio de ordinalidad</strong>:</p>
-        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.5rem;">Establece que las aportaciones de las CCAA a la solidaridad no deben alterar su posición en el ranking de recursos por habitante:</p>
-        <blockquote style="border-left: 3px solid var(--neon-purple); padding-left: 0.75rem; margin: 0; font-style: italic; font-size: 0.8rem;">
-          "Una comunidad que aporta más recursos fiscales por habitante al fondo común no puede recibir después menos financiación por habitante que las comunidades receptoras."
-        </blockquote>
-      ` 
+      `
     }
   ],
-  'reduccion-jornada-laboral': [
-    { 
-      title: '1. El Límite Legal y la Reducción a 37.5 Horas', 
-      text: '', 
+  'autonomos-y-fiscalidad': [
+    {
+      title: '1. El Sistema de Tramos por Ingresos Reales',
+      text: '',
       htmlContent: `
-        <p style="margin-bottom: 0.5rem;">La propuesta del Ministerio de Trabajo modifica el artículo 34 del Estatuto de los Trabajadores:</p>
+        <p style="margin-bottom: 0.5rem;">A partir del 2023 entró en vigor el nuevo sistema de cotización de la Seguridad Social para autónomos:</p>
         <ul style="padding-left: 1.25rem; margin-bottom: 0.5rem; display: flex; flex-direction: column; gap: 0.35rem;">
-          <li><strong>Jornada semanal</strong>: Reducción del límite máximo de 40 horas semanales vigentes desde 1983 a 37.5 horas semanales.</li>
-          <li><strong>Salario intacto</strong>: La ley prohibe expresamente cualquier reducción de la retribución mensual bruta de los trabajadores.</li>
-          <li>Beneficiará de forma directa a unos 12 millones de asalariados del sector privado en España.</li>
+          <li><strong>Rendimientos Netos</strong>: Los ingresos brutos menos los gastos deducibles de la actividad.</li>
+          <li><strong>Regularización anual</strong>: Al finalizar el año, Hacienda y la SS cruzan datos. Si cotizaste de más se te devuelve de oficio; si cotizaste de menos, debes ingresar la diferencia.</li>
+          <li>Las cuotas mínimas se fijan en 230€ y ascienden a 500€ para los tramos superiores (Rendimientos > 6.000€ mensuales).</li>
         </ul>
-      ` 
+      `
     },
-    { 
-      title: '2. Cómputo Anual de Horas de Trabajo', 
-      text: '', 
+    {
+      title: '2. Tarifa Plana para Nuevos Autónomos (Art. 31 LETA)',
+      text: '',
       htmlContent: `
-        <p style="margin-bottom: 0.5rem;">La jornada se calculará en cómputo anual para flexibilizar la aplicación en sectores especiales:</p>
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 0.5rem; margin-bottom: 0.5rem; text-align: left;">
-          <thead>
-            <tr style="border-bottom: 2px solid rgba(0, 240, 255, 0.25);">
-              <th style="padding: 0.4rem; color: var(--neon-blue);">Límite Semanal</th>
-              <th style="padding: 0.4rem; color: var(--neon-blue);">Horas Anuales Equivalentes</th>
-              <th style="padding: 0.4rem; color: var(--neon-blue);">Diferencia de Horas / Año</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-              <td style="padding: 0.4rem; font-weight: bold;">40 horas semanales</td>
-              <td style="padding: 0.4rem;">1.826 horas anuales</td>
-              <td style="padding: 0.4rem;">Referencial anterior</td>
-            </tr>
-            <tr>
-              <td style="padding: 0.4rem; font-weight: bold;">37.5 horas semanales</td>
-              <td style="padding: 0.4rem; color: var(--neon-green);">1.712 horas anuales</td>
-              <td style="padding: 0.4rem; color: var(--neon-rose);">-114 horas anuales de trabajo</td>
-            </tr>
-          </tbody>
-        </table>
-      ` 
-    },
-    { 
-      title: '3. Informe del Banco de España (Productividad)', 
-      text: '', 
-      htmlContent: `
-        <p style="margin-bottom: 0.5rem;">El análisis macroeconómico oficial sobre los efectos de la reducción de la jornada:</p>
-        <ul style="padding-left: 1.25rem; margin-bottom: 0.5rem; display: flex; flex-direction: column; gap: 0.35rem;">
-          <li><strong>Mejora de Productividad</strong>: Aumento de la eficiencia de los trabajadores y menor tasa de absentismo por enfermedad.</li>
-          <li><strong>Riesgo en PYMEs</strong>: En sectores intensivos en mano de obra presencial (comercio, hostelería), la medida incrementará los costes laborales unitarios entre un 1.5% y un 3% si no se incrementa la productividad por hora trabajada.</li>
-        </ul>
-      ` 
-    }
-  ],
-  'ley-de-vivienda-alquileres': [
-    { 
-      title: '1. ¿Qué es una Zona Tensionada de Alquiler?', 
-      text: '', 
-      htmlContent: `
-        <p style="margin-bottom: 0.5rem;">La Ley 12/2023 de Vivienda permite a las CCAA declarar zonas residenciales tensionadas si cumplen una condición:</p>
-        <ul style="padding-left: 1.25rem; margin-bottom: 0.5rem; display: flex; flex-direction: column; gap: 0.35rem;">
-          <li>Que la carga media del pago de la hipoteca o alquiler + suministros básicos supere el <strong>30% de los ingresos medios de los hogares</strong> de la zona.</li>
-          <li>Que el precio de compra o alquiler haya subido al menos 3 puntos porcentuales por encima del IPC de la comunidad autónoma en los últimos 5 años.</li>
-        </ul>
-      ` 
-    },
-    { 
-      title: '2. El Índice de Precios de Referencia (Grandes Tenedores)', 
-      text: '', 
-      htmlContent: `
-        <p style="margin-bottom: 0.5rem;">El funcionamiento de la contención de precios en zonas tensionadas declaradas (ej. Cataluña en 2024):</p>
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 0.5rem; margin-bottom: 0.5rem; text-align: left;">
-          <thead>
-            <tr style="border-bottom: 2px solid rgba(0, 240, 255, 0.25);">
-              <th style="padding: 0.4rem; color: var(--neon-blue);">Propietario</th>
-              <th style="padding: 0.4rem; color: var(--neon-blue);">Límite del Alquiler</th>
-              <th style="padding: 0.4rem; color: var(--neon-blue);">Índice Estatal Aplicable</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-              <td style="padding: 0.4rem; font-weight: bold;">Pequeño tenedor (&lt;5 pisos)</td>
-              <td style="padding: 0.4rem;">Prorroga de precio del contrato anterior</td>
-              <td style="padding: 0.4rem;">No obligado a bajar por índice (salvo pacto)</td>
-            </tr>
-            <tr>
-              <td style="padding: 0.4rem; font-weight: bold;">Gran tenedor (&ge;5 pisos)</td>
-              <td style="padding: 0.4rem; color: var(--neon-rose);">Tope por el límite inferior del Índice de Referencia</td>
-              <td style="padding: 0.4rem; color: var(--neon-green);">Obligado a ajustar la renta al índice oficial</td>
-            </tr>
-          </tbody>
-        </table>
-      ` 
-    },
-    { 
-      title: '3. El Vacío de los Alquileres de Temporada', 
-      text: '', 
-      htmlContent: `
-        <p style="margin-bottom: 0.5rem;">En el último año, se ha disparado el desvío de viviendas del régimen residencial al de temporada:</p>
+        <p style="margin-bottom: 0.5rem;">La bonificación estatal incentiva el inicio de la actividad por cuenta propia:</p>
         <ul style="padding-left: 1.25rem; margin-bottom: 0.5rem;">
-          <li>Los contratos de temporada (para estudiantes, traslados laborales temporales) se rigen por la voluntad de las partes y no están sujetos a topes.</li>
-          <li>Los arrendadores los usan para eludir la prórroga obligatoria de 5 años y las limitaciones de renta de la Ley de Vivienda.</li>
-          <li>Las administraciones proponen regularlos obligando a justificar detalladamente la temporalidad bajo sanciones administrativas graves.</li>
+          <li>Cuota fija de <strong>80€ mensuales durante los primeros 12 meses</strong> de actividad (ampliable otros 12 meses si los ingresos no superan el SMI).</li>
+          <li>Ciertas Comunidades Autónomas (Andalucía, Madrid, Murcia) bonifican la diferencia al 100% (Cuota Cero autonómica).</li>
         </ul>
-      ` 
+      `
+    }
+  ],
+  'economia-espanola': [
+    {
+      title: '1. Medición de Crecimiento Económico (PIB)',
+      text: '',
+      htmlContent: `
+        <p style="margin-bottom: 0.5rem;">El PIB mide el valor monetario de todos los bienes y servicios producidos en España:</p>
+        <ul style="padding-left: 1.25rem; margin-bottom: 0.5rem; display: flex; flex-direction: column; gap: 0.35rem;">
+          <li>Publicado trimestralmente por el INE en la Contabilidad Nacional Trimestral de España.</li>
+          <li>El sector servicios (incluyendo turismo) aporta más del 67% del valor añadido bruto del PIB español.</li>
+        </ul>
+      `
+    },
+    {
+      title: '2. Deuda Pública y Protocolo de Déficit Excesivo',
+      text: '',
+      htmlContent: `
+        <p style="margin-bottom: 0.5rem;">La deuda de las administraciones públicas se rige por las reglas fiscales del Tratado de Maastricht:</p>
+        <ul style="padding-left: 1.25rem; margin-bottom: 0.5rem;">
+          <li>Límite de déficit anual del 3% del PIB y deuda del 60% del PIB, actualmente reactivados tras la suspensión por la pandemia.</li>
+          <li>El Banco de España publica la cifra oficial de deuda según el PDE mensualmente.</li>
+        </ul>
+      `
+    }
+  ],
+  'impuestos-y-ahorro': [
+    {
+      title: '1. El Fondo de Garantía de Depósitos (FGD)',
+      text: '',
+      htmlContent: `
+        <p style="margin-bottom: 0.5rem;">El sistema español garantiza los ahorros de los depositantes en caso de insolvencia de un banco:</p>
+        <blockquote style="border-left: 3px solid var(--neon-blue); padding-left: 0.75rem; margin: 0.5rem 0; font-style: italic; font-size: 0.82rem; color: var(--text-muted);">
+          "El Fondo garantiza hasta un límite máximo de 100.000€ por depositante y por entidad de crédito, cubriendo cuentas corrientes, cuentas de ahorro y depósitos a plazo fijo." (Real Decreto 2606/1996)
+        </blockquote>
+      `
+    },
+    {
+      title: '2. Tramos del IRPF para las Rentas del Ahorro',
+      text: '',
+      htmlContent: `
+        <p style="margin-bottom: 0.5rem;">Los intereses generados por cuentas corrientes y depósitos tributan como rendimientos de capital mobiliario:</p>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 0.5rem; margin-bottom: 0.5rem; text-align: left;">
+          <thead>
+            <tr style="border-bottom: 2px solid rgba(0, 240, 255, 0.25);">
+              <th style="padding: 0.4rem; color: var(--neon-blue);">Rendimiento Obtenido</th>
+              <th style="padding: 0.4rem; color: var(--neon-blue);">Tipo de Retención / IRPF</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <td style="padding: 0.4rem; font-weight: bold;">Hasta 6.000€</td>
+              <td style="padding: 0.4rem; color: var(--neon-green);">19%</td>
+            </tr>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <td style="padding: 0.4rem; font-weight: bold;">De 6.000€ a 50.000€</td>
+              <td style="padding: 0.4rem;">21%</td>
+            </tr>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <td style="padding: 0.4rem; font-weight: bold;">De 50.000€ a 200.000€</td>
+              <td style="padding: 0.4rem;">23%</td>
+            </tr>
+            <tr>
+              <td style="padding: 0.4rem; font-weight: bold;">Más de 300.000€</td>
+              <td style="padding: 0.4rem; color: var(--neon-rose);">28%</td>
+            </tr>
+          </tbody>
+        </table>
+      `
     }
   ]
 };
@@ -716,7 +740,7 @@ const infographicData = {
       { label: 'Consentimiento afirmativo explícito', percentage: '100%', color: 'var(--neon-green)', desc: 'Centro de la tipicidad del nuevo Código Penal' }
     ]
   },
-  'reforma-ley-extranjeria-menores': {
+  'menores-extranjeros-no-acompanados': {
     metric: '275%',
     metricLabel: 'Saturación en plazas de menores tutelados en Canarias',
     subText: 'La sobreocupación crítica ha desbordado los sistemas de acogida en Canarias y Ceuta, provocando la propuesta del Gobierno para obligar al reparto por ley.',
@@ -725,31 +749,49 @@ const infographicData = {
       { label: 'Capacidad de acogida óptima de la red', percentage: '100%', color: 'var(--neon-green)', desc: '2.000 plazas de tutela' }
     ]
   },
-  'concierto-economico-catalunya': {
-    metric: '100%',
-    metricLabel: 'Recaudación de tributos por la Generalitat (Propuesto)',
-    subText: 'Cataluña pasaría del Régimen Común (donde recauda el Estado) a un régimen singular de concierto en el que recauda el 100% de impuestos y transfiere una cuota al Estado.',
+  'inflacion-y-coste-de-vida': {
+    metric: '1.9%',
+    metricLabel: 'Tasa de inflación del IPC interanual (Bajo Control)',
+    subText: 'La inflación interanual en España se ha moderado sustancialmente desde el récord del 10.8% registrado en julio de 2022, regresando al rango de estabilidad definido por el Banco Central Europeo (cerca del 2%).',
     bars: [
-      { label: 'Recaudación propia propuesta', percentage: '100%', color: 'var(--neon-blue)', desc: 'IRPF, IVA e Impuestos Especiales' },
-      { label: 'Régimen Común actual', percentage: '9%', color: 'var(--neon-purple)', desc: 'Hacienda recauda y reparte' }
+      { label: 'Pico Histórico de Inflación (Julio 2022)', percentage: '100%', color: 'var(--neon-rose)', desc: '10.8% registrado por el INE' },
+      { label: 'Tasa Interanual Reciente', percentage: '17.5%', color: 'var(--neon-green)', desc: '1.9% interanual registrado' }
     ]
   },
-  'reduccion-jornada-laboral': {
-    metric: '37,5h',
-    metricLabel: 'Límite legal semanal propuesto para la jornada laboral',
-    subText: 'La reforma laboral reducirá la jornada legal de 40 a 37.5 horas semanales sin que se pueda tocar o bajar el salario mensual de los trabajadores.',
+  'empleo-y-cifras-de-paro': {
+    metric: '11.2%',
+    metricLabel: 'Tasa de desempleo nacional según la Encuesta EPA',
+    subText: 'La Encuesta de Población Activa (EPA) del INE mide la situación del empleo en los hogares españoles bajo la metodología oficial europea homologada (Eurostat y OIT).',
     bars: [
-      { label: 'Sueldo garantizado e intacto por ley', percentage: '100%', color: 'var(--neon-green)', desc: 'Prohibida la reducción salarial' },
-      { label: 'Reducción de horas anuales de trabajo', percentage: '6.2%', color: 'var(--neon-blue)', desc: 'De 1.826h a 1.712h anuales' }
+      { label: 'Tasa de paro registrada (EPA)', percentage: '11.2%', color: 'var(--neon-rose)', desc: '2.7 millones de desempleados' },
+      { label: 'Tasa de empleo (Población activa ocupada)', percentage: '52.1%', color: 'var(--neon-green)', desc: '21.3 millones de personas trabajando' }
     ]
   },
-  'ley-de-vivienda-alquileres': {
-    metric: '30%',
-    metricLabel: 'Esfuerzo financiero de alquiler/hipoteca para declarar zona tensionada',
-    subText: 'La ley de vivienda regula los precios del alquiler residencial únicamente en los municipios que cumplan los criterios oficiales y sean declarados zonas tensionadas.',
+  'autonomos-y-fiscalidad': {
+    metric: '80€',
+    metricLabel: 'Cuota mensual reducida para nuevos emprendedores',
+    subText: 'La cuota de autónomos de Tarifa Plana estatal facilita el inicio de la actividad por cuenta propia, amortiguando los costes fiscales durante los primeros 12 a 24 meses.',
     bars: [
-      { label: 'Tope obligatorio a grandes tenedores', percentage: '100%', color: 'var(--neon-rose)', desc: 'Indexado al IGC oficial estatal' },
-      { label: 'Alquileres turísticos/temporales excluidos', percentage: '100%', color: 'var(--neon-amber)', desc: 'Vía de escape por la LAU' }
+      { label: 'Tramo de Cuota Mínima (Ingresos < SMI)', percentage: '46%', color: 'var(--neon-blue)', desc: '230€ cuota mínima regular' },
+      { label: 'Tramo de Cuota Máxima (Ingresos > 6k€)', percentage: '100%', color: 'var(--neon-purple)', desc: '500€ cuota máxima regular' }
+    ]
+  },
+  'economia-espanola': {
+    metric: '2.5%',
+    metricLabel: 'Crecimiento estimado del PIB real interanual',
+    subText: 'El dinamismo de la economía española durante el último año se sitúa por encima de la media de crecimiento de la Eurozona, liderado por el sector servicios, exportaciones y empleo.',
+    bars: [
+      { label: 'Deuda Pública sobre el PIB', percentage: '107%', color: 'var(--neon-rose)', desc: 'Ratio de deuda financiera del PDE' },
+      { label: 'Déficit Fiscal del Estado', percentage: '3.6%', color: 'var(--neon-amber)', desc: 'Diferencia anual de ingresos/gastos' }
+    ]
+  },
+  'impuestos-y-ahorro': {
+    metric: '100K€',
+    metricLabel: 'Garantía máxima de ahorro cubierto ante insolvencias',
+    subText: 'El Fondo de Garantía de Depósitos (FGD) protege de forma obligatoria y de oficio los fondos líquidos de los titulares en cuentas corrientes y libretas de ahorro.',
+    bars: [
+      { label: 'Tasa mínima IRPF Ahorro (rendimiento < 6k€)', percentage: '19%', color: 'var(--neon-green)', desc: '19% de retención en origen' },
+      { label: 'Tasa máxima IRPF Ahorro (rendimiento > 300k€)', percentage: '28%', color: 'var(--neon-rose)', desc: '28% de retención fiscal' }
     ]
   }
 };

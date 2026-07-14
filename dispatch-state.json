@@ -1,18 +1,11 @@
 {
-  "project_name": "NEWNEWS Refactoring & Topic Optimization",
-  "last_updated": "2026-07-13T19:54:18.864Z",
+  "project_name": "NEWNEWS Advanced Optimization",
+  "last_updated": "2026-07-14T13:02:00.000Z",
   "active_sessions": [
     {
-      "task_id": "init-setup",
-      "branch": "main",
+      "task_id": "regression-audit-check",
+      "branch": "master",
       "worktree_path": ".",
-      "agent": "Antigravity",
-      "status": "completed"
-    },
-    {
-      "task_id": "clean-ui-aesthetics",
-      "branch": "task/clean-ui-aesthetics",
-      "worktree_path": ".worktrees/clean-ui-aesthetics",
       "agent": "Antigravity",
       "status": "in_progress"
     }
@@ -20,11 +13,7 @@
   "worktrees": {
     "main": {
       "path": ".",
-      "task_id": "init-setup"
-    },
-    "clean-ui-aesthetics": {
-      "path": ".worktrees/clean-ui-aesthetics",
-      "task_id": "clean-ui-aesthetics"
+      "task_id": "regression-audit-check"
     }
   }
 }
