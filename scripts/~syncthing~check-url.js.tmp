@@ -151,6 +151,21 @@ async function analyzeYouTube(url) {
       } catch (e) {
         // Ignorar fallo de scraping de vistas y usar oembed
       }
+
+      // Obtener transcripción del vídeo
+      try {
+        console.log(`  -> [Transcripción] Solicitando transcripción para vídeo ${videoId}...`);
+        const transcript = await fetchYouTubeTranscript(videoId);
+        if (transcript) {
+          result.transcript = transcript;
+          // Actualizar descripción si tenemos transcripción completa
+          result.description = transcript.substring(0, 300) + '...';
+        } else {
+          console.log(`  -> [Transcripción] No se encontró transcripción disponible para el vídeo.`);
+        }
+      } catch (transErr) {
+        console.error('  -> [Transcripción] Falló obtención de transcripción:', transErr.message);
+      }
     } else {
       result.error = `YouTube oEmbed respondió con ${resp.status}`;
     }
@@ -493,6 +508,104 @@ export async function analyzeUrl(url) {
 
   return result;
 }
+
+async function fetchYouTubeTranscript(videoId) {
+  // 1. Primary: youtube-transcript.ai
+  try {
+    const aiUrl = `https://youtube-transcript.ai/transcript/${videoId}.txt`;
+    const resp = await fetch(aiUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
+      }
+    });
+    if (resp.ok) {
+      const text = await resp.text();
+      if (text.includes('## Transcript')) {
+        const transcriptIndex = text.indexOf('## Transcript');
+        let transcriptText = text.substring(transcriptIndex + 13);
+        const endIndex = transcriptText.indexOf('---');
+        if (endIndex !== -1) {
+          transcriptText = transcriptText.substring(0, endIndex);
+        }
+        transcriptText = transcriptText.replace(/\[\d+:\d+\]/g, '');
+        transcriptText = transcriptText.trim().replace(/\s+/g, ' ');
+        if (transcriptText.length > 50) {
+          console.log(`[Transcript Scraper] Obtenida transcripción vía youtube-transcript.ai (${transcriptText.length} caracteres)`);
+          return transcriptText;
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[Transcript Scraper] Falló youtube-transcript.ai:', e.message);
+  }
+
+  // 2. Fallback: Direct watch page captionTracks
+  try {
+    const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    const watchResp = await fetch(watchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
+      }
+    });
+    if (watchResp.ok) {
+      const html = await watchResp.text();
+      const idx = html.indexOf('"captionTracks"');
+      if (idx !== -1) {
+        const startIdx = html.indexOf('[', idx);
+        if (startIdx !== -1) {
+          let braceCount = 1;
+          let endIdx = startIdx + 1;
+          while (braceCount > 0 && endIdx < html.length) {
+            const char = html[endIdx];
+            if (char === '[') braceCount++;
+            else if (char === ']') braceCount--;
+            endIdx++;
+          }
+          const captionTracks = JSON.parse(html.substring(startIdx, endIdx));
+          const track = captionTracks.find(t => t.languageCode === 'es') || captionTracks[0];
+          if (track && track.baseUrl) {
+            const subResp = await fetch(track.baseUrl, {
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
+              }
+            });
+            if (subResp.ok) {
+              const xml = await subResp.text();
+              const textSegments = [];
+              const textRegex = /<text[^>]*>([^<]*)<\/text>/g;
+              let m;
+              while ((m = textRegex.exec(xml)) !== null) {
+                textSegments.push(decodeHtml(m[1]));
+              }
+              const transcriptText = textSegments.join(' ').trim().replace(/\s+/g, ' ');
+              if (transcriptText.length > 50) {
+                console.log(`[Transcript Scraper] Obtenida transcripción vía captionTracks (${transcriptText.length} caracteres)`);
+                return transcriptText;
+              }
+            }
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[Transcript Scraper] Falló watch page fallback:', e.message);
+  }
+
+  return null;
+}
+
+function decodeHtml(str) {
+  return str
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;#39;/g, "'")
+    .replace(/&#x27;/g, "'")
+    .replace(/&amp;quot;/g, '"');
+}
+
 
 // ===== MODO CLI =====
 // Solo ejecutar en modo CLI si el script es invocado directamente (no importado como módulo)

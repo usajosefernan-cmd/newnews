@@ -169,28 +169,85 @@ console.log('[AI Pipeline] Iniciando procesado de items de radar...');
 // Función para llamar a Gemini con fetch
 async function callGemini(promptText) {
   const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-  if (!apiKey) {
-    throw new Error('Sin clave API de Gemini');
+  const orKey = process.env.OPENROUTER_API_KEY;
+
+  // Intentar primero con la API nativa de Gemini si está presente
+  if (apiKey) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: promptText }] }],
+          generationConfig: { responseMimeType: "application/json" }
+        })
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+        const rawText = json.candidates[0].content.parts[0].text;
+        return JSON.parse(rawText);
+      } else {
+        const errorText = await response.text();
+        console.warn(`[Gemini API] Error ${response.status}: ${errorText.substring(0, 150)}... Intentando fallback.`);
+      }
+    } catch (e) {
+      console.warn(`[Gemini API] Excepción al conectar: ${e.message}. Intentando fallback.`);
+    }
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: promptText }] }],
-      generationConfig: { responseMimeType: "application/json" }
-    })
-  });
+  // Fallback a OpenRouter
+  if (orKey) {
+    try {
+      console.log('  -> [OpenRouter] Solicitando verificación a través de OpenRouter...');
+      const orUrl = 'https://openrouter.ai/api/v1/chat/completions';
+      
+      // Intentamos con gemini-2.5-flash en OpenRouter primero
+      let response = await fetch(orUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${orKey}`
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [{ role: 'user', content: promptText }],
+          response_format: { type: 'json_object' }
+        })
+      });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Error en API de Gemini: ${response.status} - ${errorText}`);
+      // Si falla, intentamos con Llama 3.1 8B Instruct como segundo fallback
+      if (!response.ok) {
+        console.warn(`[OpenRouter] Falló Google Gemini, intentando con Llama 3.1 8B...`);
+        response = await fetch(orUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${orKey}`
+          },
+          body: JSON.stringify({
+            model: 'meta-llama/llama-3.1-8b-instruct:free',
+            messages: [{ role: 'user', content: promptText }],
+            response_format: { type: 'json_object' }
+          })
+        });
+      }
+
+      if (response.ok) {
+        const json = await response.json();
+        const rawText = json.choices[0].message.content;
+        return JSON.parse(rawText.trim());
+      } else {
+        const errorText = await response.text();
+        throw new Error(`OpenRouter falló con estado ${response.status}: ${errorText}`);
+      }
+    } catch (err) {
+      throw new Error(`Fallo en el pipeline de IA a través de OpenRouter: ${err.message}`);
+    }
   }
 
-  const json = await response.json();
-  const rawText = json.candidates[0].content.parts[0].text;
-  return JSON.parse(rawText);
+  throw new Error('No hay claves API válidas o disponibles (Gemini o OpenRouter).');
 }
 
 async function processItems() {
@@ -272,44 +329,45 @@ async function processItems() {
         const prompt = `
 Eres el Director de Verificación y Defensor del Lector de NEWNEWS. Tu labor se rige bajo los principios del Código Deontológico de la FAPE (Federación de Asociaciones de Periodistas de España) y los estándares del periodismo de investigación clásico: neutralidad absoluta, separación rigurosa entre información y opinión/promoción, e independencia editorial.
 
-Analiza el siguiente claim detectado en el radar y genera una auditoría de hechos estructurada:
-Original: ${item.text}
-Claim: ${item.detected_claim}
-Tema: ${item.suggested_topic}
-Origen (Plataforma): ${item.platform}
-URL Original: ${item.url || 'No proporcionada'}
+Analiza el siguiente claim y la transcripción/texto completo del recurso original detectado en el radar. Genera una verificación de hechos estructurada de alta calidad:
+Transcripción/Texto Original (puede contener redundancias de dictado): "${item.text}"
+Claim / Afirmación: "${item.detected_claim}"
+Tema Sugerido: "${item.suggested_topic}"
+Origen (Plataforma): "${item.platform}"
+URL Original: "${item.url || 'No proporcionada'}"
 
---- FILTROS Y REGLAS DE AUDITORÍA ESPECÍFICAS POR CATEGORÍA ---
+--- INSTRUCCIONES DE REDACCIÓN Y MAQUETACIÓN (CRÍTICAS) ---
+1. TÍTULO: Genera un titular periodístico profesional, informativo, serio y neutral.
+   - PROHIBIDO usar la muletilla o prefijo "Auditoría de hechos sobre:".
+   - PROHIBIDO usar lenguaje sensacionalista o clickbait de redes sociales ("el zasca de...", "el repaso de...", "humillación", "destroza").
+   - Ejemplo correcto: "El debate de las listas paritarias en el Congreso: análisis de la legislación electoral y constitucional".
+2. REDACCIÓN Y TONO: Redacta con un estilo formal, analítico, objetivo y periodístico. Estructura los argumentos con datos precisos. Evita valoraciones subjetivas del emisor y céntrate en verificar los hechos reales y el marco de datos contrastable.
 
-1. FILTRO DE OPINIÓN COMERCIAL, HYPE TECNOLÓGICO Y MARKETING (Ej. Herramientas de IA, MCPs, gadgets, software):
-   - Detecta si el recurso original es promocional, publicitario o si contiene enlaces de afiliados/referidos directos u ocultos.
-   - Si el video/post vende un producto como "el mejor", "revolucionario" o incita a la compra/registro usando enlaces de referidos, tu veredicto debe ser "Falta contexto" o "Engañoso".
-   - Explica detalladamente al lector que se trata de OPINIÓN COMERCIAL y MARKETING DE AFILIADOS, no de información neutral. Expón los sesgos comerciales involucrados.
-   - Separa claramente las características técnicas reales del producto de la exageración publicitaria.
+--- GUÍA DE FUENTES OFICIALES Y BASE DE DATOS JURÍDICAS ---
+Dependiendo del tema analizado, debes investigar y enlazar las bases de datos correspondientes (utiliza dominios oficiales .gob.es o .es o .europa.eu).
+- Temas Laborales / Desempleo / SEPE: Cita datos del SEPE (sepe.gob.es) o del INE (ine.es - Encuesta de Población Activa EPA, normativa OIT).
+- Leyes / Votaciones / BOE: Cita leyes exactas publicadas en el Boletín Oficial del Estado (boe.es) o sentencias del Tribunal Constitucional (tribunalconstitucional.es).
+- Vivienda / Alquiler / Okupación: Cita leyes de vivienda en el BOE o estadísticas de vivienda del Ministerio (mivau.gob.es).
+- Precios / Inflación: Cita el Índice de Precios de Consumo (IPC) del INE (ine.es).
+- Igualdad / Derechos Sociales: Cita las leyes del Ministerio de Igualdad (igualdad.gob.es) o del BOE.
+- MCP / Tecnología / Afiliados: Si el post contiene enlaces de referidos u opiniones comerciales encubiertas, expón los sesgos comerciales de forma objetiva y contrasta con la documentación oficial del software/herramienta (ej: nodejs.org, mcp.dev, github.com).
 
-2. FILTRO DE POLÍTICA Y DEBATE PÚBLICO (Ej. Leyes, presupuestos, empleo, inmigración):
-   - Mantén una neutralidad política absoluta. No tomes partido. Cita exclusivamente datos oficiales.
-   - Si trata de precios, inflación o cesta de la compra, cita el IPC del INE (Instituto Nacional de Estadística) y estándares de Eurostat.
-   - Si trata de paro, empleo o contratos (fijos discontinuos), explica la diferencia entre el paro registrado del SEPE y la EPA del INE (normativa OIT).
-   - Si trata de autónomos o impuestos, cita las cuotas del BOE, tramos de cotización por ingresos reales de la Seguridad Social o leyes de Hacienda.
-
-3. REGLA DE FUENTES PRIMARIAS DE ESPAÑA (DEONTOLOGÍA PERIODÍSTICA):
-   - PROHIBIDO ABSOLUTAMENTE citar, mencionar, referenciar o enlazar a agencias de verificación de terceros como Newtral, Maldita, EFE Verifica u otras similares. Los desmentidos y fuentes deben basarse EXCLUSIVAMENTE en fuentes primarias oficiales del Estado (BOE, INE, ministerios, resoluciones de juzgados, patentes oficiales, etc.).
-   - Las fuentes que propongas en la lista de "sources" deben ser del dominio oficial (.gob.es, .es, .europa.eu). NUNCA generes enlaces a Newtral.es o Maldita.es.
+* REGLA DE DEONTOLOGÍA PERIODÍSTICA DE NEWNEWS:
+  PROHIBIDO ABSOLUTAMENTE citar, mencionar, referenciar o enlazar a agencias de verificación de terceros (ej. Newtral, Maldita, EFE Verifica). Los desmentidos y fuentes deben basarse EXCLUSIVAMENTE en fuentes primarias oficiales.
 
 Devuelve un JSON válido con la siguiente estructura:
 {
-  "title": "Auditoría de hechos sobre: [Título claro, periodístico y directo]",
-  "subtitle": "[Subtítulo corto, didáctico y centrado en el veredicto]",
+  "title": "[Título claro, periodístico, directo, sin prefijos redundantes]",
+  "subtitle": "[Subtítulo corto, didáctico y centrado en el veredicto y marco legal]",
   "verdict": "Verdadero" | "Falso" | "Engañoso" | "Falta contexto",
   "confidence": "Alta",
   "summary": "[Resumen periodístico del desmentido y la detección del sesgo u omisión de datos]",
-  "explanation": "[Explicación detallada con datos del BOE/INE o de la naturaleza comercial del post/video. Cita artículos y leyes exactas si aplica]",
+  "explanation": "[Explicación detallada con datos del BOE/INE, resoluciones de tribunales o la naturaleza comercial del post/video. Cita artículos y leyes exactas si aplica]",
   "what_is_true": "[Qué partes de los datos expuestos son reales]",
   "what_is_false": "[Qué partes son exageraciones publicitarias, mentiras o bulos]",
-  "what_lacks_context": "[Qué contexto omiten (como la presencia de enlaces de referidos o costes reales de cuotas/servicios)]",
+  "what_lacks_context": "[Qué contexto omiten (como la presencia de enlaces de referidos o el historial de votaciones completas)]",
   "what_is_not_proven": "[Qué afirmaciones no tienen respaldo técnico, legislativo o científico]",
-  "sources": [{ "title": "[Nombre de la fuente oficial o registro de patentes/comercial]", "url": "[URL de la fuente]", "source_type": "oficial", "authority_level": "Máxima", "quote_or_summary": "[Extracto resumido]" }],
+  "sources": [{ "title": "[Nombre de la fuente oficial o base de datos]", "url": "[URL de la fuente]", "source_type": "oficial", "authority_level": "Máxima", "quote_or_summary": "[Extracto o justificación de los datos consultados]" }],
   "social_posts": [{ "platform": "X", "format": "hilo", "content": "[Contenido corto para redes]" }]
 }
 `;
