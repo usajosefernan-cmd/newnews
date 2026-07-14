@@ -41,12 +41,14 @@ export async function POST({ request }) {
         let title = '';
         let description = '';
         let views = 0;
+        let originalImageUrl = null;
         
         try {
           const analysis = await analyzeUrl(url);
           platform = analysis.platform || platform;
           title = analysis.title || '';
           description = analysis.description || '';
+          originalImageUrl = analysis.imageUrl || null;
           if (typeof analysis.views === 'number') {
             views = analysis.views;
           } else if (typeof analysis.views === 'string') {
@@ -148,7 +150,7 @@ Debes responder estrictamente en formato JSON con la siguiente estructura:
         db.prepare(`
           INSERT INTO scraped_items (id, platform, url, text, author_public_name, metrics_json, detected_claim, suggested_topic, virality_score, risk_score, status, created_at)
           VALUES (?, ?, ?, ?, 'Público', ?, ?, 'General', ?, 6.0, 'pendiente', datetime('now'))
-        `).run(id, platform, url, cleanClaim, JSON.stringify({ declared_views: views, auto_reason: reason }), cleanClaim, viralityScore);
+        `).run(id, platform, url, cleanClaim, JSON.stringify({ declared_views: views, auto_reason: reason, imageUrl: originalImageUrl }), cleanClaim, viralityScore);
 
         db.close();
         send({ status: 'info', message: '💾 [BASE DE DATOS] Registro catalogado en la VPS con éxito.' });
