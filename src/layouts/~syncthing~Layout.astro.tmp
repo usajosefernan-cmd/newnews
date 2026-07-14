@@ -1,0 +1,312 @@
+---
+import '../styles/global.css';
+import { DatabaseSync } from 'node:sqlite';
+import path from 'node:path';
+
+const { 
+  title, 
+  description = "NEWNEWS - Web de noticias, desmentidos y contrastación con fuentes oficiales de España.",
+  category,
+  activeNav = ''
+} = Astro.props;
+
+const dbPath = path.resolve('data/newnews.db');
+const db = new DatabaseSync(dbPath);
+db.exec('PRAGMA busy_timeout = 5000;');
+db.exec('PRAGMA journal_mode = WAL;');
+
+const topics = db.prepare("SELECT title, slug FROM topics WHERE status = 'activo' ORDER BY title").all() as any[];
+
+const rawCategories = db.prepare("SELECT DISTINCT category FROM articles WHERE status = 'publicado'").all() as any[];
+const categories = rawCategories.map(c => {
+  const cat = c.category;
+  const slug = cat.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+  return { name: cat, slug };
+}).filter(c => c.name);
+
+db.close();
+
+const currentPath = Astro.url.pathname;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title} | NEWNEWS</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={`${title} | NEWNEWS`} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={`${title} | NEWNEWS`} />
+    <meta name="twitter:description" content={description} />
+  </head>
+  <body>
+    <!-- ═══ HEADER ═══ -->
+    <header style="border-bottom: 1px solid var(--border-color); background: rgba(7, 9, 19, 0.75); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); position: sticky; top: 0; z-index: 100;">
+      <div class="container" style="display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1rem; max-width: 680px;">
+        
+        <!-- Logo -->
+        <a href="/" style="display: flex; align-items: center; gap: 0.5rem;">
+          <span style="font-family: var(--font-title); font-weight: 800; font-size: 1.4rem; letter-spacing: -0.04em; display: inline-flex; align-items: center;">
+            NEW<span style="color: var(--neon-blue);">NEWS</span>
+          </span>
+          <span style="background: rgba(0, 240, 255, 0.1); color: var(--neon-blue); font-size: 0.5rem; font-weight: 800; padding: 0.15rem 0.4rem; text-transform: uppercase; border-radius: 4px; letter-spacing: 0.05em; border: 1px solid rgba(0, 240, 255, 0.2);">
+            RADAR
+          </span>
+        </a>
+
+        <!-- Desktop Navigation -->
+        <nav class="desktop-nav" style="display: flex; align-items: center; gap: 1.5rem;">
+          
+          <div class="nav-dropdown" style="position: relative; display: inline-block;">
+            <a href="/temas" class="nav-link dropdown-toggle" style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem; text-decoration: none;">
+              Temas <span style="font-size: 0.5rem; transition: transform 0.2s; display: inline-block;">▼</span>
+            </a>
+            <div class="dropdown-menu" style="display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: rgba(7, 9, 19, 0.95); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0px 4px 20px rgba(0, 240, 255, 0.15); min-width: 210px; z-index: 1000; padding: 0.5rem 0; margin-top: 0.5rem; backdrop-filter: blur(16px);">
+              <a href="/temas" style="display: block; padding: 0.5rem 1rem; color: var(--neon-blue); text-decoration: none; font-size: 0.8rem; font-weight: 700; font-family: var(--font-title); border-bottom: 1px solid var(--border-color); margin-bottom: 0.25rem; transition: all 0.2s;">🔍 Todos los Temas</a>
+              {topics.map((t) => (
+                <a href={`/tema/${t.slug}`} style="display: block; padding: 0.5rem 1rem; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600; font-family: var(--font-title); transition: all 0.2s; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title={t.title}>
+                  📁 {t.title}
+                </a>
+              ))}
+            </div>
+          </div>
+          
+          <div class="nav-dropdown" style="position: relative; display: inline-block;">
+            <a href="#" class="nav-link dropdown-toggle" style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem; text-decoration: none;">
+              Categorías <span style="font-size: 0.5rem; transition: transform 0.2s; display: inline-block;">▼</span>
+            </a>
+            <div class="dropdown-menu" style="display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: rgba(7, 9, 19, 0.95); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0px 4px 20px rgba(0, 240, 255, 0.15); min-width: 200px; z-index: 1000; padding: 0.5rem 0; margin-top: 0.5rem; backdrop-filter: blur(16px);">
+              {categories.map((c) => (
+                <a href={`/categoria/${c.slug}`} style="display: block; padding: 0.5rem 1rem; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600; font-family: var(--font-title); transition: all 0.2s; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title={c.name}>
+                  📂 {c.name}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <a href="/interceptador" class="nav-link" style="font-size: 0.85rem; color: var(--text-muted); text-decoration: none; font-weight: 700; font-family: var(--font-title);">
+            📡 Interceptador
+          </a>
+
+          <a href="/actualidad" class="nav-link" style="font-size: 0.85rem; color: var(--text-muted); text-decoration: none; font-weight: 700; font-family: var(--font-title);">
+            Actualidad
+          </a>
+
+          <div class="nav-dropdown" style="position: relative; display: inline-block;">
+            <a href="#" class="nav-link dropdown-toggle" style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem; text-decoration: none;">
+              Políticos <span style="font-size: 0.5rem; transition: transform 0.2s; display: inline-block;">▼</span>
+            </a>
+            <div class="dropdown-menu" style="display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: rgba(7, 9, 19, 0.95); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0px 4px 20px rgba(0, 240, 255, 0.15); min-width: 180px; z-index: 1000; padding: 0.5rem 0; margin-top: 0.5rem; backdrop-filter: blur(16px);">
+              <a href="/programas-politicos" style="display: block; padding: 0.5rem 1rem; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600; font-family: var(--font-title); transition: all 0.2s;">📁 Programas Electorales</a>
+              <a href="/comparador-politico" style="display: block; padding: 0.5rem 1rem; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600; font-family: var(--font-title); transition: all 0.2s;">⚖️ Comparador de Hechos</a>
+              <a href="/bienes-declarados" style="display: block; padding: 0.5rem 1rem; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600; font-family: var(--font-title); transition: all 0.2s;">💼 Bienes y Patrimonios</a>
+            </div>
+          </div>
+          <a href="/admin" class="nav-link" style="font-size: 0.85rem; color: var(--neon-blue); text-decoration: none; font-weight: 800; font-family: var(--font-title); border: 1px solid rgba(0, 240, 255, 0.2); padding: 0.25rem 0.6rem; border-radius: 6px; background: rgba(0, 240, 255, 0.05);">
+            Editor
+          </a>
+        </nav>
+
+        <!-- Right: Search + Hamburger (mobile) -->
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <a href="/buscador" style="color: var(--text-muted); padding: 0.4rem; display: flex; align-items: center; justify-content: center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </a>
+          <button class="hamburger-btn" id="drawer-open-btn" aria-label="Abrir menú">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- ═══ DRAWER LATERAL (MÓVIL) ═══ -->
+    <div class="drawer-overlay" id="drawer-overlay"></div>
+    <div class="drawer-panel" id="drawer-panel">
+      <div class="drawer-header">
+        <span style="font-family: var(--font-title); font-weight: 800; font-size: 1.2rem;">
+          NEW<span style="color: var(--neon-blue);">NEWS</span>
+        </span>
+        <button class="drawer-close" id="drawer-close-btn" aria-label="Cerrar menú">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <nav class="drawer-nav">
+        <span class="drawer-section-title">Navegación</span>
+        <a href="/" class="drawer-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+          Radar
+        </a>
+        <a href="/interceptador" class="drawer-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
+          📡 Interceptador
+        </a>
+        <a href="/actualidad" class="drawer-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          Feed de Actualidad
+        </a>
+        <a href="/temas" class="drawer-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Expedientes
+        </a>
+
+        <span class="drawer-section-title">Temas Activos</span>
+        {topics.map((t) => (
+          <a href={`/tema/${t.slug}`} class="drawer-link" style="font-size: 0.85rem; padding: 0.65rem 1.5rem;">
+            <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--neon-blue); flex-shrink: 0;"></span>
+            {t.title}
+          </a>
+        ))}
+
+        <span class="drawer-section-title">Categorías</span>
+        {categories.map((c) => (
+          <a href={`/categoria/${c.slug}`} class="drawer-link" style="font-size: 0.85rem; padding: 0.65rem 1.5rem;">
+            <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--neon-purple); flex-shrink: 0;"></span>
+            {c.name}
+          </a>
+        ))}
+
+        <span class="drawer-section-title">Política</span>
+        <a href="/comparador-politico" class="drawer-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="9"/></svg>
+          Comparador
+        </a>
+        <a href="/programas-politicos" class="drawer-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Programas
+        </a>
+        <a href="/bienes-declarados" class="drawer-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Bienes Declarados
+        </a>
+        <a href="/admin" class="drawer-link" style="margin-top: auto; border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Panel Editor
+        </a>
+      </nav>
+    </div>
+
+    <!-- ═══ BOTTOM NAV (MÓVIL) ═══ -->
+    <div class="bottom-nav-container">
+      <nav class="bottom-nav">
+        <a href="/" class={`bottom-nav-item ${currentPath === '/' ? 'active' : ''}`}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+            <line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/>
+          </svg>
+          <span>Radar</span>
+        </a>
+        <a href="/actualidad" class={`bottom-nav-item ${currentPath.startsWith('/actualidad') ? 'active' : ''}`}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+          <span>Feed</span>
+        </a>
+        <a href="/temas" class={`bottom-nav-item ${currentPath.startsWith('/tema') ? 'active' : ''}`}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+          </svg>
+          <span>Temas</span>
+        </a>
+        <a href="/comparador-politico" class={`bottom-nav-item ${currentPath.startsWith('/comparador') ? 'active' : ''}`}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+            <path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="9"/>
+          </svg>
+          <span>Votos</span>
+        </a>
+        <a href="/admin" class={`bottom-nav-item ${currentPath.startsWith('/admin') ? 'active' : ''}`}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68 1.65 1.65 0 0 0 10 3.17V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.32 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          <span>Editor</span>
+        </a>
+      </nav>
+    </div>
+
+    <main style="min-height: calc(100vh - 150px);">
+      <slot />
+    </main>
+
+    <footer style="border-top: 1px solid var(--border-color); background: rgba(7, 9, 19, 0.8); backdrop-filter: blur(12px); padding: 4rem 0; font-size: 0.85rem; color: var(--text-muted);">
+      <div class="container" style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 4rem; max-width: 680px;">
+        
+        <div>
+          <h3 style="color: var(--text-main); font-size: 1.25rem; margin-bottom: 0.75rem; letter-spacing: -0.03em;">NEW<span style="color: var(--neon-blue);">NEWS</span></h3>
+          <p style="margin-bottom: 1.5rem; max-width: 400px; font-size: 0.9rem; line-height: 1.5;">
+            Iniciativa neutral para analizar bulos virales, contrastar promesas políticas y explicar la actualidad de España con datos oficiales.
+          </p>
+          <p style="font-size: 0.8rem;">© {new Date().getFullYear()} NEWNEWS.</p>
+        </div>
+
+        <div>
+          <h4 style="color: var(--text-main); font-size: 1rem; margin-bottom: 1rem; font-family: var(--font-title);">Metodología</h4>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem;" class="footer-links">
+            <li><a href="/temas">Expedientes Vivos</a></li>
+            <li><a href="/programas-politicos">Programas Electorales</a></li>
+            <li><a href="/comparador-politico">Comparador de Hechos</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style="color: var(--text-main); font-size: 1rem; margin-bottom: 1rem; font-family: var(--font-title);">Fuentes Oficiales</h4>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem;">
+            <li><a href="https://www.ine.es" target="_blank" rel="noopener noreferrer">INE (Estadísticas)</a></li>
+            <li><a href="https://www.boe.es" target="_blank" rel="noopener noreferrer">BOE (Leyes y Normas)</a></li>
+            <li><a href="https://www.congreso.es" target="_blank" rel="noopener noreferrer">Congreso de los Diputados</a></li>
+          </ul>
+        </div>
+
+      </div>
+    </footer>
+
+    <!-- Script del Drawer -->
+    <script is:inline>
+      const openBtn = document.getElementById('drawer-open-btn');
+      const closeBtn = document.getElementById('drawer-close-btn');
+      const overlay = document.getElementById('drawer-overlay');
+      const panel = document.getElementById('drawer-panel');
+
+      function openDrawer() {
+        overlay.classList.add('open');
+        panel.classList.add('open');
+        document.body.style.overflow = 'hidden';
+      }
+      function closeDrawer() {
+        overlay.classList.remove('open');
+        panel.classList.remove('open');
+        document.body.style.overflow = '';
+      }
+
+      if (openBtn) openBtn.addEventListener('click', openDrawer);
+      if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+      if (overlay) overlay.addEventListener('click', closeDrawer);
+    </script>
+  </body>
+</html>
+
+<style>
+  .nav-link {
+    font-family: var(--font-title);
+    font-weight: 600;
+    transition: color 0.2s ease;
+    padding: 0.25rem 0;
+    border-bottom: 2px solid transparent;
+  }
+  .nav-link:hover {
+    color: var(--neon-blue);
+    border-bottom-color: var(--neon-blue);
+  }
+  .nav-dropdown:hover .dropdown-menu { display: block !important; }
+  .nav-dropdown:hover .dropdown-toggle span { transform: rotate(180deg); color: var(--neon-blue); }
+  .dropdown-menu a:hover { color: var(--neon-blue) !important; background: rgba(0, 240, 255, 0.05); }
+  .footer-links a { color: var(--text-muted); text-decoration: none; transition: color 0.2s ease; }
+  .footer-links a:hover { color: var(--neon-blue) !important; }
+</style>

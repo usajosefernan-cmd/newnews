@@ -1,0 +1,191 @@
+---
+import Layout from '../layouts/Layout.astro';
+const baseRoute = import.meta.env.BASE_URL;
+const cleanBase = baseRoute.endsWith('/') ? baseRoute.slice(0, -1) : baseRoute;
+---
+
+<Layout title="Interceptador de Bulos — Hermes Engine" description="Audita links virales sospechosos de TikTok, YouTube, Instagram y X en caliente con bases de datos del BOE e INE.">
+  <div class="container" style="max-width: 600px; padding: 3rem 1rem;">
+    
+    <!-- Header/Hero muy corto y moderno -->
+    <section style="text-align: center; margin-bottom: 2.25rem;">
+      <div style="display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.2); color: var(--neon-blue); font-size: 1.75rem; margin-bottom: 1rem; animation: pulse 2.5s infinite;">
+        📡
+      </div>
+      <h1 style="font-size: 1.85rem; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 0.4rem 0; line-height: 1.1;">
+        Buzón de <span style="color: var(--neon-blue);">Intercepción</span>
+      </h1>
+      <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.45; max-width: 440px; margin: 0 auto;">
+        Pega un enlace sospechoso. Nuestro motor audita su viralidad real y el impacto social del tema contrastándolo de inmediato con el BOE y el INE.
+      </p>
+    </section>
+
+    <!-- Caja del Formulario Cyberpunk -->
+    <section class="cyber-card" style="padding: 1.85rem; background: linear-gradient(180deg, rgba(7, 9, 19, 0.95) 0%, rgba(18, 22, 41, 0.85) 100%); border-color: var(--neon-blue); box-shadow: 0 10px 30px rgba(0, 240, 255, 0.03);">
+      
+      <form id="public-report-form" style="display: flex; flex-direction: column; gap: 1.25rem;">
+        
+        <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+          <label style="font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.08em; text-align: left;">Enlace de la publicación sospechosa:</label>
+          <input type="url" id="report-url" placeholder="https://tiktok.com/@user/video/... o https://youtube.com/watch?v=..." required 
+            style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.6); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 0.85rem; outline: none; transition: border-color 0.2s; box-sizing: border-box;" />
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+          <label style="font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.08em; text-align: left;">¿Qué se afirma en el bulo? (Opcional):</label>
+          <textarea id="report-text" placeholder="Ej: Afirman que los autónomos tendrán una cuota del 50%..." rows="2"
+            style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.6); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 0.85rem; outline: none; transition: border-color 0.2s; resize: none; box-sizing: border-box;"></textarea>
+        </div>
+
+        <button type="submit" id="submit-btn" class="cyber-btn accent" style="width: 100%; padding: 0.85rem; border-radius: 8px; font-weight: 800; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.08em; cursor: pointer; transition: all 0.2s ease;">
+          Interceptar y Auditar Link
+        </button>
+      </form>
+
+      <!-- 🖥️ CONSOLA DE LOGS EN VIVO -->
+      <div id="console-wrapper" style="display: none; margin-top: 1.5rem; background: rgba(5, 7, 15, 0.95); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.15rem; font-family: monospace; font-size: 0.75rem; text-align: left; box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.1); max-height: 250px; overflow-y: auto; scroll-behavior: smooth;">
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 240, 255, 0.1); padding-bottom: 0.5rem; margin-bottom: 0.75rem;">
+          <span style="color: var(--neon-blue); font-weight: 800; font-size: 0.7rem; letter-spacing: 0.05em; text-transform: uppercase; display: flex; align-items: center; gap: 0.35rem;">
+            <span class="pulse-dot"></span> CONSOLA DE AUDITORÍA HERMES
+          </span>
+          <span id="console-status" style="color: var(--neon-amber); font-weight: bold; font-size: 0.65rem; text-transform: uppercase;">PROCESANDO...</span>
+        </div>
+        <div id="console-logs" style="display: flex; flex-direction: column; gap: 0.4rem; line-height: 1.4; color: var(--text-muted);">
+          <!-- Logs dinámicos -->
+        </div>
+      </div>
+    </section>
+
+  </div>
+</Layout>
+
+<script define:vars={{ cleanBase }}>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('public-report-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const consoleWrapper = document.getElementById('console-wrapper');
+    const consoleLogs = document.getElementById('console-logs');
+    const consoleStatus = document.getElementById('console-status');
+
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const url = document.getElementById('report-url').value;
+        const text = document.getElementById('report-text').value;
+
+        // Desactivar form y mostrar consola
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.5';
+        submitBtn.innerText = 'PROCESANDO ENLACE...';
+        
+        consoleLogs.innerHTML = '';
+        consoleWrapper.style.display = 'block';
+        consoleStatus.innerText = 'ANALIZANDO';
+        consoleStatus.style.color = 'var(--neon-amber)';
+
+        const appendLog = (msg, type = 'info') => {
+          const row = document.createElement('div');
+          row.style.wordBreak = 'break-all';
+          
+          if (type === 'success') {
+            row.style.color = '#00ffc4'; // neon green
+          } else if (type === 'error') {
+            row.style.color = '#ff3366'; // neon rose
+          } else if (type === 'warn') {
+            row.style.color = '#ffb020'; // neon amber
+          } else {
+            row.style.color = '#00f0ff'; // neon blue
+          }
+          
+          row.innerText = `> ${msg}`;
+          consoleLogs.appendChild(row);
+          
+          // Auto scroll
+          consoleWrapper.scrollTop = consoleWrapper.scrollHeight;
+        };
+
+        try {
+          const response = await fetch(`${cleanBase}/api/report`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ url, text })
+          });
+
+          if (!response.body) {
+            appendLog('Error de conexión: El servidor no devolvió un flujo de datos.', 'error');
+            return;
+          }
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop(); // Mantener remanente incompleto
+
+            for (const line of lines) {
+              if (line.trim()) {
+                try {
+                  const data = JSON.parse(line);
+                  appendLog(data.message, data.status);
+                  
+                  if (data.status === 'success') {
+                    consoleStatus.innerText = 'COMPLETADO';
+                    consoleStatus.style.color = '#00ffc4';
+                  } else if (data.status === 'error') {
+                    consoleStatus.innerText = 'FALLIDO';
+                    consoleStatus.style.color = '#ff3366';
+                  }
+                } catch (jsonErr) {
+                  // Fallback para logs de texto crudo si hubiera
+                  appendLog(line, 'info');
+                }
+              }
+            }
+          }
+          
+          // Limpiar el form
+          form.reset();
+        } catch (err) {
+          appendLog(`Error de conexión con la VPS: ${err.message}`, 'error');
+          consoleStatus.innerText = 'ERROR';
+          consoleStatus.style.color = '#ff3366';
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = '1';
+          submitBtn.innerText = 'Interceptar y Auditar Link';
+        }
+      });
+    }
+  });
+</script>
+
+<style is:global>
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(0, 240, 255, 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(0, 240, 255, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(0, 240, 255, 0);
+    }
+  }
+
+  .pulse-dot {
+    width: 6px;
+    height: 6px;
+    background-color: var(--neon-blue);
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse 1.5s infinite;
+  }
+</style>
