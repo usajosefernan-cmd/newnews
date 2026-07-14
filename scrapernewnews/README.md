@@ -39,11 +39,41 @@ Cuando un enlace se reporta, el endpoint ejecuta un análisis de triple índice:
 
 ## 4. 🤖 Pipeline de Redacción Deontológica (`ai-pipeline.js`)
 * **Código Deontológico:** El prompt prohíbe taxativamente usar agencias de fact-checking secundarias (Newtral, Maldita). Los argumentos deben contrastarse directamente con fuentes del BOE y el INE.
-* **Detección de Sesgo Comercial:** Si el claim trata sobre una herramienta de IA o software, la IA audita si el post original contiene enlaces de referidos y explica en un apartado detallado al lector la existencia de intereses económicos privados detrás de la review.
-* **Base de Datos Local:** Si no hay conexión con Gemini, el script procesa la reclamación localmente utilizando una base de datos predefinida de 9 temas de actualidad (Seguridad Social, delincuencia juvenil, Begoña Gómez, caso Koldo, Ley de Vivienda, etc.).
+* **Extracción de Transcripción de YouTube:** `check-url.js` ahora descarga automáticamente la transcripción completa de los vídeos y Shorts de YouTube:
+  1. *Endpoint Primario:* Consulta la API pública sin llaves `youtube-transcript.ai` para descargar el texto plano limpio.
+  2. *Fallback Secundario:* Raspado del HTML nativo del reproductor de YouTube buscando `captionTracks`, extrayendo la URL base XML del idioma configurado y limpiando las marcas de tiempo.
+  La transcripción resultante se guarda en la columna `text` de la base de datos a través del endpoint `/api/report.js`, dotando a la IA del discurso hablado completo para su análisis.
+* **Fallback Robusto con OpenRouter:**
+  - Si la llamada nativa de Gemini devuelve un error (como `429 - Quota Exceeded` de los límites de llamada diarios gratuitos), el motor conmuta automáticamente a OpenRouter.
+  - Para evitar errores de validación de saldo/crédito en OpenRouter (`402 - Payment Required`), se define explícitamente `max_tokens: 2000` en la consulta, reduciendo drásticamente el coste proyectado a milésimas de centavo y permitiendo la ejecución con saldos mínimos.
+  - *Modelo Secundario:* Si el modelo principal falla, se conmuta a `meta-llama/llama-3.1-8b-instruct` como segundo nivel de contingencia.
+* **Base de Datos Local:** Si falla toda conexión de IA, se aplica el fallback estático con una base de datos local predefinida de 9 temas de actualidad (Seguridad Social, Begoña Gómez, Koldo, Vivienda, etc.).
 
 ---
 
 ## 🖥️ 5. Consola Editorial y Logs en Caliente (`admin.astro` & `run-job.js`)
 * **Subproceso en Vivo:** Los botones del panel de control realizan peticiones HTTP POST a `/api/run-job`. El backend lanza el script solicitado en la VPS usando `spawn` de Node.js.
 * **Stream en Tiempo Real:** El `stdout` y `stderr` del subproceso se capturan y se transmiten línea a línea a la terminal del navegador usando un stream NDJSON (`ReadableStream`), permitiendo depurar en vivo sin recargas.
+
+---
+
+## 🌐 6. Despliegue y Proxy Inverso (Nginx VPS)
+* **Arquitectura de Red:** El portal se sirve en producción en la VPS bajo la ruta `https://143-47-35-167.sslip.io/pro/newnews/`.
+* **Configuración de Nginx:** La VPS cuenta con una instancia Nginx activa en el host (puerto 80 y 443). Se habilitó el bloque de servidor `algotrading` en `/etc/nginx/sites-enabled/` que redirige el subpath `/pro/newnews/` mediante proxy inverso al servidor Node de Astro:
+  ```nginx
+  location = /pro/newnews {
+      return 301 $scheme://$http_host/pro/newnews/;
+  }
+  location /pro/newnews/ {
+      proxy_pass http://127.0.0.1:4322;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_buffering off;
+  }
+  ```
+* **Mantenimiento y PM2:** Astro corre bajo PM2 (`name: newnews`, ID 10) en el puerto `4322`. Tras cada compilación de build estático, el backend de Astro recarga automáticamente su propio daemon (`pm2 reload newnews`) para servir instantáneamente los nuevos activos de servidor compilados sin interrupciones.
