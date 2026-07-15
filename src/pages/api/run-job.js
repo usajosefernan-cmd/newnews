@@ -1,6 +1,9 @@
 export const prerender = false;
 import { spawn } from 'node:child_process';
 import path from 'node:path';
+import { loadEnv } from '../../../scripts/newnews-engine/config.js';
+
+loadEnv();
 
 export async function POST({ request }) {
   let job = '';

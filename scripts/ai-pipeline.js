@@ -286,8 +286,8 @@ async function runPipeline() {
             id, topic_id, slug, title, subtitle, claim, origin_platform, origin_url, origin_summary, 
             category, verdict, confidence, summary, explanation, what_is_true, what_is_false, 
             what_lacks_context, what_is_not_proven, status, human_review_required, published_at, origin_date,
-            multimedia_url, multimedia_type, trick_used, newnews_score, emoji_tag, infographic_svg, created_at, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+            multimedia_url, multimedia_type, trick_used, newnews_score, emoji_tag, infographic_svg, infographic_parts, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
         `).run(
           articleId, topicId, slug, article.title, article.subtitle, item.detected_claim,
           item.platform, item.url, item.text, category, verification.verdict, verification.confidence,
@@ -296,7 +296,8 @@ async function runPipeline() {
           statusVal, reviewVal, pubAtVal,
           item.origin_date || new Date().toISOString(), metrics.imageUrl || null, metrics.imageUrl ? 'image' : null,
           article.trick_used || 'dato sin base', article.newnews_score || 50, article.emoji_tag || '🧊 Falta contexto',
-          article.infographic_svg || null
+          article.infographic_svg || null,
+          JSON.stringify(article.infographic_parts || [])
         );
 
         // Insertar relaciones con múltiples temas/expedientes

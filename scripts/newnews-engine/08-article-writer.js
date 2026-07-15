@@ -105,7 +105,4 @@ Devuelve un JSON con el formato exacto:
 
     return fallbackResult;
   }
-}' text-anchor='middle'>Contraste de Evidencias Oficiales en Proceso</text></svg>`
-    };
-  }
 }

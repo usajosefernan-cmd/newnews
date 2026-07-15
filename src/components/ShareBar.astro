@@ -284,6 +284,12 @@ const shareIcon =
     }
   }
 
+  function buildMediaUrl(handle: string, url: string, text: string): string {
+    const t = encodeURIComponent(text);
+    const u = encodeURIComponent(url);
+    return `https://twitter.com/intent/tweet?text=${t}%20${u}&via=${handle}`;
+  }
+
   function flashCopied(btn: HTMLElement) {
     btn.classList.add('copied');
     const label = btn.querySelector('span');
@@ -309,6 +315,13 @@ const shareIcon =
         } catch (e) {
           console.error('No se pudo copiar:', e);
         }
+        return;
+      }
+
+      if (key === 'media') {
+        const handle = btn.getAttribute('data-handle') || '';
+        const mediaUrl = buildMediaUrl(handle, url, text);
+        window.open(mediaUrl, '_blank', 'noopener,noreferrer,width=620,height=620');
         return;
       }
 

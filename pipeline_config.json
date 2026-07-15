@@ -1,11 +1,11 @@
 {
-  "comment": "Configuración modular del motor de desmentidos Newnews (12 Fases). Puedes editar proveedores, modelos y timeouts desde el panel.",
+  "comment": "Configuración modular del motor de desmentidos Newnews (12 Fases) optimizada para usar Gemini 2.5 Flash de forma ultra-rápida y estable.",
   "global": {
     "default_provider": "gemini",
-    "fallback_provider": "nous",
-    "fallback_model": "stepfun/step-3.7-flash:free",
-    "timeout_ms": 120000,
-    "autopilot": true
+    "fallback_provider": "gemini",
+    "fallback_model": "gemini-2.5-flash",
+    "timeout_ms": 60000,
+    "autopilot": false
   },
   "phases": {
     "00": {
@@ -21,8 +21,8 @@
       "name": "Fase 01: Filtro Relevancia",
       "script": "01-relevance-gate.js",
       "agent_role": "Filtro de interés social y relevancia pública.",
-      "provider": "nous",
-      "model": "meta-llama/llama-3.2-3b-instruct:free",
+      "provider": "gemini",
+      "model": "gemini-2.5-flash",
       "temperature": 0.1,
       "system_prompt": "Evalúa si una afirmación tiene suficiente interés sociopolítico público en España para requerir fact-checking."
     },
@@ -30,8 +30,8 @@
       "name": "Fase 02: Enrutador Semántico",
       "script": "02-semantic-router.js",
       "agent_role": "Enrutador de expedientes y verticales.",
-      "provider": "nous",
-      "model": "stepfun/step-3.7-flash:free",
+      "provider": "gemini",
+      "model": "gemini-2.5-flash",
       "temperature": 0.1,
       "system_prompt": "Clasifica el claim en una de las categorías temáticas existentes y asócialo al expediente correspondiente."
     },
@@ -48,8 +48,8 @@
       "name": "Fase 04: Filtro de Ruido",
       "script": "04-noise-filter.js",
       "agent_role": "Filtro de spam y bulos inverosímiles.",
-      "provider": "nous",
-      "model": "meta-llama/llama-3.2-3b-instruct:free",
+      "provider": "gemini",
+      "model": "gemini-2.5-flash",
       "temperature": 0.1,
       "system_prompt": "Detecta si la afirmación es spam comercial, cotilleo menor, notas ordinarias o carece de impacto social."
     },
@@ -57,8 +57,8 @@
       "name": "Fase 05: Extractor de Claims",
       "script": "05-claim-extractor.js",
       "agent_role": "Extractor de reclamaciones fácticas explícitas.",
-      "provider": "nous",
-      "model": "stepfun/step-3.7-flash:free",
+      "provider": "gemini",
+      "model": "gemini-2.5-flash",
       "temperature": 0.1,
       "system_prompt": "Aísla el sujeto y el claim fáctico explícito a verificar a partir de transcripciones o textos en redes."
     },
@@ -75,8 +75,8 @@
       "name": "Fase 07: Verificador",
       "script": "07-verifier.js",
       "agent_role": "Auditor lógico de veracidad y veredictos.",
-      "provider": "nous",
-      "model": "stepfun/step-3.7-flash:free",
+      "provider": "gemini",
+      "model": "gemini-2.5-flash",
       "temperature": 0.2,
       "system_prompt": "Analiza contradicciones lógicas entre el claim y las fuentes recolectadas, dictando veredicto, confianza y detalles fácticos."
     },
@@ -84,8 +84,8 @@
       "name": "Fase 08: Redactor del Artículo",
       "script": "08-article-writer.js",
       "agent_role": "Redactor y estructurador formal de desmentidos.",
-      "provider": "nous",
-      "model": "stepfun/step-3.7-flash:free",
+      "provider": "gemini",
+      "model": "gemini-2.5-flash",
       "temperature": 0.5,
       "system_prompt": "Escribe el artículo desmentido con claridad periodística, lenguaje desapasionado y estructura formal de Newnews."
     },
@@ -93,8 +93,8 @@
       "name": "Fase 09: Calidad Deontológica",
       "script": "09-quality-gate.js",
       "agent_role": "Defensor del Lector y filtro ético.",
-      "provider": "nous",
-      "model": "stepfun/step-3.7-flash:free",
+      "provider": "gemini",
+      "model": "gemini-2.5-flash",
       "temperature": 0.2,
       "system_prompt": "Audita que el tono sea neutral y objetivo, sin sesgos partidistas o lenguaje condescendiente."
     },
@@ -102,8 +102,8 @@
       "name": "Fase 10: Cola de Revisión",
       "script": "10-review-queue.js",
       "agent_role": "Encolador automático de moderación rápida.",
-      "provider": "nous",
-      "model": "stepfun/step-3.7-flash:free",
+      "provider": "gemini",
+      "model": "gemini-2.5-flash",
       "temperature": 0.1,
       "system_prompt": "Genera la checklist de moderación rápida humana recomendada para el editor basada en los riesgos detectados."
     },
@@ -111,8 +111,8 @@
       "name": "Fase 11: Copies de Redes",
       "script": "11-social-writer.js",
       "agent_role": "Generador de copys optimizados para difusión.",
-      "provider": "nous",
-      "model": "tencent/hy3:free",
+      "provider": "gemini",
+      "model": "gemini-2.5-flash",
       "temperature": 0.6,
       "system_prompt": "Redacta hilos y resúmenes para Twitter y Telegram de forma neutral e informativa."
     }

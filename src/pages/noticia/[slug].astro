@@ -1,6 +1,7 @@
 ---
 export const prerender = false;
 import Layout from '../../layouts/Layout.astro';
+import ShareBar from '../../components/ShareBar.astro';
 import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 
@@ -370,9 +371,9 @@ if (trickUsed === 'cherry-picking') {
       ))}
     </div>
 
-    <!-- Título principal elegante (Serif) -->
+    <!-- Título principal elegante (Igual que la Web) -->
     <header style="margin-bottom: 2.5rem; text-align: center;">
-      <h1 style="font-size: 2.3rem; line-height: 1.2; font-weight: 800; color: #ffffff; font-family: 'Playfair Display', Georgia, serif; margin-bottom: 0.5rem;">
+      <h1 style="font-size: 2.3rem; line-height: 1.2; font-weight: 900; color: #ffffff; font-family: var(--font-title); margin-bottom: 0.5rem; letter-spacing: -0.03em;">
         {article.title}
       </h1>
       <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted); font-weight: bold; margin-top: 0.75rem;">
@@ -381,10 +382,20 @@ if (trickUsed === 'cherry-picking') {
     </header>
 
     <!-- Gran Banner de Veredicto Sólido -->
-    <div style="margin-bottom: 2.5rem; text-align: center;">
-      <div class={`verdict-banner ${article.verdict.toLowerCase().replace(' ', '-')}`} style={`display: inline-block; width: 100%; padding: 1.25rem; border-radius: 12px; font-size: 1.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; font-family: system-ui, sans-serif; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); color: #ffffff; background: ${article.verdict.toLowerCase().includes('verdadero') ? 'rgba(0, 245, 160, 0.15)' : article.verdict.toLowerCase().includes('falso') ? 'rgba(220, 39, 67, 0.15)' : 'rgba(255, 183, 3, 0.15)'}; border: 2px solid ${article.verdict.toLowerCase().includes('verdadero') ? 'var(--neon-green)' : article.verdict.toLowerCase().includes('falso') ? 'var(--neon-rose)' : 'var(--neon-amber)'};`}>
+    <div style="margin-bottom: 1.5rem; text-align: center;">
+      <div class={`verdict-banner ${article.verdict.toLowerCase().replace(' ', '-')}`} style={`display: inline-block; width: 100%; padding: 1.25rem; border-radius: 12px; font-size: 1.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--font-title); text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); color: #ffffff; background: ${article.verdict.toLowerCase().includes('verdadero') ? 'rgba(0, 245, 160, 0.15)' : article.verdict.toLowerCase().includes('falso') ? 'rgba(220, 39, 67, 0.15)' : 'rgba(255, 183, 3, 0.15)'}; border: 2px solid ${article.verdict.toLowerCase().includes('verdadero') ? 'var(--neon-green)' : article.verdict.toLowerCase().includes('falso') ? 'var(--neon-rose)' : 'var(--neon-amber)'};`}>
         {article.verdict}
       </div>
+    </div>
+
+    <!-- Barra de Compartir Tras Veredicto (Inline) -->
+    <div style="margin-bottom: 2rem;">
+      <ShareBar 
+        title={article.title} 
+        text={`NEWNEWS califica de ${article.verdict.toLowerCase()} la declaración: "${article.claim}"`} 
+        variant="inline"
+        label="Compartir este desmentido"
+      />
     </div>
 
     <!-- Panel: Conclusión de la Auditoría -->
@@ -480,7 +491,20 @@ if (trickUsed === 'cherry-picking') {
             </a>
           </div>
         ))}
+      </div>
+    </section>
 
+    <!-- Barra de Compartir al Final (Card) -->
+    <div style="margin-top: 3rem; margin-bottom: 3rem;">
+      <ShareBar 
+        title={article.title} 
+        text={`NEWNEWS califica de ${article.verdict.toLowerCase()} la declaración: "${article.claim}"`} 
+        variant="card"
+        label="Difunde la Verdad"
+      />
+    </div>
+
+    <!-- Artículos Relacionados (Siguiente lectura) -->
     <section style="margin-bottom: 3rem;">
       <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.15em; display: block; padding-left: 0.25rem; margin-bottom: 1.25rem;">Casos e Informes Relacionados</span>
       
