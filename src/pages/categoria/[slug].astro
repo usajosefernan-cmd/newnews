@@ -7,10 +7,14 @@ export async function getStaticPaths() {
   const dbPath = path.resolve('data/newnews.db');
   const db = new DatabaseSync(dbPath);
   db.exec('PRAGMA journal_mode = WAL;');
-  const articles = db.prepare("SELECT category FROM articles WHERE status = 'publicado'").all() as any[];
+  const rawArticles = db.prepare("SELECT category FROM articles WHERE status = 'publicado'").all() as any[];
+  const rawTopics = db.prepare("SELECT category FROM topics WHERE status = 'activo'").all() as any[];
   db.close();
 
-  const categories = [...new Set(articles.map(art => art.category))].filter(Boolean);
+  const categories = [...new Set([
+    ...rawArticles.map(art => art.category),
+    ...rawTopics.map(t => t.category)
+  ])].filter(Boolean);
 
   return categories.map(cat => {
     const slug = cat.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
