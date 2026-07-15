@@ -597,5 +597,32 @@ export const topicDidacticData = {
     ],
     quick_replies: 'Las leyes en España son tramitadas y decididas en el Parlamento. Las normas excepcionales dictadas por el Gobierno en forma de decretos-leyes deben pasar el visto bueno obligatorio del Congreso de los Diputados en 30 días para no extinguirse.',
     pending_questions: 'Sectores legislativos prioritarios para limitar el uso de la vía de urgencia en el trámite de proyectos de ley ordinaria.'
+  },
+  'financiacion-autonomica-desigual': {
+    what_is_happening: 'El reparto de recursos fiscales entre Comunidades Autónomas suscita un permanente debate en España. Las críticas giran en torno a la infrafinanciación estructural de ciertas regiones (como la Comunidad Valenciana o Murcia) en el régimen común, los privilegios atribuidos a los conciertos forales del País Vasco y Navarra, y el debate de las balanzas fiscales y balanzas de servicios públicos esenciales.',
+    what_we_know: 'Sabemos que España cuenta con dos modelos diferenciados constitucionalmente: el Régimen Común (15 CCAA y Ceuta/Melilla, regulado por la LOFCA y gestionado mediante fondos de suficiencia y garantía) y el Régimen Foral (País Vasco y Navarra, que recaudan el 100% de impuestos y pagan un Cupo o Aportación al Estado por las competencias no transferidas). FEDEA y el Ministerio de Hacienda publican datos de financiación por habitante ajustado que muestran que las CCAA de régimen foral disponen de casi el doble de recursos por habitante que la media del régimen común.',
+    what_we_do_not_know: 'No está definido un consenso metodológico sobre cómo computar las balanzas fiscales territoriales de forma neutral, ya que el cálculo varía según se use el método de "carga-beneficio" (que asigna el gasto del Estado donde reside el beneficiario) o el de "flujo monetario" (donde se realiza físicamente la inversión).',
+    key_facts: [
+      'La Comunidad de Madrid y Cataluña son los mayores aportadores netos al Fondo de Garantía de Servicios Públicos Fundamentales.',
+      'El modelo de financiación común está caducado desde el año 2014 por falta de acuerdo político bipartidista para su renovación.',
+      'La financiación por habitante ajustado del País Vasco duplica la de comunidades infrafinanciadas como la Comunidad Valenciana o Murcia.'
+    ],
+    main_sources: [
+      { name: 'FEDEA - Análisis y Series de Financiación de las Comunidades Autónomas', url: 'http://www.fedea.net/' },
+      { name: 'Ministerio de Hacienda - Informes de Balanzas Fiscales y Sistema LOFCA', url: 'https://www.hacienda.gob.es/' },
+      { name: 'CGPJ - Ley Orgánica 8/1980 de Financiación de las Comunidades Autónomas (LOFCA)', url: 'https://www.boe.es/' }
+    ],
+    chronology: [
+      { date: 'Año 2009', event: 'Aprobación del actual modelo de financiación del régimen común por el gobierno de Zapatero.' },
+      { date: 'Año 2014', event: 'Expiración del período de vigencia de cinco años del sistema de financiación LOFCA sin renovación.' }
+    ],
+    frequent_confusions: [
+      { confusion: 'La Comunidad de Madrid es deficitaria y recibe ayudas del resto de España por sus bajos impuestos.', reality: 'Falso. Madrid es la región que más aporta en términos netos a la caja común de la solidaridad (cerca del 70% del fondo de servicios esenciales), seguida por Cataluña y Baleares, debido a su mayor PIB y recaudación del IRPF.' },
+      { confusion: 'Los impuestos que recauda el País Vasco se destinan a financiar los servicios de toda España.', reality: 'Falso. El País Vasco y Navarra operan bajo concierto foral, quedándose con el 100% de la recaudación de sus impuestos y transfiriendo únicamente una cantidad anual (el Cupo vasco y la Aportación navarra) para sufragar gastos del Estado no transferidos (como defensa, asuntos exteriores y la corona).' },
+      { confusion: 'La desigualdad del sistema de financiación común se debe a que unas comunidades gastan más de lo debido.', reality: 'Falso. Los informes de FEDEA demuestran que la desigualdad procede de la distribución inicial de recursos del modelo LOFCA de 2009 (criterio del "statu quo"), que beneficia a regiones poco pobladas frente a las de rápido crecimiento demográfico como Valencia.' }
+    ],
+    quick_replies: 'El sistema de financiación autonómica presenta una brecha entre el régimen común de la LOFCA (con CCAA infrafinanciadas como la valenciana) y el régimen foral, que goza de autonomía tributaria plena y un saldo por habitante que dobla la media común.',
+    pending_questions: 'Reforma del sistema LOFCA para garantizar la equidad por habitante ajustado y el encaje de la financiación singular catalana.'
   }
 };
+

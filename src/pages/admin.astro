@@ -279,48 +279,36 @@ if (Astro.request.method === 'POST') {
       }
     }
     else if (action === 'trigger_sync') {
-      try {
-        commandOutput = execSync('node scripts/sync.js', { encoding: 'utf-8', stdio: 'pipe' });
-        message = `✓ Proceso de Sincronización y Reconstrucción completado con éxito.`;
-        messageType = 'success';
-      } catch (err: any) {
-        commandOutput = err.stdout || err.message;
-        message = `✗ Error ejecutando sincronización: ${err.message}`;
-        messageType = 'error';
-      }
+      message = `✓ Sincronización y Reconstrucción iniciadas en segundo plano.`;
+      messageType = 'success';
+      exec('node scripts/sync.js', (err, stdout, stderr) => {
+        const output = stdout + (stderr ? '\nSTDERR:\n' + stderr : '');
+        dbPath && new DatabaseSync(dbPath).prepare("INSERT INTO verification_logs (id, status, query_text, verdict, execution_log, ip_address, created_at) VALUES (?, 'Sync', 'Sincronización Manual', 'Completado', ?, 'Servidor', datetime('now'))").run(`sync-${Date.now()}`, output);
+      });
     }
     else if (action === 'trigger_build') {
-      try {
-        commandOutput = execSync('npm run build', { encoding: 'utf-8', stdio: 'pipe' });
-        message = `✓ Reconstrucción estática del portal finalizada con éxito.`;
-        messageType = 'success';
-      } catch (err: any) {
-        commandOutput = err.stdout || err.message;
-        message = `✗ Error compilando el portal: ${err.message}`;
-        messageType = 'error';
-      }
+      message = `✓ Compilación estática del portal iniciada en segundo plano.`;
+      messageType = 'success';
+      exec('npm run build', (err, stdout, stderr) => {
+        const output = stdout + (stderr ? '\nSTDERR:\n' + stderr : '');
+        dbPath && new DatabaseSync(dbPath).prepare("INSERT INTO verification_logs (id, status, query_text, verdict, execution_log, ip_address, created_at) VALUES (?, 'Build', 'Compilación Manual', 'Completado', ?, 'Servidor', datetime('now'))").run(`build-${Date.now()}`, output);
+      });
     }
     else if (action === 'trigger_radar') {
-      try {
-        commandOutput = execSync('node scripts/radar-cron.js', { encoding: 'utf-8', stdio: 'pipe' });
-        message = `✓ Escaneo de radar completado con éxito.`;
-        messageType = 'success';
-      } catch (err: any) {
-        commandOutput = err.stdout || err.message;
-        message = `✗ Error en el radar: ${err.message}`;
-        messageType = 'error';
-      }
+      message = `✓ Escaneo de radar iniciado en segundo plano.`;
+      messageType = 'success';
+      exec('node scripts/radar-cron.js', (err, stdout, stderr) => {
+        const output = stdout + (stderr ? '\nSTDERR:\n' + stderr : '');
+        dbPath && new DatabaseSync(dbPath).prepare("INSERT INTO verification_logs (id, status, query_text, verdict, execution_log, ip_address, created_at) VALUES (?, 'Radar', 'Radar Manual', 'Completado', ?, 'Servidor', datetime('now'))").run(`radar-${Date.now()}`, output);
+      });
     }
     else if (action === 'trigger_ai') {
-      try {
-        commandOutput = execSync('node scripts/ai-pipeline.js', { encoding: 'utf-8', stdio: 'pipe' });
-        message = `✓ Pipeline de IA completado de forma modular. Nuevos borradores generados.`;
-        messageType = 'success';
-      } catch (err: any) {
-        commandOutput = err.stdout || err.message;
-        message = `✗ Error en la IA: ${err.message}`;
-        messageType = 'error';
-      }
+      message = `✓ Pipeline de IA y redacción de borradores iniciados en segundo plano.`;
+      messageType = 'success';
+      exec('node scripts/ai-pipeline.js', (err, stdout, stderr) => {
+        const output = stdout + (stderr ? '\nSTDERR:\n' + stderr : '');
+        dbPath && new DatabaseSync(dbPath).prepare("INSERT INTO verification_logs (id, status, query_text, verdict, execution_log, ip_address, created_at) VALUES (?, 'IA', 'Pipeline IA Manual', 'Completado', ?, 'Servidor', datetime('now'))").run(`ai-${Date.now()}`, output);
+      });
     }
     else if (action === 'approve_submission') {
       const submissionId = data.get('submission_id')?.toString() || '';
@@ -772,9 +760,6 @@ const getVerdictClass = (verdict) => {
         <AprobacionPanel draftsWithDetails={draftsWithDetails} activeTopics={activeTopics} getVerdictClass={getVerdictClass} />
       </div>
 
-        </div>
-      </div>
-
       <!-- PESTAÑA: TRIAGE DE USUARIOS (RADAR CIUDADANO) -->
       <div id="pane-user-submissions" class="admin-tab-panel">
         <TriagePanel userSubmissions={userSubmissions} activeTopics={activeTopics} />
@@ -787,8 +772,7 @@ const getVerdictClass = (verdict) => {
 
       <!-- PESTAÑA 3: ASISTENTE REDACTOR (PLANTILLA FACT-CHECKING CON PREVISUALIZACIÓN EN VIVO) -->
       <div id="pane-redactor" class="admin-tab-panel">
-          </div>
-        </div>
+        <RedactorPanel activeTopics={activeTopics} />
       </div>
 
       <!-- PESTAÑA 4: NOTICIAS PUBLICADAS (HISTÓRICO) -->

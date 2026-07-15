@@ -129,13 +129,23 @@ function getStatusLabel(status: string) {
   const paramUrl = urlParams.get('url');
   const paramText = urlParams.get('text');
   
+  const urlInput = document.getElementById('url') as HTMLInputElement;
+  const textInput = document.getElementById('text') as HTMLTextAreaElement;
+
   if (paramUrl) {
-    const urlInput = document.getElementById('url') as HTMLInputElement;
     if (urlInput) urlInput.value = paramUrl;
   }
   if (paramText) {
-    const textInput = document.getElementById('text') as HTMLTextAreaElement;
-    if (textInput) textInput.value = paramText;
+    const isUrl = paramText.trim().startsWith('http://') || paramText.trim().startsWith('https://');
+    if (isUrl) {
+      if (urlInput) urlInput.value = paramText.trim();
+      if (textInput) {
+        textInput.placeholder = 'Añade un comentario o aclaración sobre este enlace... (Requerido)';
+        textInput.focus();
+      }
+    } else {
+      if (textInput) textInput.value = paramText;
+    }
   }
 
   if (form) {

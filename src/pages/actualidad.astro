@@ -15,7 +15,7 @@ const articles = db.prepare(`
   ORDER BY a.published_at DESC, a.created_at DESC
 `).all() as any[];
 
-// Extraer categor💡⚙️as 💡únicas para los filtros
+// Extraer categorías 💡únicas para los filtros
 const categories = [...new Set(articles.map(art => art.category))].filter(Boolean);
 
 db.close();
@@ -62,7 +62,7 @@ const base = import.meta.env.BASE_URL;
 const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
 ---
 
-<Layout title="Feed de Actualidad" description="Informes cronol💡⚙️gicos de contrastaci💡⚙️n y verificaci💡⚙️n de bulos en España.">
+<Layout title="Feed de Actualidad" description="Informes cronol💡⚙️gicos de contrastación y verificación de bulos en España.">
   <div class="container" style="padding-top: 1.5rem; padding-bottom: 5rem; max-width: 680px;">
     
     <div style="margin-bottom: 2rem;">
@@ -74,7 +74,7 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
       </p>
     </div>
 
-    <!-- Filtro de Categor💡⚙️as (Sticky) -->
+    <!-- Filtro de Categorías (Sticky) -->
     <div style="display: flex; gap: 0.5rem; margin-bottom: 2rem; overflow-x: auto; scrollbar-width: none; align-items: center; position: sticky; top: 64px; z-index: 990; background: rgba(7, 9, 19, 0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 0.75rem 0.5rem; border-bottom: 1px solid var(--border-color); margin-left: -0.5rem; margin-right: -0.5rem; white-space: nowrap;">
       <span style="font-size: 0.75rem; font-weight: bold; color: var(--text-muted); text-transform: uppercase; margin-right: 0.5rem; flex-shrink: 0;">Filtrar por área:</span>
       <a href={`${cleanBase}/actualidad`} class="cyber-btn" style="font-size: 0.75rem; padding: 0.35rem 0.75rem; text-decoration: none; border-color: var(--neon-blue); color: var(--neon-blue); flex-shrink: 0;">
@@ -91,7 +91,7 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
       ))}
     </div>
 
-    <!-- Listado de Art💡⚙️culos (Cronol💡⚙️gico) -->
+    <!-- Listado de Artículos (Cronol💡⚙️gico) -->
     <div style="display: flex; flex-direction: column; gap: 1.5rem;">
       {articles.map(art => (
         <article class={`cyber-card ${getVerdictClass(art.verdict)}`} style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; transition: transform 0.2s ease, box-shadow 0.2s ease;">
@@ -163,7 +163,7 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
 </Layout>
 
 <style is:global>
-  /* Animaci💡⚙️n hover para los artículos del feed */
+  /* Animación hover para los artículos del feed */
   article:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 20px rgba(0, 240, 255, 0.05);

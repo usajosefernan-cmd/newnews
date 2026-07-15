@@ -32,7 +32,7 @@ const dbPath = path.resolve('data/newnews.db');
 const db = new DatabaseSync(dbPath);
 db.exec('PRAGMA journal_mode = WAL;');
 
-// Cargar todos los artículos de esta categor💡⚙️a
+// Cargar todos los artículos de esta categoría
 const articles = db.prepare(`
   SELECT a.*, t.title as topic_title, t.slug as topic_slug
   FROM articles a
@@ -41,7 +41,7 @@ const articles = db.prepare(`
   ORDER BY a.published_at DESC, a.created_at DESC
 `).all(categoryName) as any[];
 
-// Calcular estadísticas b💡⚙️sicas en caliente de la categor💡⚙️a
+// Calcular estadísticas básicas en caliente de la categoría
 const stats = {
   total: articles.length,
   falsos: articles.filter(a => (a.verdict || '').toLowerCase().includes('falso')).length,
@@ -57,7 +57,7 @@ const lowerCat = categoryName.toLowerCase();
 if (lowerCat.includes('vivienda')) {
   areaMapping = ['Vivienda'];
 } else if (lowerCat.includes('inmigra') || lowerCat.includes('menas') || lowerCat.includes('migr')) {
-  areaMapping = ['Inmigraci💡⚙️n'];
+  areaMapping = ['Inmigración'];
 } else if (lowerCat.includes('econ') || lowerCat.includes('impues') || lowerCat.includes('paro') || lowerCat.includes('empleo') || lowerCat.includes('fiscal')) {
   areaMapping = ['Econom💡⚙️a', 'Fiscalidad', 'Pensiones'];
 } else if (lowerCat.includes('justic') || lowerCat.includes('corrup') || lowerCat.includes('leyes') || lowerCat.includes('amnistia')) {
@@ -78,7 +78,7 @@ if (areaMapping.length > 0) {
 
 db.close();
 
-// Glosario did💡⚙️ctico adaptado a j💡⚙️venes
+// Glosario did💡⚙️ctico adaptado a jóvenes
 const educationalGlosario = {
   'sociedad-y-migracion': [
     {
@@ -93,28 +93,28 @@ const educationalGlosario = {
   'economia-e-impuestos': [
     {
       title: '💡 Cotización por Ingresos Reales (Aut💡⚙️nomos)',
-      content: 'Desde 2023 rige un sistema progresivo de 15 tramos donde los autónomos cotizan seg💡⚙️n sus ingresos netos reales declarados a Hacienda, permitiendo cuotas reducidas de 225💡 para ingresos bajos y tramos de hasta 530💡 para ingresos superiores a 6.000💡.'
+      content: 'Desde 2023 rige un sistema progresivo de 15 tramos donde los autónomos cotizan según sus ingresos netos reales declarados a Hacienda, permitiendo cuotas reducidas de 225💡 para ingresos bajos y tramos de hasta 530💡 para ingresos superiores a 6.000💡.'
     },
     {
       title: '💡 Cuentas bancarias abandonadas tras 20 años',
-      content: 'Hacienda no confisca dep💡⚙️sitos de forma arbitraria. Los saldos en cuentas sin ning💡⚙️n movimiento ni reclamaci💡⚙️n durante 20 años consecutivos pasan al Tesoro P💡⚙️blico por ley, destin💡⚙️ndose 💡⚙️ntegramente a becas de estudio y personas con discapacidad.'
+      content: 'Hacienda no confisca dep💡⚙️sitos de forma arbitraria. Los saldos en cuentas sin ning💡⚙️n movimiento ni reclamación durante 20 años consecutivos pasan al Tesoro P💡⚙️blico por ley, destin💡⚙️ndose 💡⚙️ntegramente a becas de estudio y personas con discapacidad.'
     }
   ],
   'justicia-y-politica': [
     {
       title: '💡 Fase de Instrucción vs Sentencia Penal',
-      content: 'Estar investigado o imputado (fase de instrucción) significa que un juez recaba indicios o pruebas, bajo la presunción de inocencia. La culpabilidad o condena solo se establece mediante una sentencia judicial firme tras la celebraci💡⚙️n del juicio oral.'
+      content: 'Estar investigado o imputado (fase de instrucción) significa que un juez recaba indicios o pruebas, bajo la presunción de inocencia. La culpabilidad o condena solo se establece mediante una sentencia judicial firme tras la celebración del juicio oral.'
     }
   ],
   'corrupcion-publica': [
     {
-      title: '💡 Malversaci💡⚙️n y Cohecho en el Código Penal',
-      content: 'La malversación castiga el desv💡⚙️o o uso il💡⚙️cito de caudales públicos por parte de funcionarios. El cohecho penaliza la entrega o aceptaci💡⚙️n de d💡⚙️divas o mordidas a cambio de favores o concesiones administrativas.'
+      title: '💡 Malversación y Cohecho en el Código Penal',
+      content: 'La malversación castiga el desv💡⚙️o o uso il💡⚙️cito de caudales públicos por parte de funcionarios. El cohecho penaliza la entrega o aceptación de d💡⚙️divas o mordidas a cambio de favores o concesiones administrativas.'
     }
   ],
   'historia-y-leyes': [
     {
-      title: '💡 El origen hist💡⚙️rico del Instituto Nacional de Previsi💡⚙️n',
+      title: '💡 El origen histórico del Instituto Nacional de Previsión',
       content: 'Fundado en 1908 bajo el reinado de Alfonso XIII, el INP fue el germen de los seguros sociales en España (retiro obrero, seguro de maternidad, etc.), unificados y renombrados posteriormente en 1963 como Seguridad Social.'
     }
   ]
@@ -123,7 +123,7 @@ const educationalGlosario = {
 const localGlosario = educationalGlosario[slug] || [
   {
     title: '💡 Auditor💡⚙️a Independiente',
-    content: 'Revisi💡⚙️n imparcial de datos extra💡⚙️dos directamente de fuentes oficiales del Estado (BOE, INE, ministerios) para contrastar los bulos y afirmaciones de redes.'
+    content: 'Revisión imparcial de datos extra💡⚙️dos directamente de fuentes oficiales del Estado (BOE, INE, ministerios) para contrastar los bulos y afirmaciones de redes.'
   }
 ];
 
@@ -154,7 +154,7 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
         </h1>
       </div>
       <p style="color: var(--text-muted); font-size: 1rem; margin-top: 0.5rem; margin-bottom: 0; line-height: 1.4;">
-        Expediente de control, verificaci💡⚙️n de bulos y propuestas de partidos en el área de {categoryName}.
+        Expediente de control, verificación de bulos y propuestas de partidos en el área de {categoryName}.
       </p>
     </div>
 
@@ -171,7 +171,7 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
       <!-- Buscador y Filtros interactivos -->
       <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; background: rgba(18, 22, 41, 0.4); padding: 1rem; border-radius: 12px; border: 1px solid var(--border-color);">
         <div style="flex: 1; min-width: 250px; position: relative;">
-          <input type="text" id="cat-search" placeholder="Buscar bulo o claim en esta categor💡⚙️a..." 
+          <input type="text" id="cat-search" placeholder="Buscar bulo o claim en esta categoría..." 
             style="width: 100%; padding: 0.65rem 1rem; background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 0.85rem; outline: none; transition: border-color 0.2s;" />
         </div>
         <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
@@ -239,7 +239,7 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
 
         {articles.length === 0 && (
           <div class="cyber-card" style="padding: 3rem; text-align: center; border-color: rgba(255,255,255,0.05);">
-            <p style="color: var(--text-muted); font-size: 1rem; margin: 0;">No se han publicado desmentidos todav💡⚙️a bajo esta categor💡⚙️a.</p>
+            <p style="color: var(--text-muted); font-size: 1rem; margin: 0;">No se han publicado desmentidos todav💡⚙️a bajo esta categoría.</p>
           </div>
         )}
       </div>
@@ -263,7 +263,7 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
       </div>
 
       <div class="cyber-card" style="padding: 1.5rem; background: linear-gradient(135deg, rgba(0, 240, 255, 0.03) 0%, rgba(7, 9, 19, 0.95) 100%);">
-        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--neon-blue); margin-top: 0; margin-bottom: 1rem;">Distribuci💡⚙️n de Veredictos del Sector</h3>
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--neon-blue); margin-top: 0; margin-bottom: 1rem;">Distribución de Veredictos del Sector</h3>
         <div style="display: flex; flex-direction: column; gap: 0.75rem;">
           <div>
             <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.25rem;">
@@ -350,7 +350,7 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
 
         {policyMeasures.length === 0 && (
           <div class="cyber-card" style="padding: 3rem; text-align: center; grid-column: 1 / -1; border-color: rgba(255,255,255,0.05);">
-            <p style="color: var(--text-muted); font-size: 1rem; margin: 0;">No se han mapeado medidas políticas de programas todav💡⚙️a para esta categor💡⚙️a.</p>
+            <p style="color: var(--text-muted); font-size: 1rem; margin: 0;">No se han mapeado medidas políticas de programas todav💡⚙️a para esta categoría.</p>
           </div>
         )}
       </div>

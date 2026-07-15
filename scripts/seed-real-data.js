@@ -23,7 +23,7 @@ db.exec(`
   DELETE FROM scraped_items;
 `);
 
-// 1. Insertar Temas Reales (Verticales Educativos)
+// 1. Insertar Temas Reales (Verticales Educativos y Didácticos)
 const insertTopic = db.prepare(`
   INSERT INTO topics (id, slug, title, description, category, confidence, verdict_summary, status, created_at, updated_at)
   VALUES (?, ?, ?, ?, ?, ?, ?, 'activo', datetime('now'), datetime('now'))
@@ -32,19 +32,19 @@ const insertTopic = db.prepare(`
 const topicsData = [
   {
     id: 't-franco',
-    slug: 'franco-y-memoria-historica',
+    slug: 'franquismo-y-memoria-historica',
     title: 'Mitos y Leyendas del Franquismo',
     description: 'Auditoría histórica de las afirmaciones virales sobre la dictadura: legislación laboral, creación de la Seguridad Social, pantanos y el mito de la prosperidad económica de posguerra.',
-    category: 'Historia y Leyes',
+    category: 'Historia y memoria',
     confidence: 'Alta',
     verdict_summary: 'Desmentido de la autoría franquista de la Seguridad Social y contextualización de la paga extra de Navidad con documentos del BOE.'
   },
   {
     id: 't-migracion',
-    slug: 'inmigracion-y-seguridad-social',
+    slug: 'inmigracion-y-convivencia',
     title: 'Inmigración, Delincuencia y Ayudas',
     description: 'Análisis de datos oficiales y estadísticas sobre criminalidad de menores extranjeros no acompañados (MENAS), costes reales de tutela y la falsedad de prestaciones económicas directas.',
-    category: 'Sociedad y Migración',
+    category: 'Inmigración, MENAS y convivencia',
     confidence: 'Alta',
     verdict_summary: 'Desmentidos de pagas directas de 4.200€ al mes y revisión del protocolo penal para menores infractores en España.'
   },
@@ -59,12 +59,12 @@ const topicsData = [
   },
   {
     id: 't-koldo',
-    slug: 'caso-koldo-y-abalos',
+    slug: 'corrupcion-y-promesas-politicas',
     title: 'Caso Koldo y Sentencia del Tribunal Supremo',
     description: 'Auditoría penal sobre la red de comisiones ilegales en la compra de mascarillas durante la pandemia de COVID-19, las condenas de prisión a Ábalos y Koldo, y el informe del Ministerio de Transportes.',
-    category: 'Corrupción Pública',
+    category: 'Corrupción y transparencia',
     confidence: 'Alta',
-    verdict_summary: 'Detalles de la sentencia firme del Tribunal Supremo de junio de 2026 y la auditoría que detectó el incremento injustificado de compras de material sanitario.'
+    verdict_summary: 'Detalles de la sentencia firme del Tribunal Supremo de junio de 2026 y la auditoría que detectó el incremento de compras.'
   },
   {
     id: 't-inflacion',
@@ -92,12 +92,86 @@ const topicsData = [
     category: 'Economía e Impuestos',
     confidence: 'Alta',
     verdict_summary: 'Desglose de las nuevas tablas de cotización del sistema de ingresos reales frente a falsedades de cuotas fijas excesivas.'
+  },
+  {
+    id: 't-eta',
+    slug: 'memoria-de-eta-y-terrorismo',
+    title: 'Terrorismo de ETA y Memoria Histórica',
+    description: 'Análisis sobre el fin de la banda armada ETA, el debate del acercamiento de presos, las transferencias de prisiones y las pensiones oficiales a víctimas.',
+    category: 'Sociedad',
+    confidence: 'Alta',
+    verdict_summary: 'Contrastado con la Ley de Reconocimiento y Protección Integral a las Víctimas del Terrorismo.'
+  },
+  {
+    id: 't-salarios',
+    slug: 'salarios-smi-y-coste-laboral',
+    title: 'Salarios, SMI y Mercado Laboral',
+    description: 'Análisis del Salario Mínimo Interprofesional (SMI) en España, las variaciones del salario medio frente a la UE y la brecha de género con datos oficiales del INE.',
+    category: 'Economía e Impuestos',
+    confidence: 'Alta',
+    verdict_summary: 'Contrastado con la Encuesta de Estructura Salarial del INE.'
+  },
+  {
+    id: 't-educacion',
+    slug: 'educacion-leyes-y-rendimiento',
+    title: 'Educación: Leyes, Reformas y Rendimiento',
+    description: 'Evolución de las leyes de educación en España (LOMLOE), ratios de alumnos y nivel académico real comparado con el informe PISA.',
+    category: 'Sociedad',
+    confidence: 'Alta',
+    verdict_summary: 'Contrastado con datos de la OCDE (Informe PISA) y el Ministerio de Educación.'
+  },
+  {
+    id: 't-cultura',
+    slug: 'cultura-subvenciones-y-patrimonio',
+    title: 'Cultura: Subvenciones, Cine y Bono Cultural',
+    description: 'Auditoría sobre ayudas al cine español, el retorno económico de subvenciones y el funcionamiento del Bono Cultural Joven oficial.',
+    category: 'Sociedad',
+    confidence: 'Alta',
+    verdict_summary: 'Contrastado con informes del ICAA y resoluciones del Ministerio de Cultura.'
+  },
+  {
+    id: 't-sanidad',
+    slug: 'sanidad-publica',
+    title: 'Sanidad pública',
+    description: 'La saturación de la atención primaria, el récord histórico de las listas de espera para operaciones y el debate sobre la derivación de fondos a conciertos con la sanidad privada centran la agenda sanitaria.',
+    category: 'Sanidad pública y listas de espera',
+    confidence: 'Alta',
+    verdict_summary: 'Contrastado con la base de datos SISLE del Ministerio de Sanidad y estadísticas del INE.'
+  },
+  {
+    id: 't-cataluna',
+    slug: 'cataluna-y-convivencia-territorial',
+    title: 'Cataluña, independencia y amnistía',
+    description: 'Explicación del proceso soberanista, el debate de la Ley de Amnistía y la financiación singular de Cataluña.',
+    category: 'Cataluña y independentismo',
+    confidence: 'Alta',
+    verdict_summary: 'Contrastado con la Ley Orgánica 1/2024 de Amnistía y los balances del Ministerio de Hacienda.'
+  },
+  {
+    id: 't-seguridad-obras-publicas',
+    slug: 'seguridad-obras-publicas',
+    title: 'Seguridad en obras públicas y prevención de derrumbes',
+    description: 'Análisis de la seguridad estructural en infraestructuras públicas de España, auditoría de prevención de riesgos y control de licitaciones de mantenimiento de carreteras y puentes.',
+    category: 'Sociedad',
+    confidence: 'Alta',
+    verdict_summary: 'Contrastado con informes de Fomento, licitaciones oficiales del BOE y actas del CGPJ.'
+  },
+  {
+    id: 't-financiacion-autonomica',
+    slug: 'financiacion-autonomica-desigual',
+    title: 'Financiación Autonómica Desigual',
+    description: 'Análisis sobre el régimen común, los conciertos forales de País Vasco y Navarra, el cálculo de las balanzas fiscales y las demandas de reforma del sistema de financiación de las Comunidades Autónomas.',
+    category: 'Economía e Impuestos',
+    confidence: 'Alta',
+    verdict_summary: 'Contrastado con los informes de balanzas fiscales del Ministerio de Hacienda y los análisis de infrafinanciación de FEDEA.'
   }
 ];
+
 
 topicsData.forEach(t => {
   insertTopic.run(t.id, t.slug, t.title, t.description, t.category, t.confidence, t.verdict_summary);
 });
+
 const insertArticle = db.prepare(`
   INSERT INTO articles (
     id, topic_id, slug, title, subtitle, claim, origin_platform, origin_url, origin_summary, 
@@ -117,7 +191,7 @@ const articlesData = [
     origin_platform: 'X (Twitter)',
     origin_url: 'https://x.com/vox_es/status/1684031089700',
     origin_summary: 'Vídeos y tuits virales que afirman que la protección social no existía antes de 1939 y fue un regalo del régimen franquista.',
-    category: 'Historia y Leyes',
+    category: 'Historia y memoria',
     verdict: 'Falso',
     confidence: 'Alta',
     summary: 'El sistema de seguros sociales en España es fruto de una evolución de más de un siglo iniciada en 1883 con la Comisión de Reformas Sociales y el Instituto Nacional de Previsión en 1908. El franquismo únicamente unificó y renombró en 1963 seguros que ya existían previamente.',
@@ -137,7 +211,7 @@ const articlesData = [
     origin_platform: 'X (Twitter)',
     origin_url: 'https://x.com/vox_es/status/1684031089701',
     origin_summary: 'Cadenas de mensajes de WhatsApp que atribuyen al dictador la creación de la paga extraordinaria navideña como beneficio social.',
-    category: 'Historia y Leyes',
+    category: 'Historia y memoria',
     verdict: 'Falta contexto',
     confidence: 'Alta',
     summary: 'La dictadura de Franco dictó una orden en diciembre de 1944 que hizo obligatoria la paga extraordinaria de Navidad para industrias no reglamentadas. No obstante, la práctica laboral de abonar gratificaciones de Navidad (aguinaldos pactados) ya existía y estaba regulada previamente en muchos sectores.',
@@ -157,14 +231,14 @@ const articlesData = [
     origin_platform: 'X (Twitter)',
     origin_url: 'https://x.com/alviseperez/status/1684031089702',
     origin_summary: 'Vídeos virales donde personas afirman que el Estado prioriza a los menores inmigrantes ingresándoles nóminas directas superiores a las pensiones.',
-    category: 'Sociedad y Migración',
+    category: 'Inmigración, MENAS y convivencia',
     verdict: 'Falso',
     confidence: 'Alta',
     summary: 'Los menores extranjeros bajo tutela de las comunidades autónomas no reciben pagas directas de 4.200 euros. El coste citado de 4.200 euros corresponde al presupuesto de gestión del centro de menores (instalaciones, sueldos de educadores, mantenimiento), no a dinero entregado al menor.',
     explanation: 'El bulo de los 4.200 euros surge de confundir el coste de licitación de las plazas residenciales de los centros de acogida con ayudas directas. El coste mensual por plaza en un centro de menores tutelado oscila entre 3.000 y 4.500 euros debido a que incluye el salario de psicólogos, educadores, alquiler del edificio, seguridad, manutención y luz.\n\nLos menores tutelados (sean españoles o extranjeros) únicamente perciben una pequeña asignación semanal para gastos básicos de bolsillo (dinero de bolsillo), que ronda los 10 o 15 euros semanales. Las ayudas de inserción social que existen son autonómicas y aplican a jóvenes extutelados al cumplir los 18 años para evitar la exclusión social, siempre que cumplan requisitos estrictos de estudios y búsqueda de empleo, en igualdad de condiciones con jóvenes españoles de familias desfavorecidas.',
     what_is_true: 'El coste de mantenimiento de una plaza pública de acogida y tutela de menores en centros residenciales ronda los 4.000 euros mensuales de gasto público de gestión.',
     what_is_false: 'Es totalmente falso que ese importe se ingrese o entregue de forma directa al menor. Tampoco existe ninguna paga directa basada únicamente en la nacionalidad extranjera.',
-    what_lacks_context: 'Se obvia que el mismo coste de plaza en centros de acogida se aplica a los miles de menores españoles que están tutelados por desamparo o maltrato familiar.',
+    what_lacks_context: 'Se obvia que el mismo coste de plaza en centros de acogida se aplica a los menores españoles que están tutelados por desamparo o maltrato familiar.',
     what_is_not_proven: 'No hay ningún registro de un menor de edad inmigrante cobrando ayudas directas o nóminas estatales mensuales más allá del dinero de bolsillo del centro.'
   },
   {
@@ -177,7 +251,7 @@ const articlesData = [
     origin_platform: 'X (Twitter)',
     origin_url: 'https://x.com/alviseperez/status/1712345678901',
     origin_summary: 'Publicaciones virales que denuncian una supuesta inacción policial pactada para proteger a menores inmigrantes de la delincuencia.',
-    category: 'Sociedad y Migración',
+    category: 'Inmigración, MENAS y convivencia',
     verdict: 'Falso',
     confidence: 'Alta',
     summary: 'No existe ninguna orden ministerial ni ley que exima a los menores extranjeros de la acción policial. Entre los 14 y 18 años se les aplica la Ley Orgánica reguladora de la Responsabilidad Penal de los Menores, pudiendo ser detenidos y puestos a disposición de la Fiscalía de Menores de forma inmediata.',
@@ -217,10 +291,10 @@ const articlesData = [
     origin_platform: 'X (Twitter)',
     origin_url: 'https://x.com/vox_es/status/1723456789012',
     origin_summary: 'Información que detalla la sentencia de la Sala Segunda del Tribunal Supremo sobre el cobro de comisiones ilegales.',
-    category: 'Corrupción Pública',
+    category: 'Corrupción y transparencia',
     verdict: 'Verdadero',
     confidence: 'Alta',
-    summary: 'La Sala Segunda del Tribunal Supremo notified la sentencia firme por la que condena al exministro José Luis Ábalos a 24 años y 3 meses de prisión por 9 delitos, y a Koldo García a 19 años y 8 meses. A Víctor de Aldama se le suspende la cárcel por colaborar como delator.',
+    summary: 'La Sala Segunda del Tribunal Supremo noticó la sentencia firme por la que condena al exministro José Luis Ábalos a 24 años y 3 meses de prisión por 9 delitos, y a Koldo García a 19 años y 8 meses. A Víctor de Aldama se le suspende la cárcel por colaborar como delator.',
     explanation: 'La sentencia por unanimidad del Tribunal Supremo declara probado que Ábalos, Koldo García y Víctor de Aldama articularon una trama para beneficiarse ilegalmente de contratos de material sanitario de emergencia en 2020. Soluciones de Gestión obtuvo adjudicaciones por valor de decenas de millones de euros de Puertos del Estado y ADIF.\n\nLa resolución judicial prueba el pago de mordidas en forma de aportaciones económicas recurrentes (10.000€ mensuales para Ábalos y Koldo), el alquiler de chalets de lujo y la colocación de familiares en empresas del ministerio. Es una de las sentencias por corrupción pública con mayores condenas dictadas en España por la Sala Segunda en los últimos años. Koldo García y Ábalos recurrieron previamente la auditoría del actual ministro Óscar Puente que detectó las presiones para adquirir 8 millones de mascarillas en minutos sin justificación técnica, pero el Supremo ratificó la validez probatoria de las investigaciones.',
     what_is_true: 'Ábalos y Koldo han sido condenados formalmente a penas de prisión efectivas. El Tribunal Supremo probó la existencia de mordidas de dinero, alquileres de inmuebles e influencia directa en los contratos de mascarillas.',
     what_is_false: 'No hay afirmaciones falsas en este claim; el fallo judicial es firme y definitivo, ratificando las acusaciones de la Fiscalía Anticorrupción.',
@@ -286,12 +360,32 @@ const articlesData = [
     what_is_false: 'Es falso que todos los autónomos paguen cuotas de 500€ o más de forma uniforme o que el sistema no proteja a quienes tienen bajos ingresos con cuotas reducidas.',
     what_lacks_context: 'Se oculta que el cálculo se realiza a final de año basándose en la declaración de la renta y que el autónomo puede ajustar su tramo de cotización hasta 6 veces al año según sus estimaciones previsionales.',
     what_is_not_proven: 'No se ha acreditado que la Seguridad Social esté aplicando cobros de tramos superiores de forma unilateral sin previa regularización fiscal.'
+  },
+  {
+    id: 'art-financiacion-madrid',
+    topic_id: 't-financiacion-autonomica',
+    slug: 'bulo-madrid-dumping-fiscal-no-aporta-solidaridad',
+    title: '¿Hace la Comunidad de Madrid dumping fiscal y no aporta nada a la solidaridad interterritorial?',
+    subtitle: 'El balance real de la balanza fiscal y las aportaciones al Fondo de Garantía de Servicios Esenciales.',
+    claim: 'La Comunidad de Madrid no aporta dinero al resto de España porque sus bajos impuestos vacían la caja común.',
+    origin_platform: 'X (Twitter)',
+    origin_url: 'https://x.com/sanchez_es/status/1784982121345',
+    origin_summary: 'Críticas de líderes políticos regionales que acusan a Madrid de beneficiarse de la capitalidad y no contribuir al sistema de reparto de servicios esenciales.',
+    category: 'Economía e Impuestos',
+    verdict: 'Falso',
+    confidence: 'Alta',
+    summary: 'La Comunidad de Madrid es la región que realiza la mayor aportación neta a la caja común de solidaridad de España, sufragando cerca del 70% del Fondo de Garantía de Servicios Públicos Fundamentales, seguida por Cataluña (25%) y Baleares.',
+    explanation: 'El sistema de financiación autonómica (LOFCA) establece que las comunidades que más recaudan transfieren recursos a las que tienen menos base imponible para garantizar sanidad, educación y servicios sociales homogéneos en todo el país. Según los datos oficiales del Ministerio de Hacienda y de FEDEA:\n- La Comunidad de Madrid aporta más de 6.000 millones de euros anuales netos al Fondo de Garantía de Servicios Públicos Fundamentales.\n- Cataluña aporta en torno a 2.000 millones netos.\n- Baleares aporta unos 350 millones netos.\n\nPor tanto, es falso que Madrid no aporte al resto de España. Las críticas de "dumping fiscal" se refieren a la decisión de bonificar impuestos propios cedidos (como Sucesiones o Patrimonio), lo cual reduce la recaudación teórica pero no elimina su posición de principal contribuyente neto al fondo de solidaridad nacional.',
+    what_is_true: 'La Comunidad de Madrid realiza la mayor aportación de solidaridad interterritorial de España gracias a la concentración de rentas altas y grandes corporaciones.',
+    what_is_false: 'Es falso que Madrid reciba transferencias netas de solidaridad del resto de comunidades o que la caja común sea perjudicada por completo por sus políticas fiscales locales.',
+    what_lacks_context: 'Se obvia el "efecto capitalidad" que atrae talento y sedes sociales de empresas de todo el país, incrementando artificialmente la base imponible y recaudación fiscal madrileña.',
+    what_is_not_proven: 'No hay pruebas empíricas que demuestren que el fin de las bonificaciones madrileñas fuera a solucionar por sí mismo el problema de infrafinanciación de la Comunidad Valenciana o Murcia.'
   }
 ];
 
+
 articlesData.forEach((art, idx) => {
   // Simular tiempos relativos basados en el momento actual para verificar el ordenamiento en "hace X min"
-  // Las noticias se ordenan de mas antiguas a mas recientes en el seed (la ultima es la mas reciente)
   const publishedAt = new Date(Date.now() - (articlesData.length - idx) * 3 * 60 * 1000).toISOString(); // intervalo de 3 min
   const originDate = new Date(Date.now() - (articlesData.length - idx) * 12 * 60 * 1000).toISOString(); // intervalo de 12 min de origen
 
