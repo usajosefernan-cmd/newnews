@@ -4,26 +4,6 @@ import { getSourceStrategyCache, setSourceStrategyCache } from './cache.js';
 export async function planSourceStrategy(claimText, topicTitle, claimType = 'Social') {
   console.log(`[Source Strategy Planner] Planificando fuentes para el claim: "${claimText.substring(0, 50)}..." bajo el tema "${topicTitle}"`);
 
-  // Intentar recuperar estrategia previa del cache usando el topicTitle como área semántica
-  const cachedStrategy = getSourceStrategyCache(topicTitle);
-  if (cachedStrategy) {
-    console.log(`[Source Strategy Planner] -> Reutilizando estrategia desde caché para el área semántica: "${topicTitle}"`);
-    return {
-      source_strategy: {
-        required_source_types: cachedStrategy.source_types,
-        preferred_authority_level: 'Máxima',
-        minimum_sources: 1,
-        needs_original_source: true,
-        needs_context_source: true,
-        needs_counter_source: false,
-        manual_check_required: false
-      },
-      search_queries: cachedStrategy.preferred_sources,
-      reuse_from_cache: true,
-      reason: 'Estrategia semántica cargada desde caché de base de datos.'
-    };
-  }
-
   const prompt = `
 Eres un Planificador de Estrategia de Fuentes para un medio de verificación periodística en España.
 Tu tarea es decidir qué tipo de fuentes de máxima autoridad oficial/primaria son necesarias para desmentir o verificar el siguiente claim de forma irrebatible, y qué consultas de búsqueda realizar.
@@ -37,7 +17,6 @@ TIPO DE CLAIM: "${claimType}"
 - INE (Instituto Nacional de Estadística - ine.es) para estadísticas de empleo, IPC, inflación, demografía.
 - SEPE (sepe.gob.es) o Seguridad Social (seg-social.es) para desempleo, cuotas de autónomos, pensiones.
 - Ministerios oficiales (mivau.gob.es para vivienda, igualdad.gob.es para igualdad, fiscal.es para delincuencia).
-- Webs de partidos políticos o Congreso (congreso.es) para propuestas políticas o iniciativas parlamentarias.
 - Portales de software/desarrollo oficiales (github.com, nodejs.org, mcp.dev) si es de carácter tecnológico.
 
 --- DIRECTRIZ DE PERIODISMO DE NEWNEWS ---
@@ -61,22 +40,33 @@ Devuelve un JSON con el siguiente formato exacto:
 `;
 
   try {
-    const result = await callGemini(prompt);
+    const result = await callGemini(prompt, '03');
     console.log(`[Source Strategy Planner] Estrategia planificada con éxito por la IA.`);
-
-    // Guardar estrategia en caché para futuros claims del mismo tema
-    setSourceStrategyCache(topicTitle, {
-      source_types: result.source_strategy.required_source_types,
-      preferred_sources: result.search_queries,
-      validation_rules: { authority: result.source_strategy.preferred_authority_level }
-    });
-
     return result;
   } catch (err) {
     console.warn('[Source Strategy Planner] Fallo al planificar con IA. Usando planificación heurística local.');
-    // Planificación heurística local
-    const queries = [`${topicTitle} España boe`, `${topicTitle} datos oficiales`];
-    const sourceTypes = ['Oficial Gubernamental'];
+    
+    // Planificación heurística local inteligente basada en palabras clave del claim
+    const textLower = claimText.toLowerCase();
+    let queries = [];
+    let sourceTypes = ['Oficial Gubernamental'];
+    
+    if (textLower.includes('vivienda') || textLower.includes('alquiler') || textLower.includes('okupa')) {
+      queries = ['INE precio alquiler vivienda España datos oficiales', 'Ministerio de Vivienda políticas alquiler'];
+      sourceTypes = ['Estadística INE', 'Ministerial'];
+    } else if (textLower.includes('desempleo') || textLower.includes('paro') || textLower.includes('empleo') || textLower.includes('trabajo') || textLower.includes('contrato')) {
+      queries = ['INE EPA desempleo España datos oficiales', 'SEPE cifras paro registrado Seguridad Social'];
+      sourceTypes = ['Estadística INE', 'Seguridad Social'];
+    } else if (textLower.includes('impuesto') || textLower.includes('autónomo') || textLower.includes('fiscal') || textLower.includes('hacienda') || textLower.includes('irpf')) {
+      queries = ['Agencia Tributaria recaudación impuestos España', 'Seguridad Social cuotas autónomos oficial'];
+      sourceTypes = ['Agencia Tributaria', 'Seguridad Social'];
+    } else if (textLower.includes('inmigra') || textLower.includes('ayudas') || textLower.includes('extranjer') || textLower.includes('mena')) {
+      queries = ['Ministerio Inclusión Migraciones ayudas extranjeros oficiales', 'INE cifras población extranjera España'];
+      sourceTypes = ['Ministerial', 'Estadística INE'];
+    } else {
+      queries = [`${topicTitle} España datos oficiales`, `${claimText} datos oficiales verificados`];
+      sourceTypes = ['Oficial'];
+    }
 
     return {
       source_strategy: {

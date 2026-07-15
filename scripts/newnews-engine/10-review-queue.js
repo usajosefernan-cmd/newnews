@@ -34,10 +34,13 @@ export function queueForReview(articleId, reviewerNotes = '') {
       reviewerNotes || 'Autogenerado por el pipeline del motor NEWNEWS. Requiere revisión editorial rápida.'
     );
 
-    // 3. Asegurar que el estado del artículo es borrador
-    db.prepare("UPDATE articles SET status = 'borrador', human_review_required = 1 WHERE id = ?").run(articleId);
-
-    console.log(`[Review Queue] ✅ Registro de revisión ${reviewId} creado. Artículo establecido como borrador.`);
+    // 3. Asegurar que el estado del artículo es borrador (sólo si no se forzó su publicación como publicado)
+    if (art.status !== 'publicado') {
+      db.prepare("UPDATE articles SET status = 'borrador', human_review_required = 1 WHERE id = ?").run(articleId);
+      console.log(`[Review Queue] ✅ Registro de revisión ${reviewId} creado. Artículo establecido como borrador.`);
+    } else {
+      console.log(`[Review Queue] ✅ Registro de revisión ${reviewId} creado. El artículo permanece como PUBLICADO de forma automática.`);
+    }
     return {
       review_id: reviewId,
       status: 'success'

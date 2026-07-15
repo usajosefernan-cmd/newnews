@@ -3,7 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { exec } from 'node:child_process';
 
-const dbPath = path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
 const CHECK_INTERVAL_MS = 10000; // Cada 10 segundos
 
 console.log('╔══════════════════════════════════════════════════════╗');

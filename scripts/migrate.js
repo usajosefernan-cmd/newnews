@@ -86,6 +86,9 @@ try {
 try {
   db.exec("ALTER TABLE articles ADD COLUMN emoji_tag TEXT;");
 } catch (e) {}
+try {
+  db.exec("ALTER TABLE articles ADD COLUMN infographic_svg TEXT;");
+} catch (e) {}
 
 // Tabla sources (Fuentes originales de los desmentidos)
 db.exec(`
@@ -335,6 +338,17 @@ db.exec(`
     preferred_sources_json TEXT,
     validation_rules_json TEXT,
     last_successful_use TEXT NOT NULL
+  );
+`);
+
+// Tabla article_topics (Relación muchos-a-múltiples temas/expedientes)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS article_topics (
+    article_id TEXT NOT NULL,
+    topic_id TEXT NOT NULL,
+    PRIMARY KEY (article_id, topic_id),
+    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE,
+    FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE
   );
 `);
 

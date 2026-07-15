@@ -4,7 +4,7 @@ import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 
 export async function getStaticPaths() {
-  const dbPath = path.resolve('data/newnews.db');
+  const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
   const db = new DatabaseSync(dbPath);
   const parties = db.prepare("SELECT slug FROM parties").all() as any[];
   db.close();
@@ -16,7 +16,7 @@ export async function getStaticPaths() {
 
 const { slug } = Astro.params;
 
-const dbPath = path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
 const db = new DatabaseSync(dbPath);
 
 // Cargar información del partido

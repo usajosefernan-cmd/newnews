@@ -3,6 +3,26 @@ import { callGemini } from './config.js';
 export async function filterNoise(itemText, platform) {
   console.log(`[Noise Filter] Evaluando si el item es ruido o contenido no relevante...`);
 
+  const lower = itemText.toLowerCase();
+  
+  // Lista de keywords que implican ruido comercial u opinión subjetiva extrema o deportes
+  const noiseKeywords = [
+    'código de descuento', 'enlace de afiliado', 'comprar aquí', 'oferta especial', 'promoción',
+    'fútbol', 'real madrid', 'barça', 'mbappé', 'champions league', 'película', 'estreno', 'horóscopo'
+  ];
+
+  const isNoise = noiseKeywords.some(kw => lower.includes(kw));
+
+  if (isNoise) {
+    console.log(`[Noise Filter] [Heurística Local Directa] Detectado ruido comercial o de entretenimiento.`);
+    return {
+      is_noise: true,
+      noise_reason: 'Detectado de forma heurística por palabras clave comerciales o deportivas de exclusión.',
+      keep_monitoring: false,
+      requires_processing: false
+    };
+  }
+
   const prompt = `
 Eres un Auditor de Calidad Periodística. Tu tarea es descartar el ruido o contenido comercial/entretenimiento sin relevancia pública de España en el flujo de NEWNEWS.
 
@@ -29,7 +49,7 @@ Devuelve un JSON con el formato exacto:
 `;
 
   try {
-    const result = await callGemini(prompt);
+    const result = await callGemini(prompt, '04');
     console.log(`[Noise Filter] is_noise: ${result.is_noise}. Razón: ${result.noise_reason}`);
     return result;
   } catch (err) {

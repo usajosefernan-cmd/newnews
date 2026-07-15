@@ -25,7 +25,7 @@ Devuelve un JSON con el formato exacto:
 `;
 
   try {
-    const result = await callGemini(prompt);
+    const result = await callGemini(prompt, '11');
     console.log(`[Social Writer] Posts sociales generados por la IA.`);
     return result;
   } catch (err) {

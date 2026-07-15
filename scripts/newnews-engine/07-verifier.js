@@ -34,7 +34,7 @@ Devuelve un JSON con el formato exacto:
 `;
 
   try {
-    const result = await callGemini(prompt);
+    const result = await callGemini(prompt, '07');
     console.log(`[Verifier] Veredicto: ${result.verdict}. Confianza: ${result.confidence}`);
     return result;
   } catch (err) {
@@ -42,7 +42,7 @@ Devuelve un JSON con el formato exacto:
     return {
       verdict: 'Falta contexto',
       confidence: 'Media',
-      verdict_reasoning: 'Verificación heurística local. Se requiere contraste detallado manual con la legislación aplicable en el BOE.',
+      verdict_reasoning: 'Verificación heurística local de seguridad debido a fallos temporales en los proveedores de inferencia.',
       what_is_true: 'El debate social en torno a la materia.',
       what_is_false: 'Exageraciones típicas que distorsionan las cifras absolutas o plazos legales.',
       what_lacks_context: 'El marco jurídico de competencias del Estado y las CCAA.',

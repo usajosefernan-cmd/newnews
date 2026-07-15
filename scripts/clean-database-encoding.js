@@ -236,7 +236,7 @@ function cleanText(text) {
   return cleaned.trim();
 }
 
-const dbPath = path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
 console.log(`[Base de Datos] Abriendo conexión con ${dbPath}...`);
 const db = new DatabaseSync(dbPath);
 db.exec('PRAGMA foreign_keys = ON;');

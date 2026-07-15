@@ -1,24 +1,12 @@
 ---
+export const prerender = false;
 import Layout from '../../layouts/Layout.astro';
 import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 
-export async function getStaticPaths() {
-  const dbPath = path.resolve('data/newnews.db');
-  const db = new DatabaseSync(dbPath);
-  db.exec('PRAGMA busy_timeout = 5000;');
-  db.exec('PRAGMA journal_mode = WAL;');
-  const articles = db.prepare("SELECT slug FROM articles WHERE status = 'publicado'").all();
-  db.close();
-
-  return articles.map(art => ({
-    params: { slug: art.slug }
-  }));
-}
-
 const { slug } = Astro.params;
 
-const dbPath = path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
 const db = new DatabaseSync(dbPath);
 db.exec('PRAGMA busy_timeout = 5000;');
 db.exec('PRAGMA journal_mode = WAL;');
@@ -29,13 +17,34 @@ const article = db.prepare(`
   FROM articles a
   LEFT JOIN topics t ON a.topic_id = t.id
   WHERE a.slug = ? AND a.status = 'publicado'
-`).get(slug);
+`).get(slug) as any;
+
+if (!article) {
+  db.close();
+  return Astro.redirect('/404');
+}
+
+// Cargar todos los temas asociados al artículo (muchos-a-muchos)
+let articleTopics = [] as any[];
+if (article) {
+  articleTopics = db.prepare(`
+    SELECT t.title, t.slug 
+    FROM article_topics at
+    JOIN topics t ON at.topic_id = t.id
+    WHERE at.article_id = ? AND t.status = 'activo'
+  `).all(article.id) as any[];
+  
+  // Si por alguna razón está vacía, usar el tema principal del artículo como fallback
+  if (articleTopics.length === 0 && article.topic_title) {
+    articleTopics.push({ title: article.topic_title, slug: article.topic_slug });
+  }
+}
 
 // Cargar fuentes
-const sources = db.prepare("SELECT * FROM sources WHERE article_id = ?").all(article.id) as any[];
+const sources = article ? db.prepare("SELECT * FROM sources WHERE article_id = ?").all(article.id) as any[] : [];
 
 // Cargar posts sociales
-const socialPosts = db.prepare("SELECT * FROM social_posts WHERE article_id = ?").all(article.id) as any[];
+const socialPosts = article ? db.prepare("SELECT * FROM social_posts WHERE article_id = ?").all(article.id) as any[] : [];
 
 // Cargar artículos relacionados (mismo tema)
 const relatedSameTopic = db.prepare(`
@@ -58,6 +67,16 @@ const scrapedItem = db.prepare("SELECT metrics_json, virality_score, risk_score 
 
 db.close();
 
+// Extraer YouTube ID directamente de forma blindada para el reproductor de video
+let directYoutubeId = '';
+if (article && article.origin_url) {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\/shorts\/)([^#\&\?]*).*/;
+  const match = article.origin_url.match(regExp);
+  if (match && match[2].length === 11) {
+    directYoutubeId = match[2];
+  }
+}
+
 const base = import.meta.env.BASE_URL;
 const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
 
@@ -73,6 +92,7 @@ if (scrapedItem && scrapedItem.metrics_json) {
 }
 const viralityScore = scrapedItem?.virality_score || null;
 const riskScore = scrapedItem?.risk_score || null;
+
 
 // Mapa de veredicto a color neón
 const getVerdictClass = (verdict) => {
@@ -283,6 +303,18 @@ const getSocialPostMeta = (url, platform) => {
 
 const socialMeta = getSocialPostMeta(article.origin_url, article.origin_platform);
 
+// Unificación estética de metadatos sociales (Código Cero Simulador)
+const resolvedSocialMeta = socialMeta || {
+  displayName: article.origin_platform === 'YouTube' ? 'Canal de YouTube' : article.origin_platform === 'TikTok' ? 'Perfil de TikTok' : article.origin_platform === 'Telegram' ? 'Canal de Telegram' : article.origin_platform === 'X' ? 'Publicación de X' : 'Publicación de Redes',
+  username: `@${article.origin_platform.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+  initials: article.origin_platform === 'YouTube' ? 'YT' : article.origin_platform === 'TikTok' ? 'TT' : article.origin_platform === 'Telegram' ? 'TG' : article.origin_platform === 'X' ? 'X' : 'RD',
+  avatarColor: article.origin_platform === 'YouTube' ? '#ff0000' : article.origin_platform === 'TikTok' ? '#00f2fe' : article.origin_platform === 'Telegram' ? '#0088cc' : article.origin_platform === 'X' ? '#000000' : 'var(--neon-blue)',
+  type: article.origin_platform.toLowerCase(),
+  verified: false,
+  dateStr: formatOriginalDate(article.origin_date),
+  metrics: realMetrics
+};
+
 // Precalculados para el termómetro
 const termometroScore = article.newnews_score || 50;
 let termometroLabel = 'Confuso';
@@ -318,382 +350,137 @@ if (trickUsed === 'cherry-picking') {
 } else if (trickUsed === 'promoción encubierta') {
   trickDesc = 'Se recomienda un producto o inversión con enlaces de referidos camuflados de recomendación sincera, ocultando el incentivo económico detrás.';
 }
+
 ---
 
 <Layout title={article.title} description={article.subtitle} category={article.category}>
-  <div class="container" style="padding-top: 1.5rem; padding-bottom: 5rem; max-width: 1000px;">
+  <div class="container" style="padding-top: 1.5rem; padding-bottom: 5rem; max-width: 680px; margin: 0 auto;">
     
-    <div style="margin-bottom: 1.5rem; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
-      <a href="/" style="text-decoration: none;">Radar</a> / <a href="/temas" style="text-decoration: none;">Expedientes</a> / <a href={`/tema/${article.topic_slug || 'general'}`} style="text-decoration: none;">{(article.topic_title || 'General').split(' ')[0]}</a> / <span style="color: var(--neon-blue);">{article.title.substring(0, 20)}...</span>
+    <!-- Migas de pan cyberpunk -->
+    <div style="margin-bottom: 2rem; font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+      <a href="/" style="text-decoration: none; color: var(--text-muted); transition: color 0.2s;" class="nav-link">Radar</a>
+      <span style="color: rgba(255,255,255,0.15);">/</span>
+      <a href="/temas" style="text-decoration: none; color: var(--text-muted); transition: color 0.2s;" class="nav-link">Expedientes</a>
+      <span style="color: rgba(255,255,255,0.15);">/</span>
+      {articleTopics.map((topic, tIdx) => (
+        <span key={topic.slug} style="display: inline-flex; align-items: center; gap: 0.25rem; margin-right: 0.25rem;">
+          {tIdx > 0 && <span style="color: rgba(255,255,255,0.15);">+</span>}
+          <a href={`/tema/${topic.slug}`} style="text-decoration: none; color: var(--neon-blue); font-weight: 800;" class="hover-link">{topic.title}</a>
+        </span>
+      ))}
     </div>
 
-    <!-- Título y Veredicto Principal -->
-    <section style="margin-bottom: 2.5rem;">
-      <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;">
-        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-          <span style="background: rgba(255,255,255,0.04); color: var(--text-muted); font-size: 0.7rem; font-weight: 800; padding: 0.25rem 0.6rem; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em;">
-            {article.category}
-          </span>
-          <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 500;">
-            Incorporado a la web: <strong style="color: var(--neon-blue);">{getRelativeTime(article.published_at)}</strong>
-          </span>
-          {article.origin_date && (
-            <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 500;">
-              &bull; Publicación original: <strong style="color: var(--text-main);">{formatOriginalDate(article.origin_date)}</strong>
-            </span>
-          )}
-        </div>
-        <h1 style="font-size: 2.2rem; line-height: 1.2; font-weight: 800; letter-spacing: -0.03em; color: var(--text-main);">
-          {article.title}
-        </h1>
-        <p style="font-size: 1.05rem; color: var(--text-muted); line-height: 1.5;">
-          {article.subtitle}
-        </p>
+    <!-- Título principal elegante (Serif) -->
+    <header style="margin-bottom: 2.5rem; text-align: center;">
+      <h1 style="font-size: 2.3rem; line-height: 1.2; font-weight: 800; color: #ffffff; font-family: 'Playfair Display', Georgia, serif; margin-bottom: 0.5rem;">
+        {article.title}
+      </h1>
+      <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted); font-weight: bold; margin-top: 0.75rem;">
+        {article.category.toUpperCase()} • IMPACTO SOCIAL VERIFICADO
       </div>
+    </header>
 
-      <!-- Veredicto Box Cyberpunk -->
-      <div class={`cyber-card ${getVerdictClass(article.verdict)}`} style="padding: 1.75rem; background: linear-gradient(180deg, rgba(18, 22, 41, 0.8) 0%, rgba(7, 9, 19, 0.95) 100%); display: flex; flex-direction: column; gap: 1.25rem;">
-        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
-          <span style="font-family: var(--font-title); font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">
-            Veredicto Oficial
-          </span>
-          <span class={`verdict-badge ${article.verdict.toLowerCase().replace(' ', '-')}`} style="font-size: 0.95rem; padding: 0.4rem 1rem;">
-            {article.verdict}
-          </span>
-        </div>
-
-        <div>
-          <span style="font-weight: 800; text-transform: uppercase; color: var(--text-main); font-size: 0.75rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.35rem;">Conclusión de la Auditoría</span>
-          <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.5;">
-            {article.summary}
-          </p>
-        </div>
+    <!-- Gran Banner de Veredicto Sólido -->
+    <div style="margin-bottom: 2.5rem; text-align: center;">
+      <div class={`verdict-banner ${article.verdict.toLowerCase().replace(' ', '-')}`} style={`display: inline-block; width: 100%; padding: 1.25rem; border-radius: 12px; font-size: 1.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; font-family: system-ui, sans-serif; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); color: #ffffff; background: ${article.verdict.toLowerCase().includes('verdadero') ? 'rgba(0, 245, 160, 0.15)' : article.verdict.toLowerCase().includes('falso') ? 'rgba(220, 39, 67, 0.15)' : 'rgba(255, 183, 3, 0.15)'}; border: 2px solid ${article.verdict.toLowerCase().includes('verdadero') ? 'var(--neon-green)' : article.verdict.toLowerCase().includes('falso') ? 'var(--neon-rose)' : 'var(--neon-amber)'};`}>
+        {article.verdict}
       </div>
-    </section>
+    </div>
 
-    <!-- Ficha del Claim y el Origen -->
-    <section style="margin-bottom: 2.5rem; display: flex; flex-direction: column; gap: 1.5rem;">
+    <!-- Panel: Conclusión de la Auditoría -->
+    <div class="cyber-card" style="padding: 1.75rem; background: rgba(18, 22, 41, 0.35); border-color: rgba(255,255,255,0.06); border-radius: 12px; margin-bottom: 1.75rem;">
+      <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; color: #ffffff; font-family: var(--font-title); font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
+        <svg style="width: 18px; height: 18px; color: var(--neon-blue);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        <span>Conclusión de la Auditoría</span>
+      </div>
+      <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; margin: 0; font-weight: 500;">
+        {article.summary || article.explanation.substring(0, 200) + '...'}
+      </p>
+    </div>
+
+    <!-- Panel: El Truco -->
+    <div class="cyber-card" style="padding: 1.75rem; background: rgba(18, 22, 41, 0.35); border-color: rgba(255,255,255,0.06); border-radius: 12px; margin-bottom: 2rem;">
+      <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; color: #ffffff; font-family: var(--font-title); font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
+        <svg style="width: 18px; height: 18px; color: var(--neon-purple);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+        </svg>
+        <span>El Truco</span>
+      </div>
+      <span style="background: rgba(157, 78, 221, 0.12); color: var(--neon-purple); border: 1px solid rgba(157, 78, 221, 0.25); font-size: 0.65rem; font-weight: 800; padding: 0.2rem 0.5rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; font-family: monospace; display: inline-block; margin-bottom: 0.75rem;">
+        {article.trick_used ? article.trick_used.toUpperCase() : 'SESGO DE DATOS'}
+      </span>
+      <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; margin: 0;">
+        {trickDesc}
+      </p>
+    </div>
+
+    <!-- PANELES COMPARATIVOS DIRECTOS: EL MITO vs EL HECHO REAL -->
+    <div style="display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 2.5rem;">
       
-      <!-- Detalle T      {socialMeta ? (
-        <div class="cyber-card" style={`padding: 1.5rem; background: rgba(7, 9, 19, 0.75); border-color: ${socialMeta.type === 'telegram' ? '#0088cc' : socialMeta.type === 'x' ? '#ffffff' : socialMeta.type === 'instagram' ? '#dc2743' : socialMeta.type === 'youtube' ? '#ff0000' : socialMeta.type === 'tiktok' ? '#00f2fe' : 'var(--neon-blue)'};`}>
-          
-          {/* Cabecera del Post (Estilo Social Media) */}
-          <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 0.85rem; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-              {/* Avatar circular con iniciales y gradiente */}
-              <div style={`width: 42px; height: 42px; border-radius: 50%; background: ${socialMeta.type === 'instagram' ? 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)' : socialMeta.avatarColor || 'var(--neon-blue)'}; display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.1);`}>
-                {socialMeta.initials || 'SP'}
-              </div>
-              
-              <div style="display: flex; flex-direction: column;">
-                <div style="display: flex; align-items: center; gap: 0.35rem;">
-                  <span style="color: #ffffff; font-weight: 800; font-size: 0.95rem; line-height: 1.2;">
-                    {socialMeta.displayName || article.origin_platform}
-                  </span>
-                  {socialMeta.verified && (
-                    <span style={`color: ${socialMeta.type === 'x' ? '#1d9bf0' : socialMeta.type === 'telegram' ? '#0088cc' : '#3897f0'}; font-size: 0.85rem;`} title="Cuenta Verificada Oficial">✓</span>
-                  )}
-                </div>
-                <span style="color: var(--text-muted); font-size: 0.8rem; font-family: monospace;">
-                  {socialMeta.username || `@${article.origin_platform.toLowerCase()}`}
-                </span>
-              </div>
-            </div>
-            
-            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.2rem;">
-              <span style={`background: ${socialMeta.type === 'telegram' ? 'rgba(0, 136, 204, 0.1)' : socialMeta.type === 'x' ? 'rgba(255,255,255,0.05)' : 'rgba(220, 39, 67, 0.1)'}; color: ${socialMeta.type === 'telegram' ? '#0088cc' : '#ffffff'}; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.03);`}>
-                {article.origin_platform}
-              </span>
-              <span style="font-size: 0.75rem; color: var(--text-muted);">
-                {socialMeta.dateStr}
-              </span>
-            </div>
-          </div>
-
-          {/* Contenido / Claim Original (Resaltado con advertencia de Bulo) */}
-          <div style="background: rgba(220, 39, 67, 0.03); border: 1px solid rgba(220, 39, 67, 0.2); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; position: relative; margin-top: 0.5rem;">
-            <span style="position: absolute; top: -0.5rem; left: 1rem; background: #070913; padding: 0 0.5rem; font-size: 0.65rem; color: var(--neon-rose); font-weight: 800; letter-spacing: 0.05em; border: 1px solid rgba(220, 39, 67, 0.2); border-radius: 4px;">
-              AFIRMACIÓN VIRAL DETECTADA
-            </span>
-            <p style="font-style: italic; color: #ffffff; font-size: 1.05rem; line-height: 1.45; font-weight: 600; margin: 0.5rem 0 0.5rem 0;">
-              "{article.claim}"
-            </p>
-            {article.origin_summary && (
-              <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin: 0;">
-                {article.origin_summary}
-              </p>
-            )}
-
-            {/* Evidencia multimedia desmentida (Foto/Video adjunto) */}
-            {article.multimedia_url && (
-              <div style="margin-top: 1.25rem; border-top: 1px solid rgba(220, 39, 67, 0.15); padding-top: 1rem; text-align: center;">
-                <span style="display: block; font-size: 0.7rem; color: var(--neon-rose); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; text-align: left;">
-                  Archivo Adjunto Desmentido:
-                </span>
-                
-                {article.multimedia_type === 'video' || article.multimedia_url.includes('.mp4') ? (
-                  <video src={article.multimedia_url} controls style="width: 100%; max-height: 320px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: #000;"></video>
-                ) : (
-                  <div style="overflow: hidden; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); max-height: 320px; display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.25);">
-                    <img src={article.multimedia_url} alt="Evidencia desmentida" style="max-width: 100%; max-height: 320px; object-fit: contain; cursor: zoom-in; transition: transform 0.2s;" onclick="this.style.transform = this.style.transform === 'scale(1.3)' ? 'scale(1)' : 'scale(1.3)';" />
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Sección interactiva: Embeds estables */}
-          <div style="margin-bottom: 1.25rem;">
-            {/* EMBED: YOUTUBE */}
-            {socialMeta.type === 'youtube' && socialMeta.youtubeId && (
-              <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); background: #000;">
-                <iframe 
-                  src={`https://www.youtube.com/embed/${socialMeta.youtubeId}`} 
-                  style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
-                  frameborder="0" 
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                  allowfullscreen
-                ></iframe>
-              </div>
-            )}
-          </div>
-
-          {/* Fila de Métricas / Viralidad (Código Cero Simulador) */}
-          <div style="display: flex; justify-content: space-around; align-items: center; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.85rem; margin-top: 0.85rem; font-family: monospace; font-size: 0.85rem; color: var(--text-muted); flex-wrap: wrap; gap: 0.75rem;">
-            {socialMeta.metrics && (socialMeta.metrics.views || socialMeta.metrics.likes || socialMeta.metrics.reposts || socialMeta.metrics.comments) ? (
-              <>
-                {socialMeta.metrics.views && (
-                  <div style="display: flex; align-items: center; gap: 0.35rem;" title="Visualizaciones reales">
-                    <strong>{socialMeta.metrics.views}</strong> <span style="font-size: 0.7rem; color: rgba(255,255,255,0.3);">Vistas</span>
-                  </div>
-                )}
-                {socialMeta.metrics.likes && (
-                  <div style="display: flex; align-items: center; gap: 0.35rem;" title="Me Gusta">
-                    <strong>{socialMeta.metrics.likes}</strong> <span style="font-size: 0.7rem; color: rgba(255,255,255,0.3);">Likes</span>
-                  </div>
-                )}
-                {socialMeta.metrics.reposts && (
-                  <div style="display: flex; align-items: center; gap: 0.35rem;" title="Compartidos">
-                    <strong>{socialMeta.metrics.reposts}</strong> <span style="font-size: 0.7rem; color: rgba(255,255,255,0.3);">Compartidos</span>
-                  </div>
-                )}
-                {socialMeta.metrics.comments && (
-                  <div style="display: flex; align-items: center; gap: 0.35rem;" title="Comentarios">
-                    <strong>{socialMeta.metrics.comments}</strong> <span style="font-size: 0.7rem; color: rgba(255,255,255,0.3);">Comentarios</span>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; gap: 1.5rem; width: 100%; justify-content: center;">
-                <span>Score de Viralidad: <strong style="color: var(--neon-purple);">{viralityScore !== null ? `${viralityScore}/10` : `${((termometroScore / 10) + 1).toFixed(1)}/10`}</strong></span>
-                <span>Nivel de Alerta: <strong style="color: var(--neon-rose);">{riskScore !== null ? `${riskScore}/10` : `${((termometroScore / 10) - 0.2).toFixed(1)}/10`}</strong></span>
-              </div>
-            )}
-          </div>
-
-          {/* Link Real y Directo al Post/Noticia */}
-          <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed rgba(255,255,255,0.06); padding-top: 0.85rem; margin-top: 0.85rem; font-size: 0.8rem; flex-wrap: wrap; gap: 0.5rem;">
-            <span style="color: var(--text-muted);">Enlace Oficial:</span>
-            <a href={socialMeta.url} target="_blank" rel="noopener noreferrer" style="color: var(--neon-blue); text-decoration: none; font-weight: 800; display: inline-flex; align-items: center; gap: 0.35rem; transition: color 0.15s;">
-              <span>Ver publicación original en {article.origin_platform}</span>
-              <span style="font-size: 0.95rem;">&rarr;</span>
-            </a>
-          </div>
-
+      <!-- EL MITO (Borde Rojo / Rosa) -->
+      <div class="cyber-card" style="padding: 1.5rem; border: 1px solid rgba(220, 39, 67, 0.25); background: rgba(220, 39, 67, 0.02); border-radius: 12px;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; color: var(--neon-rose); font-family: var(--font-title); font-size: 0.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;">
+          <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span>EL MITO</span>
         </div>
-      ) : (
-        <div class="cyber-card" style="padding: 1.5rem; background: rgba(18, 22, 41, 0.45);">
-          <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-rose); font-size: 0.7rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">Afirmación Detectada</span>
-          <p style="font-style: italic; color: var(--text-main); font-size: 1rem; font-weight: 500; line-height: 1.4; margin-bottom: 1.25rem; border-left: 2px solid var(--neon-rose); padding-left: 0.75rem;">
-            "{article.claim}"
-          </p>
-          
-          <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.7rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">Origen del bulo:</span>
-          <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 1rem;">
-            {article.origin_summary}
-          </p>
-
-          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
-            <span>Plataforma: <strong style="color: var(--text-main);">{article.origin_platform}</strong></span>
-            {article.origin_url && (
-              <a href={article.origin_url} target="_blank" rel="noopener noreferrer" style="color: var(--neon-blue); text-decoration: none; font-weight: 700;">
-                Ver post original &rarr;
-              </a>
-            )}
-          </div>
-
-          {/* Evidencia multimedia desmentida en fallback */}
-          {article.multimedia_url && (
-            <div style="margin-top: 1.25rem; border-top: 1px solid var(--border-color); padding-top: 1rem; text-align: center;">
-              <span style="display: block; font-size: 0.7rem; color: var(--neon-rose); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; text-align: left;">
-                Archivo Multimedia Desmentido:
-              </span>
-              {article.multimedia_type === 'video' || article.multimedia_url.includes('.mp4') ? (
-                <video src={article.multimedia_url} controls style="width: 100%; max-height: 320px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: #000;"></video>
-              ) : (
-                <div style="overflow: hidden; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); max-height: 320px; display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.25);">
-                  <img src={article.multimedia_url} alt="Evidencia desmentida" style="max-width: 100%; max-height: 320px; object-fit: contain; cursor: zoom-in;" onclick="this.style.transform = this.style.transform === 'scale(1.3)' ? 'scale(1)' : 'scale(1.3)';" />
-                </div>
-              )}
-            </div>
-          )}        </div>
-      )}
-
-      <!-- Auditoría del Bulómetro y Termómetro de NEWNEWS -->
-      <div class="cyber-card" style="padding: 1.5rem; background: rgba(18, 22, 41, 0.25); display: flex; flex-direction: column; gap: 1.25rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-          <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-purple); font-size: 0.7rem; letter-spacing: 0.05em;">Termómetro NewNews</span>
-          <span style="font-size: 0.8rem; font-weight: bold; color: var(--text-main); font-family: monospace;">
-            {article.emoji_tag || ' Falta contexto'}
-          </span>
-        </div>
-
-        <!-- Barra de progreso / Termómetro -->
-        <div>
-          <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.35rem; font-family: monospace;">
-            <span>Nivel: <strong>{termometroLabel}</strong></span>
-            <span>{article.newnews_score || 50}%</span>
-          </div>
-          <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);">
-            <div style={`width: ${article.newnews_score || 50}%; height: 100%; background: ${(article.newnews_score || 50) <= 40 ? 'var(--neon-green)' : (article.newnews_score || 50) <= 70 ? 'var(--neon-amber)' : 'var(--neon-rose)'}; box-shadow: 0 0 10px ${(article.newnews_score || 50) <= 40 ? 'var(--neon-green)' : (article.newnews_score || 50) <= 70 ? 'var(--neon-amber)' : 'var(--neon-rose)'};`}></div>
-          </div>
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.82rem; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
-          <div style="display: flex; justify-content: space-between;">
-            <span style="color: var(--text-muted);">Revisión Editorial:</span>
-            <span style="color: var(--neon-green); font-weight: bold; font-family: monospace;">Verificada </span>
-          </div>
-          <div style="display: flex; justify-content: space-between;">
-            <span style="color: var(--text-muted);">Fuentes oficiales:</span>
-            <span style="color: var(--neon-blue); font-weight: bold; font-family: monospace;">{sources.length} indexadas</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Truco Usado / Prebunking didáctico -->
-      <div class="cyber-card" style="padding: 1.5rem; background: linear-gradient(135deg, rgba(157, 78, 221, 0.05) 0%, rgba(7, 9, 19, 0.95) 100%); border-color: var(--neon-purple);">
-        <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-purple); font-size: 0.7rem; letter-spacing: 0.08em; display: block; margin-bottom: 0.5rem;"> Aprende el truco de manipulación</span>
-        <strong style="font-size: 0.9rem; color: #ffffff; display: block; margin-bottom: 0.35rem; text-transform: uppercase; font-family: var(--font-title);">
-          Técnica: {article.trick_used || 'dato sin base'}
-        </strong>
-        <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.45; margin: 0;">
-          {trickDesc}
+        <p style="font-size: 1.05rem; color: #ffffff; font-weight: 600; line-height: 1.5; margin: 0; font-style: italic;">
+          "{article.claim}"
         </p>
       </div>
 
-    </section>
-
-    <!-- Caja de Datos Desglosados -->
-    <section style="margin-bottom: 3rem;">
-      <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.1em; display: block; padding-left: 0.25rem; margin-bottom: 1rem;">Desglose de Hechos</span>
-      <div style="display: flex; flex-direction: column; gap: 1.25rem;">
-        
-        <div class="cyber-card" style="padding: 1.25rem; border-color: rgba(0, 245, 160, 0.15); background: rgba(0, 245, 160, 0.01);">
-          <span style="color: var(--neon-green); font-weight: 800; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.4rem;">Qué es real</span>
-          <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.45;">
-            {article.what_is_true || "No hay hechos ciertos en la afirmación."}
-          </p>
+      <!-- EL HECHO REAL (Borde Azul / Verde) -->
+      <div class="cyber-card" style="padding: 1.5rem; border: 1px solid rgba(0, 240, 255, 0.25); background: rgba(0, 240, 255, 0.02); border-radius: 12px;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; color: var(--neon-blue); font-family: var(--font-title); font-size: 0.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;">
+          <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span>EL HECHO REAL</span>
         </div>
-
-        <div class="cyber-card" style="padding: 1.25rem; border-color: rgba(255, 51, 102, 0.15); background: rgba(255, 51, 102, 0.01);">
-          <span style="color: var(--neon-rose); font-weight: 800; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.4rem;">Qué es falso</span>
-          <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.45;">
-            {article.what_is_false || "No se han detectado falsedades explícitas."}
-          </p>
-        </div>
-
-        <div class="cyber-card" style="padding: 1.25rem; border-color: rgba(255, 176, 32, 0.15); background: rgba(255, 176, 32, 0.01);">
-          <span style="color: var(--neon-amber); font-weight: 800; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.4rem;">Falta de contexto</span>
-          <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.45;">
-            {article.what_lacks_context || "No se requiere contexto adicional."}
-          </p>
-        </div>
-
+        <p style="font-size: 1.05rem; color: #ffffff; line-height: 1.5; margin: 0;">
+          {article.what_is_true || "Los datos oficiales comparados desmienten las afirmaciones sin base."}
+        </p>
       </div>
-    </section>
+
+    </div>
 
     <!-- Explicación de los Hechos (Cuerpo del Artículo) -->
-    <section style="margin-bottom: 3rem;">
-      <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.1em; display: block; padding-left: 0.25rem; margin-bottom: 1rem;">Análisis Detallado</span>
-      <div style="font-size: 0.95rem; line-height: 1.7; color: #E2E8F0; white-space: pre-wrap; background: rgba(18, 22, 41, 0.45);" class="cyber-card">
-        {article.explanation}
-      </div>
-    </section>
-
-    <!-- Fuentes Oficiales Indexadas (Plegables) -->
-    <details class="cyber-card" style="padding: 1.75rem; border-color: rgba(0, 245, 160, 0.15); background: rgba(18, 22, 41, 0.3); margin-bottom: 2.5rem; border-radius: 12px;">
-      <summary style="font-weight: 800; text-transform: uppercase; color: var(--neon-green); font-size: 0.75rem; letter-spacing: 0.05em; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; outline: none; user-select: none;">
-        <span>VER FUENTES OFICIALES E INFORME TÉCNICO ({sources.length})</span>
-        <span style="color: var(--neon-blue); font-size: 0.7rem;">+ DESPLEGAR DOCUMENTOS</span>
-      </summary>
-
-      <div style="margin-top: 1.5rem; border-top: 1px dashed rgba(0, 245, 160, 0.2); padding-top: 12px;">
-        <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.5rem; line-height: 1.4;">
-          Respaldamos esta verificación en registros primarios oficiales y públicos. Pulsa en el enlace para auditar el documento tú mismo.
-        </p>
-
-        <div style="display: flex; flex-direction: column; gap: 1.25rem;">
-          {sources.map(src => (
-            <div style="border: 1px solid var(--border-color); padding: 1rem; background: rgba(7, 9, 19, 0.5); border-radius: 12px;">
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem; flex-wrap: wrap; gap: 0.5rem;">
-                <strong style="color: var(--text-main); font-size: 0.9rem;">{src.title}</strong>
-                <span style="background: rgba(0, 240, 255, 0.08); color: var(--neon-blue); font-size: 0.6rem; font-weight: 800; padding: 0.15rem 0.5rem; text-transform: uppercase; border-radius: 4px; border: 1px solid rgba(0,240,255,0.15);">
-                  Rango: {src.authority_level}
-                </span>
-              </div>
-              <p style="color: var(--text-muted); font-size: 0.8rem; line-height: 1.4; margin-bottom: 0.75rem;">
-                {src.quote_or_summary}
-              </p>
-              <a href={src.url} target="_blank" rel="noopener noreferrer" style="color: var(--neon-blue); font-size: 0.75rem; font-weight: 700; text-decoration: none;">
-                Acceder al documento oficial &rarr;
-              </a>
-            </div>
-          ))}
-
-          {sources.length === 0 && (
-            <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center;">No se han indexado fuentes en la base de datos.</p>
-          )}
+    {article.explanation && (
+      <section style="margin-bottom: 2.5rem;">
+        <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.1em; display: block; margin-bottom: 0.75rem;">Análisis Detallado y Datos Oficiales</span>
+        <div style="font-size: 0.95rem; line-height: 1.65; color: #E2E8F0; white-space: pre-wrap; background: rgba(18, 22, 41, 0.2); padding: 1.5rem;" class="cyber-card">
+          {article.explanation}
         </div>
-      </div>
-    </details>
+      </section>
+    )}
 
-    <!-- Compartir en Redes (Contracampaña) -->
-    <section class="cyber-card" style="padding: 1.75rem; border-color: rgba(0, 240, 255, 0.15); background: rgba(18, 22, 41, 0.3); margin-bottom: 3rem;">
-      <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-blue); font-size: 0.75rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">Compartir en Redes</span>
-      <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.5rem; line-height: 1.4;">
-        Copia respuestas o hilos generados automáticamente para desmontar el bulo en redes sociales cuando lo veas en canales públicos.
-      </p>
-
-      <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-        {socialPosts.map((post, idx) => (
-          <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-            <strong style="color: var(--text-main); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
-              Formato: {post.platform} ({post.format})
-            </strong>
-            <div 
-              id={`social-content-${idx}`} 
-              style="background: rgba(7, 9, 19, 0.6); border: 1px solid var(--border-color); padding: 1rem; font-size: 0.8rem; color: var(--text-muted); font-family: monospace; white-space: pre-wrap; max-height: 150px; overflow-y: auto; border-radius: 12px; line-height: 1.45;"
-            >{post.content}</div>
+    <!-- Fuentes y Evidencia -->
+    <section style="margin-bottom: 2.5rem;">
+      <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.1em; display: block; margin-bottom: 1rem;">Fuentes y Evidencia</span>
+      
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        {sources.map(src => (
+          <div class="cyber-card" style="padding: 0.85rem 1.25rem; display: flex; justify-content: space-between; align-items: center; background: rgba(18, 22, 41, 0.35); border-color: rgba(255,255,255,0.04); border-radius: 8px;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; text-align: left; flex: 1; min-width: 0;">
+              <svg style="width: 16px; height: 16px; color: var(--neon-blue); flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              <div style="min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                <strong style="color: var(--text-main); font-size: 0.88rem;">{src.title}</strong>
+              </div>
+            </div>
             
-            <button 
-              class="cyber-btn copy-btn" 
-              data-target={`social-content-${idx}`}
-              style="width: 100%; padding: 0.6rem; font-size: 0.75rem; border-radius: 12px; text-transform: uppercase; font-weight: 800;"
-            >
-              Copiar Mensaje
-            </button>
+            <a href={src.url} target="_blank" rel="noopener noreferrer" style="color: var(--neon-blue); display: flex; align-items: center; justify-content: center; padding: 0.25rem; margin-left: 1rem; transition: color 0.2s;" class="hover-link" title="Visitar documento oficial">
+              <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              </svg>
+            </a>
           </div>
         ))}
 
-        {socialPosts.length === 0 && (
-          <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center;">No hay copys sociales sugeridos para este artículo.</p>
-        )}
-      </div>
-
-    </section>
-
-    <!-- Artículos Relacionados (Siguiente lectura) -->
     <section style="margin-bottom: 3rem;">
       <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.15em; display: block; padding-left: 0.25rem; margin-bottom: 1.25rem;">Casos e Informes Relacionados</span>
       

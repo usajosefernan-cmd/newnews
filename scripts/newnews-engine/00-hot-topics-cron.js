@@ -55,7 +55,19 @@ ${JSON.stringify(existingTopics.map(t => ({ id: t.id, title: t.title, descriptio
 
   let hotTopics = [];
   try {
-    hotTopics = await callGemini(prompt);
+    const aiOutput = await callGemini(prompt, '00');
+    if (Array.isArray(aiOutput)) {
+      hotTopics = aiOutput;
+    } else if (aiOutput && typeof aiOutput === 'object') {
+      const keyWithArray = Object.keys(aiOutput).find(k => Array.isArray(aiOutput[k]));
+      if (keyWithArray) {
+        hotTopics = aiOutput[keyWithArray];
+      } else {
+        throw new Error('La respuesta de la IA no contiene una lista de temas.');
+      }
+    } else {
+      throw new Error('La respuesta de la IA no es un JSON estructurado de lista.');
+    }
     console.log(`[Hot Topics Cron] La IA ha identificado ${hotTopics.length} verticales calientes.`);
   } catch (err) {
     console.error('[Hot Topics Cron] Fallo al llamar a la IA para clasificar tendencias:', err.message);

@@ -1,23 +1,13 @@
 ---
+export const prerender = false;
 import Layout from '../../layouts/Layout.astro';
 import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 import { topicDidacticData } from '../../data/topicDidacticData.js';
 
-export async function getStaticPaths() {
-  const dbPath = path.resolve('data/newnews.db');
-  const db = new DatabaseSync(dbPath);
-  const topics = db.prepare("SELECT slug FROM topics WHERE status = 'activo'").all();
-  db.close();
-
-  return topics.map(topic => ({
-    params: { slug: topic.slug }
-  }));
-}
-
 const { slug } = Astro.params;
 
-const dbPath = path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
 const db = new DatabaseSync(dbPath);
 
 // Cargar información del tema

@@ -15,7 +15,7 @@ export async function getStaticPaths() {
 const { slug } = Astro.params;
 const { tagName } = Astro.props;
 
-const dbPath = path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
 const db = new DatabaseSync(dbPath);
 
 // Buscar artículos que contengan la palabra clave en título, explicación o claim

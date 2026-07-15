@@ -43,7 +43,7 @@ if (Astro.request.method === 'POST') {
     const url = data.get('url')?.toString() || '';
 
     if (claim.trim().length > 5) {
-      const dbPath = path.resolve('data/newnews.db');
+      const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
       const db = new DatabaseSync(dbPath);
       const id = `user-report-${Date.now()}`;
       
@@ -62,7 +62,7 @@ if (Astro.request.method === 'POST') {
 
 // Búsqueda en la base de datos (si hay consulta q)
 if (query.trim().length > 0) {
-  const dbPath = path.resolve('data/newnews.db');
+  const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
   const db = new DatabaseSync(dbPath);
   
   results = db.prepare(`
@@ -157,7 +157,7 @@ if (verify && query.trim().length > 0) {
     log(`Guardando resultados en los registros del portal...`);
     
     // Guardar en base de datos
-    const dbPath = path.resolve('data/newnews.db');
+    const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
     const db = new DatabaseSync(dbPath);
     const verifId = `verif-${Date.now()}`;
     
@@ -181,7 +181,7 @@ if (verify && query.trim().length > 0) {
     
     // Intentar registrar el fallo en BD para auditoría
     try {
-      const dbPath = path.resolve('data/newnews.db');
+      const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
       const db = new DatabaseSync(dbPath);
       const verifId = `verif-err-${Date.now()}`;
       db.prepare(`

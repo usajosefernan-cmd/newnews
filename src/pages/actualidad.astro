@@ -1,9 +1,10 @@
 ---
+export const prerender = false;
 import Layout from '../layouts/Layout.astro';
 import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 
-const dbPath = path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
 const db = new DatabaseSync(dbPath);
 
 // Cargar todos los artículos publicados
@@ -15,8 +16,8 @@ const articles = db.prepare(`
   ORDER BY a.published_at DESC, a.created_at DESC
 `).all() as any[];
 
-// Extraer categorías únicas para los filtros
-const categories = [...new Set(articles.map(art => art.category))].filter(Boolean);
+// Cargar expedientes/temas activos para el filtrado superior
+const topics = db.prepare("SELECT title, slug FROM topics WHERE status = 'activo' ORDER BY title").all() as any[];
 
 db.close();
 
@@ -62,36 +63,36 @@ const base = import.meta.env.BASE_URL;
 const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
 ---
 
-<Layout title="Feed de Actualidad" description="Informes cronolágicos de contrastación y verificación de bulos en España.">
+<Layout title="Feed de Actualidad" description="Informes cronológicos de contrastación y verificación de bulos en España.">
   <div class="container" style="padding-top: 1.5rem; padding-bottom: 5rem; max-width: 680px;">
     
     <div style="margin-bottom: 2rem;">
       <h1 class="text-gradient-rose" style="font-size: 2.2rem; font-weight: 850; font-family: var(--font-title); letter-spacing: -0.04em; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-        <span style="font-size: 1.8rem;"></span> Feed de Actualidad
+        Feed de Actualidad
       </h1>
       <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0; line-height: 1.4;">
         Todos los bulos y claims analizados por el cortafuegos, ordenados de forma cronológica.
       </p>
     </div>
 
-    <!-- Filtro de Categorías (Sticky) -->
+    <!-- Filtro de Expedientes (Sticky) -->
     <div style="display: flex; gap: 0.5rem; margin-bottom: 2rem; overflow-x: auto; scrollbar-width: none; align-items: center; position: sticky; top: 64px; z-index: 990; background: rgba(7, 9, 19, 0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 0.75rem 0.5rem; border-bottom: 1px solid var(--border-color); margin-left: -0.5rem; margin-right: -0.5rem; white-space: nowrap;">
-      <span style="font-size: 0.75rem; font-weight: bold; color: var(--text-muted); text-transform: uppercase; margin-right: 0.5rem; flex-shrink: 0;">Filtrar por área:</span>
+      <span style="font-size: 0.75rem; font-weight: bold; color: var(--text-muted); text-transform: uppercase; margin-right: 0.5rem; flex-shrink: 0;">Filtrar por expediente:</span>
       <a href={`${cleanBase}/actualidad`} class="cyber-btn" style="font-size: 0.75rem; padding: 0.35rem 0.75rem; text-decoration: none; border-color: var(--neon-blue); color: var(--neon-blue); flex-shrink: 0;">
         Ver todo
       </a>
-      {categories.map(cat => (
+      {topics.map(topic => (
         <a 
-          href={`${cleanBase}/categoria/${cat.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')}`} 
+          href={`${cleanBase}/tema/${topic.slug}`} 
           class="cyber-btn" 
           style="font-size: 0.75rem; padding: 0.35rem 0.75rem; text-decoration: none; flex-shrink: 0;"
         >
-          {cat}
+          {topic.title}
         </a>
       ))}
     </div>
 
-    <!-- Listado de Artículos (Cronolágico) -->
+    <!-- Listado de Artículos (Cronológico) -->
     <div style="display: flex; flex-direction: column; gap: 1.5rem;">
       {articles.map(art => (
         <article class={`cyber-card ${getVerdictClass(art.verdict)}`} style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; transition: transform 0.2s ease, box-shadow 0.2s ease;">
@@ -101,10 +102,10 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
                 {art.verdict}
               </span>
               <a 
-                href={`${cleanBase}/categoria/${art.category.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')}`}
+                href={`${cleanBase}/tema/${art.topic_slug || 'general'}`}
                 style="font-size: 0.7rem; font-weight: bold; color: var(--neon-blue); text-decoration: none; text-transform: uppercase;"
               >
-                #{art.category}
+                #{art.topic_title || 'General'}
               </a>
             </div>
             <time style="font-size: 0.75rem; color: var(--text-muted);" datetime={art.published_at || art.created_at}>

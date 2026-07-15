@@ -89,6 +89,9 @@ SQLITE_DB_PATH=data/newnews.db
 PUBLIC_BASE_PATH=/pro/newnews
 ```
 
+> [!IMPORTANT]
+> **Base de Datos en Producción (VPS)**: Para evitar bloqueos y corrupción de datos de Syncthing al sincronizar en caliente, la base de datos de producción física se almacena de forma centralizada fuera del workspace compartido, en `/home/ubuntu/db/newnews/newnews.db`. En la VPS, se crea un enlace simbólico de Linux en `data/newnews.db` apuntando a esta ruta. Dado que Syncthing no sigue enlaces simbólicos externos, la base de datos se mantiene totalmente aislada del canal de sincronización en tiempo real de forma natural, sin necesidad de modificar el código del proyecto.
+
 ### 3. Instalación de Dependencias
 ```bash
 npm install

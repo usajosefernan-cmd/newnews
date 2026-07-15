@@ -20,21 +20,8 @@ function runCommand(command, description) {
   }
 }
 
-// 1. Ejecutar Radar Cron para capturar tendencias y debates
-const radarSuccess = runCommand('node scripts/radar-last30days.js', 'Ejecutando Radar Cron (Escaneo de redes con last30days)');
-
-if (!radarSuccess) {
-  console.error('⚠️ Deteniendo pipeline debido a un fallo en el Radar.');
-  process.exit(1);
-}
-
-// 2. Ejecutar Pipeline de IA para procesar claims y generar borradores o artículos
-const aiSuccess = runCommand('node scripts/ai-pipeline.js', 'Ejecutando Pipeline de IA (Procesado de claims con Gemini)');
-
-if (!aiSuccess) {
-  console.error('⚠️ Deteniendo pipeline debido a un fallo en el Pipeline de IA.');
-  process.exit(1);
-}
+// La sincronización en producción sólo ejecuta la compilación atómica de Astro para mantener la web fresca
+// El radar de redes y el pipeline de IA corren en sus propios crons independientes de fondo.
 
 // 3. Ejecutar Build de Astro usando swap atómico para evitar caídas de servidor
 console.log(`\n🔹 [PROCESO] Reconstruyendo Portal Estático (Astro Build Atómico)...`);
@@ -65,6 +52,14 @@ try {
   
   if (fs.existsSync(backupPath)) {
     fs.rmSync(backupPath, { recursive: true, force: true });
+  }
+  
+  // Recargar el proceso PM2 de Astro en producción para evitar crashes
+  try {
+    execSync('pm2 reload newnews', { stdio: 'ignore' });
+    console.log(`🔄 [PM2] Servidor newnews recargado correctamente.`);
+  } catch (e) {
+    // Ignorar si PM2 no está disponible (ej. en local)
   }
   
   console.log(`\n✅ [EXITO] Reconstruyendo Portal Estático (Astro Build Atómico) completado.`);

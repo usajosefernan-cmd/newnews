@@ -3,6 +3,16 @@ import { callGemini } from './config.js';
 export async function extractClaim(itemText) {
   console.log(`[Claim Extractor] Extrayendo afirmación del texto...`);
 
+  // HEURÍSTICA LOCAL DIRECTA: Si el texto ya es extremadamente corto e informativo, se usa directamente
+  if (itemText && itemText.trim().length < 120) {
+    console.log('[Claim Extractor] [Heurística Local Directa] Texto de entrada muy corto. Omitiendo llamada de IA.');
+    return {
+      detected_claim: itemText.trim(),
+      context: 'Texto corto capturado directamente del radar.',
+      confidence: 1.0
+    };
+  }
+
   const prompt = `
 Eres un Fact-Checker Profesional. Tu tarea es extraer la afirmación factual principal (claim) que deba ser verificada, a partir del siguiente fragmento de texto o transcripción capturado por el radar.
 
@@ -23,7 +33,7 @@ Devuelve un JSON con el formato exacto:
 `;
 
   try {
-    const result = await callGemini(prompt);
+    const result = await callGemini(prompt, '05');
     console.log(`[Claim Extractor] Claim extraído: "${result.detected_claim}"`);
     return result;
   } catch (err) {

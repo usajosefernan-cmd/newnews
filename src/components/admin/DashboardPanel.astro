@@ -21,10 +21,27 @@ const { pendingCount, pendingRadarItems } = Astro.props;
       <button onclick="runAdminJob('sync')" class="cyber-btn" id="btn-job-sync" style="border-color: var(--neon-amber); color: var(--neon-amber); cursor: pointer; border-radius: 8px; font-weight: bold; font-size: 0.75rem; padding: 0.6rem 1rem;">🔄 Sincronizar DB</button>
       <button onclick="runAdminJob('build')" class="cyber-btn" id="btn-job-build" style="border-color: var(--neon-purple); color: var(--neon-purple); cursor: pointer; border-radius: 8px; font-weight: bold; font-size: 0.75rem; padding: 0.6rem 1rem;"> Compilar Web</button>
     </div>
+    
+    <div class="console-actions" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 0.5rem; margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem; width: 100%;">
+      <span style="font-size: 0.7rem; color: var(--text-muted); grid-column: 1 / -1; display: block; margin-bottom: 0.25rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; text-align: left;">Ejecución Granular del Motor de IA (12 Fases):</span>
+      
+      <button onclick="runAdminJob('ai-phase-00')" class="cyber-btn" style="border-color: #00ffc4; color: #00ffc4; font-size: 0.65rem; padding: 0.35rem; border-radius: 4px; font-weight: bold; cursor: pointer;">F00: Hot Topics</button>
+      <button onclick="runAdminJob('ai-phase-01')" class="cyber-btn" style="border-color: #00ffc4; color: #00ffc4; font-size: 0.65rem; padding: 0.35rem; border-radius: 4px; font-weight: bold; cursor: pointer;">F01: Relevancia</button>
+      <button onclick="runAdminJob('ai-phase-02')" class="cyber-btn" style="border-color: var(--neon-blue); color: var(--neon-blue); font-size: 0.65rem; padding: 0.35rem; border-radius: 4px; font-weight: bold; cursor: pointer;">F02: Enrutador Sem</button>
+      <button onclick="runAdminJob('ai-phase-03')" class="cyber-btn" style="border-color: var(--neon-blue); color: var(--neon-blue); font-size: 0.65rem; padding: 0.35rem; border-radius: 4px; font-weight: bold; cursor: pointer;">F03: Plan Fuentes</button>
+      <button onclick="runAdminJob('ai-phase-04')" class="cyber-btn" style="border-color: #00ffc4; color: #00ffc4; font-size: 0.65rem; padding: 0.35rem; border-radius: 4px; font-weight: bold; cursor: pointer;">F04: Filtro Ruido</button>
+      <button onclick="runAdminJob('ai-phase-05')" class="cyber-btn" style="border-color: #00ffc4; color: #00ffc4; font-size: 0.65rem; padding: 0.35rem; border-radius: 4px; font-weight: bold; cursor: pointer;">F05: Extractor Claims</button>
+      <button onclick="runAdminJob('ai-phase-06')" class="cyber-btn" style="border-color: var(--neon-blue); color: var(--neon-blue); font-size: 0.65rem; padding: 0.35rem; border-radius: 4px; font-weight: bold; cursor: pointer;">F06: Buscador Evid</button>
+      <button onclick="runAdminJob('ai-phase-07')" class="cyber-btn" style="border-color: var(--neon-rose); color: var(--neon-rose); font-size: 0.65rem; padding: 0.35rem; border-radius: 4px; font-weight: bold; cursor: pointer;">F07: Verificador</button>
+      <button onclick="runAdminJob('ai-phase-08')" class="cyber-btn" style="border-color: var(--neon-rose); color: var(--neon-rose); font-size: 0.65rem; padding: 0.35rem; border-radius: 4px; font-weight: bold; cursor: pointer;">F08: Redactor</button>
+      <button onclick="runAdminJob('ai-phase-09')" class="cyber-btn" style="border-color: var(--neon-rose); color: var(--neon-rose); font-size: 0.65rem; padding: 0.35rem; border-radius: 4px; font-weight: bold; cursor: pointer;">F09: Calidad Deont</button>
+      <button onclick="runAdminJob('ai-phase-10')" class="cyber-btn" style="border-color: var(--neon-rose); color: var(--neon-rose); font-size: 0.65rem; padding: 0.35rem; border-radius: 4px; font-weight: bold; cursor: pointer;">F10: Cola Revisión</button>
+      <button onclick="runAdminJob('ai-phase-11')" class="cyber-btn" style="border-color: var(--neon-purple); color: var(--neon-purple); font-size: 0.65rem; padding: 0.35rem; border-radius: 4px; font-weight: bold; cursor: pointer;">F11: Copies RRSS</button>
+    </div>
   </div>
 
   <!-- Estado del Scraper y Reglas de Negocio -->
-  <div class="cyber-card" style="padding: 1.5rem;">
+  <div class="cyber-card" style="padding: 1.5rem; text-align: left;">
     <h3 class="card-title" style="margin-top: 0; margin-bottom: 0.5rem; font-size: 1.1rem; color: #fff;">🛡️ Estado de Salud del Scraper</h3>
     <div class="info-list" style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.85rem;">
       <div class="info-item" style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.4rem;">
@@ -108,4 +125,3 @@ const { pendingCount, pendingRadarItems } = Astro.props;
     <div style="color: var(--text-muted);">> Selecciona un proceso arriba para ver sus logs de ejecución en vivo...</div>
   </div>
 </div>
-

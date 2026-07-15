@@ -48,6 +48,57 @@ async function runRadar() {
   db.exec('PRAGMA foreign_keys = ON;');
   db.exec('PRAGMA journal_mode = WAL;');
 
+  // Cargar temas/verticales de la DB para generar queries dinámicas
+  const dbTopics = db.prepare("SELECT title FROM topics WHERE status = 'activo'").all();
+  
+  // Función para obtener palabras clave atómicas significativas de un título de tema
+  const getAtomicQueries = (title) => {
+    const cleaned = title.toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // quitar acentos
+      .replace(/[^a-z0-9\s]+/g, ' ');
+    
+    const words = cleaned.split(/\s+/).filter(w => w.length > 2);
+    
+    // Lista de palabras de parada (stop words) en español y términos genéricos
+    const stopWords = new Set([
+      'del', 'las', 'los', 'con', 'para', 'por', 'sobre', 'una', 'uno', 'unos', 'unas',
+      'mitos', 'leyendas', 'situacion', 'actual', 'percepcion', 'analisis', 'caso'
+    ]);
+    
+    const keywords = words.filter(w => !stopWords.has(w));
+    
+    // Generar combinaciones atómicas
+    if (keywords.length >= 2) {
+      return [
+        `${keywords[0]} ${keywords[1]} bulo`,
+        `${keywords[0]} ${keywords[1]} España`
+      ];
+    } else if (keywords.length === 1) {
+      return [
+        `${keywords[0]} España bulo`,
+        `${keywords[0]} bulo`
+      ];
+    }
+    
+    // Fallback genérico con el primer sustantivo
+    return words.length > 0 ? [`${words[0]} bulo`] : [];
+  };
+
+  // Generar queries dinámicas
+  let searchQueries = dbTopics.flatMap(t => getAtomicQueries(t.title));
+  
+  // Si no hay verticales cargados, usar las keywords de fallback
+  if (searchQueries.length === 0) {
+    searchQueries = [
+      'impuestos España bulo', 'ley okupa España alarma', 'caso koldo mascarillas',
+      'pensiones sostenibilidad España', 'migrantes frontera canarias',
+      'inflación cesta compra España', 'fijos discontinuos desempleo'
+    ];
+  }
+  // Limitar para optimizar el run del cron y no saturar la API
+  const uniqueQueries = [...new Set(searchQueries)].slice(0, 12);
+
   const insertScrapedItem = db.prepare(`
     INSERT OR IGNORE INTO scraped_items (id, platform, url, text, author_public_name, metrics_json, detected_claim, suggested_topic, virality_score, risk_score, status, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente', datetime('now'))
@@ -79,11 +130,11 @@ async function runRadar() {
 
     const scriptPath = '/home/ubuntu/workspace/scrapers/last30days/last30days.py';
     
-    for (const keyword of interestingKeywords) {
+    for (const keyword of uniqueQueries) {
       try {
         console.log(`\n[*] Buscando en redes sobre: "${keyword}"...`);
-        // Ejecutar last30days.py vía python3
-        const command = `python3 "${scriptPath}" "${keyword}" --search=reddit,youtube,polymarket --emit=json --save-dir="${tempDir}" --lookback-days=1`;
+        // Ejecutar last30days.py vía python3 con el set completo de fuentes
+        const command = `python3 "${scriptPath}" "${keyword}" --search=reddit,youtube,polymarket,web,instagram,tiktok --emit=json --save-dir="${tempDir}" --lookback-days=1`;
         console.log(`$ ${command}`);
         
         execSync(command, { stdio: 'inherit' });

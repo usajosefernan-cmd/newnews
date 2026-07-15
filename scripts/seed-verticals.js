@@ -1,7 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 
-const dbPath = path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
 console.log(`[Verticals Seeder] Conectando a la base de datos en: ${dbPath}`);
 const db = new DatabaseSync(dbPath);
 db.exec('PRAGMA foreign_keys = ON;');

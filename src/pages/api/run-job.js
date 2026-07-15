@@ -14,7 +14,12 @@ export async function POST({ request }) {
     });
   }
 
-  const validJobs = ['cron', 'radar', 'ai', 'sync', 'build'];
+  const validJobs = [
+    'cron', 'radar', 'ai', 'sync', 'build', 
+    'ai-triage', 'ai-evidence', 'ai-write', 'ai-social',
+    'ai-phase-00', 'ai-phase-01', 'ai-phase-02', 'ai-phase-03', 'ai-phase-04', 'ai-phase-05',
+    'ai-phase-06', 'ai-phase-07', 'ai-phase-08', 'ai-phase-09', 'ai-phase-10', 'ai-phase-11'
+  ];
   if (!validJobs.includes(job)) {
     return new Response(JSON.stringify({ success: false, error: 'Trabajo no válido.' }), {
       status: 400,
@@ -63,6 +68,17 @@ export async function POST({ request }) {
         args = ['scripts/radar-cron.js'];
       } else if (job === 'ai') {
         args = ['scripts/ai-pipeline.js'];
+      } else if (job === 'ai-triage') {
+        args = ['scripts/ai-pipeline.js', '--phase=triage'];
+      } else if (job === 'ai-evidence') {
+        args = ['scripts/ai-pipeline.js', '--phase=evidence'];
+      } else if (job === 'ai-write') {
+        args = ['scripts/ai-pipeline.js', '--phase=write'];
+      } else if (job === 'ai-social') {
+        args = ['scripts/ai-pipeline.js', '--phase=social'];
+      } else if (job.startsWith('ai-phase-')) {
+        const phaseNum = job.replace('ai-phase-', '');
+        args = ['scripts/ai-pipeline.js', `--phase=${phaseNum}`];
       } else if (job === 'sync') {
         args = ['scripts/sync.js'];
       } else if (job === 'build') {
@@ -70,7 +86,7 @@ export async function POST({ request }) {
         args = ['run', 'build'];
       }
 
-      send({ status: 'info', message: `💻 [COMANDO] Ejecutando: ${cmd} ${args.join(' ')}` });
+      send({ status: 'info', message: `💻 [COMANDO] Exec: ${cmd} ${args.join(' ')}` });
 
       try {
         child = spawn(cmd, args, { env: process.env, shell: true });

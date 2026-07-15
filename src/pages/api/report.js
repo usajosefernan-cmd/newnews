@@ -2,7 +2,7 @@ export const prerender = false;
 import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 import { analyzeUrl } from '../../../scripts/check-url.js';
-import { execSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 
 export async function POST({ request }) {
   let url = '';
@@ -81,7 +81,7 @@ export async function POST({ request }) {
         }
 
         // 1.5 Buscar si ya existe una verificación duplicada en la base de datos de la VPS
-        const dbPath = path.resolve('data/newnews.db');
+        const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
         const dbForDup = new DatabaseSync(dbPath);
         dbForDup.exec('PRAGMA foreign_keys = ON;');
         
@@ -237,20 +237,77 @@ Debes responder estrictamente en formato JSON con la siguiente estructura:
         db.close();
         send({ status: 'info', message: '[BASE DE DATOS] Registro catalogado en la VPS con éxito.' });
 
-        // 4. Decidir si califica para auditoría inmediata
-        if (isViral) {
-          send({ 
-            status: 'success', 
-            message: '[COLA DE PRIORIDAD] Impacto viral crítico validado. El reporte ha sido enviado al motor automático de Hermes en el VPS para su análisis con IA y publicación asíncrona.' 
-          });
-        } else {
-          send({ 
-            status: 'success', 
-            message: '[COLA SECUNDARIA] Relevancia local detectada. Guardado en la cola del radar. Se auditará y contrastará en el próximo ciclo automático de Hermes.' 
-          });
-        }
+        // 4. Lanzar Auditoría en Vivo síncrona mediante spawn del pipeline de IA para este item específico
+        send({ status: 'info', message: '🤖 [HERMES ENGINE] Iniciando auditoría y desmentido automatizado para este link...' });
 
-        safeClose();
+        const pipelineScript = path.resolve('scripts/ai-pipeline.js');
+        const child = spawn('node', [pipelineScript, `--item-id=${id}`]);
+
+        child.stdout.on('data', (data) => {
+          const lines = data.toString().split('\n');
+          lines.forEach(line => {
+            if (line.trim()) {
+              // Limpiar secuencias de escape ANSI o colores que rompen el texto limpio
+              const cleanLine = line.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '').trim();
+              if (cleanLine.startsWith('✅') || cleanLine.startsWith('🚀') || cleanLine.startsWith('->') || cleanLine.startsWith('├─') || cleanLine.startsWith('└─') || cleanLine.includes('[') || cleanLine.includes('---')) {
+                send({ status: 'info', message: cleanLine });
+              } else {
+                send({ status: 'info', message: cleanLine });
+              }
+            }
+          });
+        });
+
+        child.stderr.on('data', (data) => {
+          const lines = data.toString().split('\n');
+          lines.forEach(line => {
+            if (line.trim() && !line.includes('ExperimentalWarning')) {
+              send({ status: 'warn', message: `[Pipeline Warn] ${line.trim()}` });
+            }
+          });
+        });
+
+        child.on('close', (code) => {
+          try {
+            // Buscar si se ha insertado el artículo correspondiente en la DB
+            const dbCheck = new DatabaseSync(dbPath);
+            dbCheck.exec('PRAGMA foreign_keys = ON;');
+            const createdArticle = dbCheck.prepare("SELECT title, slug, status FROM articles WHERE claim = ? ORDER BY created_at DESC LIMIT 1").get(cleanClaim);
+            dbCheck.close();
+
+            if (createdArticle) {
+              const baseHost = 'https://143-47-35-167.sslip.io/pro/newnews';
+              const articleLink = `${baseHost}/noticia/${createdArticle.slug}`;
+              const isPub = createdArticle.status === 'publicado';
+
+              send({ 
+                status: 'success', 
+                message: `🎉 [AUDITORÍA FINALIZADA] El análisis ha concluido con éxito.`
+              });
+              send({
+                status: 'success',
+                message: `Título: "${createdArticle.title}"`
+              });
+              send({
+                status: 'success',
+                message: `Estado: ${isPub ? 'PUBLICADO EN PORTADA DIRECTAMENTE ⚡' : 'GUARDADO EN COLA DE MODERACIÓN ✏️'}`
+              });
+              send({
+                status: 'success',
+                message: `🔗 Ver desmentido en vivo: ${articleLink}`
+              });
+            } else {
+              send({ 
+                status: 'error', 
+                message: '❌ [ALERTA] El pipeline finalizó pero no se pudo generar el artículo desmentido. Revisa las evidencias o la relevancia.' 
+              });
+            }
+          } catch (e) {
+            send({ status: 'error', message: `❌ Error verificando artículo resultante: ${e.message}` });
+          }
+          safeClose();
+        });
+
       } catch (err) {
         send({ status: 'error', message: `[ERROR FATAL] ${err.message}` });
         safeClose();

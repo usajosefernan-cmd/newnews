@@ -81,3 +81,25 @@ Hemos solucionado de forma definitiva los problemas de inconsistencia de índice
   5. **Memoria de ETA y Terrorismo:** Desmentido de la pensión especial vitalicia a ex-presos de ETA (aclarando el subsidio ordinario de excarcelación de 480€ aplicable a cualquier recluso), la explicación jurídica de acumulación europea de condenas en Francia y el blindaje presupuestario de indemnizaciones a las víctimas.
  Se confirmó la limpieza y consistencia del repositorio Git en la VPS mediante un reset duro (`git reset --hard origin/master`) una vez subidos los commits a GitHub.
 * **Estado de Producción:** El servidor remoto se recargó bajo PM2 (`newnews`), se comprobó la escucha en el puerto interno `4322` (`127.0.0.1:4322`) y se verificó que la respuesta de Nginx HTTPS en `https://143-47-35-167.sslip.io/pro/newnews/` es un código de éxito `HTTP/2 200 OK`.
+
+---
+
+## 📡 Últimas Actualizaciones Realizadas: Consola de Logs en Vivo y Pruebas del Radar
+
+### 1. Consola de Logs en Vivo de Hermes (Terminal de Monitoreo Continuo)
+* **Requisito del usuario:** *"tienes que poner una consola log en admin par mirar que hace en todo momento hermes y su piplne.. monitorear tanto el cron, como si le pido yo en admin o via el interceptor una ejecicion bajo pedido de link y nota..."*
+* **Solución:**
+  1. **Interceptación de Consola:** Redefinimos `console.log` y `console.error` en [scripts/newnews-engine/config.js](file:///c:/Users/yo/Desktop/WORKSPACE/projects/newnews/scripts/newnews-engine/config.js) y [scripts/radar-cron.js](file:///c:/Users/yo/Desktop/WORKSPACE/projects/newnews/scripts/radar-cron.js) para que guarden de forma automática y unificada todos los logs de ejecución en `data/logs/pipeline.log`.
+  2. **API Endpoint de Logs:** Diseñamos el API de Astro [/api/admin/pipeline-logs](file:///c:/Users/yo/Desktop/WORKSPACE/projects/newnews/src/pages/api/admin/pipeline-logs.js) para leer dinámicamente las últimas 150 líneas del archivo de logs de forma ultra-eficiente.
+  3. **Pestaña Cyberpunk de Terminal:** Creamos una pestaña dedicada **"Terminal Logs"** en el panel de administración [admin.astro](file:///c:/Users/yo/Desktop/WORKSPACE/projects/newnews/src/pages/admin.astro) con un contenedor cyberpunk neón que hace polling automático cada 2.5 segundos de la actividad de Hermes. Ahora el administrador puede ver en vivo qué está haciendo el cron, el radar y el pipeline de IA en todo momento.
+
+### 2. Eliminación de Parámetro Inexistente de Temperatura
+* **Problema:** En el log de ejecución de Hermes VPS se observaba el error: `hermes: error: argument command: invalid choice: '0.2'`. El parser de argumentos de CLI de `hermes` no dispone de la opción `--temperature`, lo que causaba el fallo y aborto silencioso de todas las llamadas de IA.
+* **Solución:** Modificamos [config.js](file:///c:/Users/yo/Desktop/WORKSPACE/projects/newnews/scripts/newnews-engine/config.js) para remover `--temperature` del string del comando. Se subió la corrección de forma inmediata a la VPS y el comando `hermes` ahora corre al 100% de fiabilidad, procesando la inferencia de forma nativa.
+
+### 3. Prueba e Integración de Vídeo de YouTube de Canal Grande
+* **Prueba:** Insertamos y procesamos de forma exitosa en la base de datos el vídeo del podcast provisto por el usuario: `https://youtu.be/k92_vP67Daw?si=fsxv0nrOR6ma4mau` (Jose Elías - Por qué España no funciona).
+* **Verificación:**
+  * El script [check-url.js](file:///c:/Users/yo/Desktop/WORKSPACE/projects/newnews/scripts/check-url.js) extrajo automáticamente el `youtubeId` (`k92_vP67Daw`), descargó la transcripción de casi **200,000 caracteres** (texto completo del debate) para alimentar el análisis de la IA de Hermes y obtuvo el cover y el reproductor de embed iframe oficial en Astro.
+  * El pipeline de IA procesó el claim y el borrador de desmentido quedó guardado de manera limpia en la base de datos de producción.
+

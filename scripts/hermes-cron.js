@@ -30,10 +30,7 @@ runStep('node scripts/radar-cron.js', 'Radar Scrapers (Búsqueda)');
 // 2. Procesar el pipeline de Inteligencia Artificial para analizar y redactar
 runStep('node scripts/ai-pipeline.js', 'Pipeline IA (Análisis y Redacción)');
 
-// 3. Sincronizar e indexar la base de datos
-runStep('node scripts/sync.js', 'Sincronizador de Datos');
-
-// 4. Reconstruir estáticamente el portal para publicar cambios usando swap atómico
+// 3. Reconstruir estáticamente el portal para publicar cambios usando swap atómico
 console.log(`\n======================================================`);
 console.log(`🚀 [PASO] Ejecutando: Compilación Astro Atómica (Deploy/Build)...`);
 console.log(`======================================================`);
@@ -64,6 +61,14 @@ try {
   
   if (fs.existsSync(backupPath)) {
     fs.rmSync(backupPath, { recursive: true, force: true });
+  }
+  
+  // Recargar el proceso PM2 de Astro en producción para evitar crashes
+  try {
+    execSync('pm2 reload newnews', { stdio: 'ignore' });
+    console.log(`🔄 [PM2] Servidor newnews recargado correctamente.`);
+  } catch (e) {
+    // Ignorar si PM2 no está disponible (ej. en local)
   }
   
   console.log(`\n✅ [PASO] Completado: Compilación Astro Atómica`);

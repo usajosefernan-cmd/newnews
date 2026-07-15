@@ -2,7 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 import fs from 'node:fs';
 
-const dbPath = path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
 console.log(`[Seed] Conectando para sembrar los 4 nuevos temas elaborados en: ${dbPath}`);
 
 if (!fs.existsSync(dbPath)) {

@@ -15,7 +15,7 @@ export async function POST({ request }) {
       });
     }
 
-    const dbPath = path.resolve('data/newnews.db');
+    const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
     const db = new DatabaseSync(dbPath);
     db.exec('PRAGMA foreign_keys = ON;');
 
