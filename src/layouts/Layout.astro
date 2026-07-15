@@ -54,7 +54,7 @@ const getLink = (p) => {
   </head>
   <body>
     <!-- ═══ HEADER ═══ -->
-    <header style="border-bottom: 1px solid var(--border-color); background: rgba(7, 9, 19, 0.75); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); position: sticky; top: 0; z-index: 100;">
+    <header style="border-bottom: 1px solid var(--border-color); background: rgba(7, 9, 19, 0.75); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); position: sticky; top: 0; z-index: 1000;">
       <div class="container" style="display: flex; align-items: center; justify-content: space-between; height: 64px;">
         
         <!-- Logo -->
@@ -69,19 +69,17 @@ const getLink = (p) => {
 
         <!-- Desktop Navigation -->
         <nav style="display: flex; align-items: center; gap: 2rem;" class="desktop-nav">
-          <a href={getLink('/temas')} class="nav-link" style="font-size: 0.85rem; color: var(--text-muted); text-decoration: none; font-weight: 700; font-family: var(--font-title);">
-            Expedientes
-          </a>
-
-          <!-- Dropdown Categorías -->
+          
+          <!-- Dropdown Expedientes Vivos -->
           <div class="nav-dropdown" style="position: relative; display: inline-block;">
-            <a href="#" class="nav-link dropdown-toggle" style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem; text-decoration: none;">
-              Categorías <span style="font-size: 0.5rem; transition: transform 0.2s; display: inline-block;">▼</span>
+            <a href="#" class="nav-link dropdown-toggle" style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem; text-decoration: none; font-weight: 700; font-family: var(--font-title);">
+              📁 Expedientes Vivos <span style="font-size: 0.5rem; transition: transform 0.2s; display: inline-block;">▼</span>
             </a>
-            <div class="dropdown-menu" style="display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: rgba(7, 9, 19, 0.95); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0px 4px 20px rgba(0, 240, 255, 0.15); min-width: 200px; z-index: 1000; padding: 0.5rem 0; margin-top: 0.5rem; backdrop-filter: blur(16px);">
-              {categories.map((c) => (
-                <a href={getLink(`/categoria/${c.slug}`)} style="display: block; padding: 0.5rem 1rem; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600; font-family: var(--font-title); transition: all 0.2s; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title={c.name}>
-                  📂 {c.name}
+            <div class="dropdown-menu" style="display: none; position: absolute; top: 100%; left: 0; background: rgba(7, 9, 19, 0.95); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0px 8px 30px rgba(0, 240, 255, 0.2); min-width: 250px; max-height: 400px; overflow-y: auto; z-index: 1000; padding: 0.5rem 0; margin-top: 0.5rem; backdrop-filter: blur(16px);">
+              {topics.map((t) => (
+                <a href={getLink(`/tema/${t.slug}`)} style="display: flex; align-items: center; gap: 0.5rem; padding: 0.55rem 1.25rem; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600; font-family: var(--font-title); transition: all 0.2s; border-bottom: 1px solid rgba(255,255,255,0.02);" title={t.title}>
+                  <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--neon-blue); flex-shrink: 0;"></span>
+                  <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{t.title}</span>
                 </a>
               ))}
             </div>
@@ -148,24 +146,11 @@ const getLink = (p) => {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           Feed de Actualidad
         </a>
-        <a href={getLink('/temas')} class="drawer-link">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-          Expedientes
-        </a>
-
-        <span class="drawer-section-title">Temas Activos</span>
+        <span class="drawer-section-title">📁 Expedientes Vivos</span>
         {topics.map((t) => (
           <a href={getLink(`/tema/${t.slug}`)} class="drawer-link" style="font-size: 0.85rem; padding: 0.65rem 1.5rem;">
             <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--neon-blue); flex-shrink: 0;"></span>
             {t.title}
-          </a>
-        ))}
-
-        <span class="drawer-section-title">Categorías</span>
-        {categories.map((c) => (
-          <a href={getLink(`/categoria/${c.slug}`)} class="drawer-link" style="font-size: 0.85rem; padding: 0.65rem 1.5rem;">
-            <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--neon-purple); flex-shrink: 0;"></span>
-            {c.name}
           </a>
         ))}
 
@@ -264,12 +249,18 @@ const getLink = (p) => {
       </div>
     </footer>
 
-    <!-- Script del Drawer -->
+    <!-- Botón Subir Arriba flotante -->
+    <button id="back-to-top" class="back-to-top-btn" aria-label="Subir arriba">
+      ↑
+    </button>
+
+    <!-- Script del Drawer y Botón Volver Arriba -->
     <script is:inline>
       const openBtn = document.getElementById('drawer-open-btn');
       const closeBtn = document.getElementById('drawer-close-btn');
       const overlay = document.getElementById('drawer-overlay');
       const panel = document.getElementById('drawer-panel');
+      const backToTopBtn = document.getElementById('back-to-top');
 
       function openDrawer() {
         overlay.classList.add('open');
@@ -285,6 +276,20 @@ const getLink = (p) => {
       if (openBtn) openBtn.addEventListener('click', openDrawer);
       if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
       if (overlay) overlay.addEventListener('click', closeDrawer);
+
+      // Lógica de botón flotante "subir arriba"
+      if (backToTopBtn) {
+        window.addEventListener('scroll', () => {
+          if (window.scrollY > 300) {
+            backToTopBtn.classList.add('visible');
+          } else {
+            backToTopBtn.classList.remove('visible');
+          }
+        });
+        backToTopBtn.addEventListener('click', () => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      }
     </script>
   </body>
 </html>
@@ -306,4 +311,46 @@ const getLink = (p) => {
   .dropdown-menu a:hover { color: var(--neon-blue) !important; background: rgba(0, 240, 255, 0.05); }
   .footer-links a { color: var(--text-muted); text-decoration: none; transition: color 0.2s ease; }
   .footer-links a:hover { color: var(--neon-blue) !important; }
+
+  /* Estilos del botón flotante Subir Arriba */
+  .back-to-top-btn {
+    position: fixed;
+    bottom: 85px; /* Por encima de la barra inferior en móvil */
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(7, 9, 19, 0.9);
+    border: 1px solid var(--border-color);
+    color: var(--neon-blue);
+    font-size: 1.25rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 998;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .back-to-top-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+  .back-to-top-btn:hover {
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+    color: #fff;
+  }
+  @media (min-width: 900px) {
+    .back-to-top-btn {
+      bottom: 25px; /* En escritorio no hay barra inferior */
+    }
+  }
 </style>

@@ -54,11 +54,13 @@ const veracidadRate = stats.total > 0 ? Math.round(((stats.total - stats.falsos)
 // Mapear áreas para propuestas políticas electorales
 let areaMapping = [];
 const lowerCat = categoryName.toLowerCase();
-if (lowerCat.includes('sociedad') || lowerCat.includes('migr')) {
-  areaMapping = ['Inmigración', 'Vivienda'];
-} else if (lowerCat.includes('econ') || lowerCat.includes('impues')) {
-  areaMapping = ['Fiscalidad', 'Economía', 'Pensiones'];
-} else if (lowerCat.includes('justic') || lowerCat.includes('corrup') || lowerCat.includes('leyes')) {
+if (lowerCat.includes('vivienda')) {
+  areaMapping = ['Vivienda'];
+} else if (lowerCat.includes('inmigra') || lowerCat.includes('menas') || lowerCat.includes('migr')) {
+  areaMapping = ['Inmigración'];
+} else if (lowerCat.includes('econ') || lowerCat.includes('impues') || lowerCat.includes('paro') || lowerCat.includes('empleo') || lowerCat.includes('fiscal')) {
+  areaMapping = ['Economía', 'Fiscalidad', 'Pensiones'];
+} else if (lowerCat.includes('justic') || lowerCat.includes('corrup') || lowerCat.includes('leyes') || lowerCat.includes('amnistia')) {
   areaMapping = ['Justicia'];
 }
 
@@ -138,7 +140,7 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
 ---
 
 <Layout title={`Vertical: ${categoryName}`}>
-  <div class="container" style="padding-top: 2rem; padding-bottom: 5rem; max-width: 1000px;">
+  <div class="container" style="padding-top: 2rem; padding-bottom: 5rem; max-width: 680px;">
     
     <!-- Cabecera Premium -->
     <div style="margin-bottom: 2rem; border-bottom: 2px solid var(--border-color); padding-bottom: 1.5rem;">
@@ -157,7 +159,7 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
     </div>
 
     <!-- Menú de Pestañas Cyberpunk -->
-    <div class="topic-tabs-nav" style="display: flex; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; overflow-x: auto;">
+    <div class="topic-tabs-nav">
       <button class="tab-btn active" data-target="panel-desmentidos">🔍 Desmentidos ({stats.total})</button>
       <button class="tab-btn" data-target="panel-metricas">📊 Datos & Métricas</button>
       <button class="tab-btn" data-target="panel-politica">📋 Medidas Políticas ({policyMeasures.length})</button>
@@ -315,18 +317,33 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
                 </span>
               </div>
               <h4 style="font-size: 0.95rem; font-weight: 750; color: var(--text-main); margin-top: 0; margin-bottom: 0.5rem; line-height: 1.35;">
-                {pm.measure_title}
+                {pm.title}
               </h4>
               <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 1rem;">
-                {pm.measure_description}
+                {pm.plain_language_summary}
               </p>
+              {pm.original_text && (
+                <div style="background: rgba(255, 255, 255, 0.015); border-left: 2px solid var(--neon-blue); padding: 0.5rem 0.75rem; border-radius: 0 6px 6px 0; margin-bottom: 0.75rem; font-size: 0.75rem; color: var(--text-muted); font-style: italic;">
+                  "{pm.original_text}"
+                </div>
+              )}
             </div>
             
-            <div style="border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
-              <span style="font-size: 0.65rem; text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 0.25rem; color: var(--neon-purple);">Dictamen de Viabilidad Legal:</span>
-              <p style="font-size: 0.75rem; color: var(--text-main); font-style: italic; line-height: 1.4; margin: 0;">
-                {pm.feasibility_analysis}
-              </p>
+            <div style="border-top: 1px solid var(--border-color); padding-top: 0.75rem; display: flex; flex-direction: column; gap: 0.4rem;">
+              <div>
+                <span style="font-size: 0.62rem; text-transform: uppercase; font-weight: 800; display: block; color: var(--neon-green);">Impacto Estimado:</span>
+                <p style="font-size: 0.75rem; color: var(--text-main); line-height: 1.4; margin: 0;">
+                  {pm.possible_impact || 'No especificado'}
+                </p>
+              </div>
+              {pm.target_groups && (
+                <div>
+                  <span style="font-size: 0.62rem; text-transform: uppercase; font-weight: 800; display: block; color: var(--neon-amber);">Colectivos Afectados:</span>
+                  <p style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4; margin: 0;">
+                    {pm.target_groups}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         ))}

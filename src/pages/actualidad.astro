@@ -74,17 +74,17 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
       </p>
     </div>
 
-    <!-- Filtro de Categorías -->
-    <div style="display: flex; gap: 0.5rem; margin-bottom: 2rem; flex-wrap: wrap; align-items: center;">
-      <span style="font-size: 0.75rem; font-weight: bold; color: var(--text-muted); text-transform: uppercase; margin-right: 0.5rem;">Filtrar por Área:</span>
-      <a href={`${cleanBase}/actualidad`} class="cyber-btn" style="font-size: 0.75rem; padding: 0.35rem 0.75rem; text-decoration: none; border-color: var(--neon-blue); color: var(--neon-blue);">
+    <!-- Filtro de Categorías (Sticky) -->
+    <div style="display: flex; gap: 0.5rem; margin-bottom: 2rem; overflow-x: auto; scrollbar-width: none; align-items: center; position: sticky; top: 64px; z-index: 990; background: rgba(7, 9, 19, 0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 0.75rem 0.5rem; border-bottom: 1px solid var(--border-color); margin-left: -0.5rem; margin-right: -0.5rem; white-space: nowrap;">
+      <span style="font-size: 0.75rem; font-weight: bold; color: var(--text-muted); text-transform: uppercase; margin-right: 0.5rem; flex-shrink: 0;">Filtrar por Área:</span>
+      <a href={`${cleanBase}/actualidad`} class="cyber-btn" style="font-size: 0.75rem; padding: 0.35rem 0.75rem; text-decoration: none; border-color: var(--neon-blue); color: var(--neon-blue); flex-shrink: 0;">
         Ver todo
       </a>
       {categories.map(cat => (
         <a 
           href={`${cleanBase}/categoria/${cat.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')}`} 
           class="cyber-btn" 
-          style="font-size: 0.75rem; padding: 0.35rem 0.75rem; text-decoration: none;"
+          style="font-size: 0.75rem; padding: 0.35rem 0.75rem; text-decoration: none; flex-shrink: 0;"
         >
           {cat}
         </a>

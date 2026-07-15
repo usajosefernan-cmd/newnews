@@ -844,6 +844,7 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
 ---
 
 <Layout title={topic.title} description={topic.description}>
+  <div class="container" style="padding-top: 1.5rem; padding-bottom: 3rem; max-width: 680px;">
     <!-- ═══ HERO DEL TEMA ═══ -->
     <section class="topic-hero" style="margin-bottom: 2rem;">
       <div class="cyber-card" style="padding: 2.5rem 2rem; background: linear-gradient(180deg, rgba(18, 22, 41, 0.8) 0%, rgba(7, 9, 19, 0.95) 100%); overflow: hidden; border-color: rgba(0, 240, 255, 0.25);">
@@ -891,14 +892,14 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
 
     <!-- ═══ BOTONES DE APARTADOS (TABS) ═══ -->
     <nav class="topic-tabs-nav">
-      <button class="tab-btn active" data-target="panel-magnitud">
-        📊 <span>Cifras</span>
+      <button class="tab-btn active" data-target="panel-legal">
+        📖 <span>Didáctica y Hechos</span>
       </button>
-      <button class="tab-btn" data-target="panel-legal">
-        ⚖️ <span>Marco Legal</span>
+      <button class="tab-btn" data-target="panel-magnitud">
+        📊 <span>Cifras y Datos</span>
       </button>
       <button class="tab-btn" data-target="panel-radar">
-        🛡️ <span>Expedientes ({articles.length})</span>
+        🛡️ <span>Casos en el Radar ({articles.length})</span>
       </button>
       <button class="tab-btn" data-target="panel-politica">
         🏛️ <span>Enfoque Político ({policyMeasures.length})</span>
@@ -906,7 +907,7 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
     </nav>
 
     <!-- ═══ PANEL 1: MAGNITUD Y CIFRAS ═══ -->
-    <div id="panel-magnitud" class="topic-tab-panel active">
+    <div id="panel-magnitud" class="topic-tab-panel">
       {info && (
         <section class="topic-section">
           <div class="topic-section-header">
@@ -944,7 +945,7 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
     </div>
 
     <!-- ═══ PANEL 2: MARCO LEGAL Y DIDÁCTICA ═══ -->
-    <div id="panel-legal" class="topic-tab-panel">
+    <div id="panel-legal" class="topic-tab-panel active">
       <!-- 1. ¿Qué está pasando? -->
       {didactic && (
         <section class="topic-section" style="margin-bottom: 2.5rem;">
@@ -1322,9 +1323,17 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
     gap: 0.6rem;
     margin: 1.5rem 0;
     border-bottom: 1px solid var(--border-color);
-    padding-bottom: 0.75rem;
+    padding: 0.75rem 0.5rem;
     overflow-x: auto;
     scrollbar-width: none; /* Firefox */
+    position: sticky;
+    top: 64px; /* Justo debajo de la cabecera */
+    z-index: 990;
+    background: rgba(7, 9, 19, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
   }
   .topic-tabs-nav::-webkit-scrollbar {
     display: none; /* Chrome/Safari */

@@ -1425,9 +1425,15 @@ const getVerdictClass = (verdict) => {
 <!-- ESTILOS LOCALES PREMIUM PARA EL ADMIN -->
 <style>
   .admin-container {
+    width: 100%;
     max-width: 1050px;
     margin: 0 auto;
-    padding: 2rem 1.5rem 5rem 1.5rem;
+    padding: 1rem 0.5rem 5rem 0.5rem;
+  }
+  @media (min-width: 600px) {
+    .admin-container {
+      padding: 2rem 1.5rem 5rem 1.5rem;
+    }
   }
   
   .admin-header {
@@ -1499,9 +1505,23 @@ const getVerdictClass = (verdict) => {
     display: flex;
     gap: 0.5rem;
     border-bottom: 2px solid var(--border-color);
-    padding-bottom: 0.25rem;
+    padding: 0.75rem 0.5rem;
     margin-bottom: 2rem;
     overflow-x: auto;
+    scrollbar-width: none;
+    position: sticky;
+    top: 64px; /* Justo debajo del header */
+    z-index: 990;
+    background: rgba(7, 9, 19, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    margin-left: -0.75rem;
+    margin-right: -0.75rem;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  .admin-tabs-nav::-webkit-scrollbar {
+    display: none;
   }
   .admin-tab-btn {
     background: none;
