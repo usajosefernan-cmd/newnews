@@ -5,7 +5,7 @@ import path from 'node:path';
 
 const { 
   title, 
-  description = "NEWNEWS - Web de noticias, desmentidos y contrastaci??n con fuentes oficiales de Espa??a.",
+  description = "NEWNEWS - Web de noticias, desmentidos y contrastación con fuentes oficiales de España.",
   category,
   activeNav = ''
 } = Astro.props;
@@ -53,7 +53,7 @@ const getLink = (p) => {
     <meta name="twitter:description" content={description} />
   </head>
   <body>
-    <!-- ????????? HEADER PREMIUM GLOBAL ????????? -->
+    <!-- ═══ HEADER PREMIUM GLOBAL ═══ -->
     <header style="border-bottom: 1px solid var(--border-color); background: rgba(7, 9, 19, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 1000; transition: all 0.3s ease;">
       <div class="container" style="display: flex; align-items: center; justify-content: space-between; height: 64px;">
         
@@ -63,7 +63,7 @@ const getLink = (p) => {
             NEW<span style="color: var(--neon-blue);">NEWS</span>
           </span>
           <span style="background: rgba(0, 240, 255, 0.12); border: 1px solid rgba(0, 240, 255, 0.25); color: var(--neon-blue); font-size: 0.55rem; font-weight: 900; text-transform: uppercase; padding: 0.12rem 0.4rem; border-radius: 4px; letter-spacing: 0.05em; font-family: var(--font-title);">
-            DEONTOL??GICO
+            DEONTOLÓGICO
           </span>
         </a>
 
@@ -73,7 +73,7 @@ const getLink = (p) => {
           <!-- Dropdown Expedientes Vivos -->
           <div class="nav-dropdown" style="position: relative; display: inline-block;">
             <a href="#" class="nav-link dropdown-toggle" style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem; text-decoration: none; font-weight: 700; font-family: var(--font-title);">
-              ???? Expedientes Vivos <span style="font-size: 0.6rem; transition: transform 0.25s ease; display: inline-block;">???</span>
+              📂 Expedientes Vivos <span style="font-size: 0.6rem; transition: transform 0.25s ease; display: inline-block;">▼</span>
             </a>
             <div class="dropdown-menu left-align" style="opacity: 0; transform: translateY(10px); pointer-events: none; position: absolute; top: 100%; left: 0; background: rgba(7, 9, 19, 0.95); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0px 8px 32px rgba(0, 240, 255, 0.15); min-width: 250px; max-height: 400px; overflow-y: auto; z-index: 1000; padding: 0.5rem 0; margin-top: 0.5rem; backdrop-filter: blur(20px); transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);">
               {topics.map((t) => (
@@ -86,22 +86,22 @@ const getLink = (p) => {
           </div>
 
           <a href={getLink('/interceptor')} class="nav-link" style="font-size: 0.85rem; color: var(--text-muted); text-decoration: none; font-weight: 700; font-family: var(--font-title); display: flex; align-items: center; gap: 0.25rem;">
-            ??????? Interceptor
+            🕵️ Interceptor
           </a>
 
           <a href={getLink('/actualidad')} class="nav-link" style="font-size: 0.85rem; color: var(--text-muted); text-decoration: none; font-weight: 700; font-family: var(--font-title);">
             Actualidad
           </a>
 
-          <!-- Dropdown Pol??ticos -->
+          <!-- Dropdown Políticos -->
           <div class="nav-dropdown" style="position: relative; display: inline-block;">
             <a href="#" class="nav-link dropdown-toggle" style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem; text-decoration: none; font-weight: 700; font-family: var(--font-title);">
-              Pol??ticos <span style="font-size: 0.6rem; transition: transform 0.25s ease; display: inline-block;">???</span>
+              Políticos <span style="font-size: 0.6rem; transition: transform 0.25s ease; display: inline-block;">▼</span>
             </a>
             <div class="dropdown-menu" style="opacity: 0; transform: translateY(10px) translateX(-50%); pointer-events: none; position: absolute; top: 100%; left: 50%; background: rgba(7, 9, 19, 0.95); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0px 8px 32px rgba(0, 240, 255, 0.15); min-width: 200px; z-index: 1000; padding: 0.5rem 0; margin-top: 0.5rem; backdrop-filter: blur(20px); transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);">
-              <a href={getLink('/programas-politicos')} style="display: block; padding: 0.55rem 1.25rem; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600; font-family: var(--font-title); transition: all 0.2s;">???? Programas Electorales</a>
-              <a href={getLink('/comparador-politico')} style="display: block; padding: 0.55rem 1.25rem; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600; font-family: var(--font-title); transition: all 0.2s;">?????? Comparador de Hechos</a>
-              <a href={getLink('/bienes-declarados')} style="display: block; padding: 0.55rem 1.25rem; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600; font-family: var(--font-title); transition: all 0.2s;">???? Bienes y Patrimonios</a>
+              <a href={getLink('/programas-politicos')} style="display: block; padding: 0.55rem 1.25rem; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600; font-family: var(--font-title); transition: all 0.2s;">📋 Programas Electorales</a>
+              <a href={getLink('/comparador-politico')} style="display: block; padding: 0.55rem 1.25rem; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600; font-family: var(--font-title); transition: all 0.2s;">⚖️ Comparador de Hechos</a>
+              <a href={getLink('/bienes-declarados')} style="display: block; padding: 0.55rem 1.25rem; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600; font-family: var(--font-title); transition: all 0.2s;">💰 Bienes y Patrimonios</a>
             </div>
           </div>
 
@@ -115,7 +115,7 @@ const getLink = (p) => {
           <a href={getLink('/buscador')} style="color: var(--text-muted); padding: 0.4rem; display: flex; align-items: center; justify-content: center;" title="Buscador">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </a>
-          <button class="hamburger-btn" id="drawer-open-btn" aria-label="Abrir men??">
+          <button class="hamburger-btn" id="drawer-open-btn" aria-label="Abrir menú">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
         </div>
@@ -123,32 +123,32 @@ const getLink = (p) => {
       </div>
     </header>
 
-    <!-- ????????? DRAWER LATERAL (M??VIL) ????????? -->
+    <!-- ═══ DRAWER LATERAL (MÓVIL) ═══ -->
     <div class="drawer-overlay" id="drawer-overlay"></div>
     <div class="drawer-panel" id="drawer-panel">
       <div class="drawer-header">
         <span style="font-family: var(--font-title); font-weight: 800; font-size: 1.2rem;">
           NEW<span style="color: var(--neon-blue);">NEWS</span>
         </span>
-        <button class="drawer-close" id="drawer-close-btn" aria-label="Cerrar men??">
+        <button class="drawer-close" id="drawer-close-btn" aria-label="Cerrar menú">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
       <nav class="drawer-nav">
-        <span class="drawer-section-title">Navegaci??n</span>
+        <span class="drawer-section-title">Navegación</span>
         <a href={getLink('/')} class="drawer-link">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
           Radar
         </a>
         <a href={getLink('/interceptor')} class="drawer-link">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
-          ??????? Interceptor
+          🕵️ Interceptor
         </a>
         <a href={getLink('/actualidad')} class="drawer-link">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           Feed de Actualidad
         </a>
-        <span class="drawer-section-title">???? Expedientes Vivos</span>
+        <span class="drawer-section-title">📂 Expedientes Vivos</span>
         {topics.map((t) => (
           <a href={getLink(`/tema/${t.slug}`)} class="drawer-link" style="font-size: 0.85rem; padding: 0.65rem 1.5rem;">
             <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--neon-blue); flex-shrink: 0;"></span>
@@ -156,7 +156,7 @@ const getLink = (p) => {
           </a>
         ))}
 
-        <span class="drawer-section-title">Pol??tica</span>
+        <span class="drawer-section-title">Política</span>
         <a href={getLink('/comparador-politico')} class="drawer-link">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="9"/></svg>
           Comparador
@@ -176,7 +176,7 @@ const getLink = (p) => {
       </nav>
     </div>
 
-    <!-- ????????? BOTTOM NAV (M??VIL) ????????? -->
+    <!-- ═══ BOTTOM NAV (MÓVIL) ═══ -->
     <div class="bottom-nav-container">
       <nav class="bottom-nav">
         <a href={getLink('/')} class={`bottom-nav-item ${currentPath === '/' || currentPath === base ? 'active' : ''}`}>
@@ -226,13 +226,13 @@ const getLink = (p) => {
         <div>
           <h3 style="color: var(--text-main); font-size: 1.25rem; margin-bottom: 0.75rem; letter-spacing: -0.03em;">NEW<span style="color: var(--neon-blue);">NEWS</span></h3>
           <p style="margin-bottom: 1.5rem; max-width: 400px; font-size: 0.9rem; line-height: 1.5;">
-            Iniciativa neutral para analizar bulos virales, contrastar promesas pol??ticas y explicar la actualidad de Espa??a con datos oficiales.
+            Iniciativa neutral para analizar bulos virales, contrastar promesas políticas y explicar la actualidad de España con datos oficiales.
           </p>
-          <p style="font-size: 0.8rem;">?? {new Date().getFullYear()} NEWNEWS.</p>
+          <p style="font-size: 0.8rem;">© {new Date().getFullYear()} NEWNEWS.</p>
         </div>
 
         <div>
-          <h4 style="color: var(--text-main); font-size: 1rem; margin-bottom: 1rem; font-family: var(--font-title);">Metodolog??a</h4>
+          <h4 style="color: var(--text-main); font-size: 1rem; margin-bottom: 1rem; font-family: var(--font-title);">Metodología</h4>
           <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem;" class="footer-links">
             <li><a href={getLink('/temas')}>Expedientes Vivos</a></li>
             <li><a href={getLink('/programas-politicos')}>Programas Electorales</a></li>
@@ -243,7 +243,7 @@ const getLink = (p) => {
         <div>
           <h4 style="color: var(--text-main); font-size: 1rem; margin-bottom: 1rem; font-family: var(--font-title);">Fuentes Oficiales</h4>
           <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem;">
-            <li><a href="https://www.ine.es" target="_blank" rel="noopener noreferrer">INE (Estad??sticas)</a></li>
+            <li><a href="https://www.ine.es" target="_blank" rel="noopener noreferrer">INE (Estadísticas)</a></li>
             <li><a href="https://www.boe.es" target="_blank" rel="noopener noreferrer">BOE (Leyes y Normas)</a></li>
             <li><a href="https://www.congreso.es" target="_blank" rel="noopener noreferrer">Congreso de los Diputados</a></li>
           </ul>
@@ -252,12 +252,12 @@ const getLink = (p) => {
       </div>
     </footer>
 
-    <!-- Bot??n Subir Arriba flotante con flecha limpia -->
+    <!-- Botón Subir Arriba flotante con flecha limpia -->
     <button id="back-to-top" class="back-to-top-btn" aria-label="Subir arriba">
-      ???
+      ▲
     </button>
 
-    <!-- Script del Drawer y Bot??n Volver Arriba -->
+    <!-- Script del Drawer y Botón Volver Arriba -->
     <script is:inline>
       const openBtn = document.getElementById('drawer-open-btn');
       const closeBtn = document.getElementById('drawer-close-btn');
@@ -280,7 +280,7 @@ const getLink = (p) => {
       if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
       if (overlay) overlay.addEventListener('click', closeDrawer);
 
-      // L??gica de bot??n flotante "subir arriba"
+      // Lógica de botón flotante "subir arriba"
       if (backToTopBtn) {
         window.addEventListener('scroll', () => {
           if (window.scrollY > 300) {
@@ -341,10 +341,10 @@ const getLink = (p) => {
     color: var(--neon-blue) !important; 
   }
 
-  /* Estilos del bot??n flotante Subir Arriba */
+  /* Estilos del botón flotante Subir Arriba */
   .back-to-top-btn {
     position: fixed;
-    bottom: 85px; /* Por encima de la barra inferior en m??vil */
+    bottom: 85px; /* Por encima de la barra inferior en móvil */
     right: 20px;
     width: 44px;
     height: 44px;

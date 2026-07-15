@@ -118,7 +118,7 @@ function formatOriginalDate(dateStr) {
 ---
 
 <Layout title="Radar de Desmentidos y Auditoría en Vivo">
-  <div class="container" style="padding-top: 1.5rem; padding-bottom: 3rem; max-width: 680px;">
+  <div class="container" style="padding-top: 1.5rem; padding-bottom: 3rem; max-width: 1000px;">
     
     <!-- ═══ HEADER DEL PORTAL ═══ -->
     <section style="margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem;">
@@ -157,40 +157,6 @@ function formatOriginalDate(dateStr) {
             Interceptar
           </button>
         </form>
-      </div>
-    </section>
-
-    <!-- ═══ SECCIÓN DE "STORIES" (TEMAS ACTIVOS) ═══ -->
-    <section style="margin-bottom: 2rem;">
-      <div class="no-scrollbar" style="display: flex; gap: 1rem; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 0.5rem;">
-        
-        {topics.map((topic: any) => (
-          <a href={`${cleanBase}/tema/${topic.slug}`} style="display: flex; flex-direction: column; align-items: center; gap: 0.4rem; min-width: 72px;">
-            <div class={`story-circle ${topic.has_recent ? 'active' : ''}`}>
-              {topic.has_recent && (
-                <div style="position: absolute; top: -2px; right: 8px; background: var(--neon-rose); color: #fff; font-size: 0.55rem; font-weight: 900; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--bg-main); box-shadow: 0 0 6px var(--neon-rose); z-index: 10;" title="Última Hora">⚡</div>
-              )}
-              <div class="story-inner" style="font-size: 0.85rem; letter-spacing: 0.05em; font-weight: 800;">
-                {getCategoryInitials(topic.category)}
-              </div>
-            </div>
-            <span style="font-size: 0.7rem; font-weight: 700; color: var(--text-main); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 75px;">
-              {topic.title.split(' ')[0]}
-            </span>
-          </a>
-        ))}
-
-        <a href={`${cleanBase}/temas`} style="display: flex; flex-direction: column; align-items: center; gap: 0.4rem; min-width: 72px;">
-          <div class="story-circle" style="background: linear-gradient(135deg, var(--border-color), rgba(255,255,255,0.2));">
-            <div class="story-inner" style="color: var(--text-muted); font-size: 0.85rem; font-weight: 800;">
-              ALL
-            </div>
-          </div>
-          <span style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-align: center; white-space: nowrap;">
-            Ver Todos
-          </span>
-        </a>
-
       </div>
     </section>
 
