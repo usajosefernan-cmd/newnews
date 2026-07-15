@@ -263,6 +263,42 @@ const getSocialPostMeta = (url, platform) => {
 };
 
 const socialMeta = getSocialPostMeta(article.origin_url, article.origin_platform);
+
+// Precalculados para el termómetro
+const termometroScore = article.newnews_score || 50;
+let termometroLabel = 'Confuso 🔵';
+if (termometroScore <= 20) {
+  termometroLabel = 'Ruido bajo 🟢';
+} else if (termometroScore <= 40) {
+  termometroLabel = 'Dudoso 🟡';
+} else if (termometroScore <= 60) {
+  termometroLabel = 'Confuso 🔵';
+} else if (termometroScore <= 80) {
+  termometroLabel = 'Viral y preocupante 🟠';
+} else {
+  termometroLabel = 'Prioridad alta / Alarma 🔴';
+}
+
+// Precalculados para el truco usado
+const trickUsed = (article.trick_used || '').toLowerCase();
+let trickDesc = 'Se utilizan afirmaciones genéricas descontextualizadas del marco legal oficial del BOE o del INE para generar desinformación.';
+if (trickUsed === 'cherry-picking') {
+  trickDesc = 'Se seleccionan únicamente datos parciales o favorables al sesgo para omitir el contexto general completo que desmiente la afirmación.';
+} else if (trickUsed === 'falso dilema') {
+  trickDesc = 'Se presenta la situación como si solo existieran dos opciones extremas excluyentes, ocultando la existencia de matices intermedios o terceras vías jurídicas.';
+} else if (trickUsed === 'culpa colectiva') {
+  trickDesc = 'Se atribuye a todo un grupo social (por origen, nacionalidad o religión) la responsabilidad directa o indirecta por el acto delictivo de un individuo aislado.';
+} else if (trickUsed === 'dato sin base') {
+  trickDesc = 'Se lanzan porcentajes alarmantes o cifras absolutas elevadas sin contextualizar la base demográfica, el denominador o el marco de comparación estadística real.';
+} else if (trickUsed === 'vídeo recortado') {
+  trickDesc = 'Se extrae un fragmento de audio o vídeo de pocos segundos para descontextualizar las declaraciones completas o la fecha real del suceso.';
+} else if (trickUsed === 'autoridad falsa') {
+  trickDesc = 'Se atribuye la información a supuestos portales de investigación, expertos autodeclarados o fuentes no oficiales para forzar veracidad.';
+} else if (trickUsed === 'miedo/urgencia') {
+  trickDesc = 'Se recurre a llamadas de pánico moral o urgencia ("lo ocultan", "secreto", "últimas unidades") para activar una creencia emocional irracional.';
+} else if (trickUsed === 'promoción encubierta') {
+  trickDesc = 'Se recomienda un producto o inversión con enlaces de referidos camuflados de recomendación sincera, ocultando el incentivo económico detrás.';
+}
 ---
 
 <Layout title={article.title} description={article.subtitle} category={article.category}>
@@ -321,13 +357,13 @@ const socialMeta = getSocialPostMeta(article.origin_url, article.origin_platform
       
       <!-- Detalle Técnico de la Afirmación y Caja de Origen (Mockups) -->
       {socialMeta ? (
-        <div class="cyber-card" style={{ padding: '1.5rem', background: 'rgba(7, 9, 19, 0.75)', borderColor: socialMeta.type === 'telegram' ? '#0088cc' : socialMeta.type === 'x' ? '#ffffff' : socialMeta.type === 'instagram' ? '#dc2743' : socialMeta.type === 'youtube' ? '#ff0000' : socialMeta.type === 'tiktok' ? '#00f2fe' : 'var(--neon-blue)' }}>
+        <div class="cyber-card" style={`padding: 1.5rem; background: rgba(7, 9, 19, 0.75); border-color: ${socialMeta.type === 'telegram' ? '#0088cc' : socialMeta.type === 'x' ? '#ffffff' : socialMeta.type === 'instagram' ? '#dc2743' : socialMeta.type === 'youtube' ? '#ff0000' : socialMeta.type === 'tiktok' ? '#00f2fe' : 'var(--neon-blue)'};`}>
           
           {/* Cabecera del Post (Estilo Social Media) */}
           <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 0.85rem; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
               {/* Avatar circular con iniciales y gradiente */}
-              <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: socialMeta.type === 'instagram' ? 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)' : socialMeta.avatarColor || 'var(--neon-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontWeight: '800', fontSize: '0.9rem', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div style={`width: 42px; height: 42px; border-radius: 50%; background: ${socialMeta.type === 'instagram' ? 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)' : socialMeta.avatarColor || 'var(--neon-blue)'}; display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; fontSize: 0.9rem; border: 1px solid rgba(255,255,255,0.1);`}>
                 {socialMeta.initials || 'SP'}
               </div>
               
@@ -337,7 +373,7 @@ const socialMeta = getSocialPostMeta(article.origin_url, article.origin_platform
                     {socialMeta.displayName || article.origin_platform}
                   </span>
                   {socialMeta.verified && (
-                    <span style={{ color: socialMeta.type === 'x' ? '#1d9bf0' : socialMeta.type === 'telegram' ? '#0088cc' : '#3897f0', fontSize: '0.85rem' }} title="Cuenta Verificada Oficial">✓</span>
+                    <span style={`color: ${socialMeta.type === 'x' ? '#1d9bf0' : socialMeta.type === 'telegram' ? '#0088cc' : '#3897f0'}; font-size: 0.85rem;`} title="Cuenta Verificada Oficial">✓</span>
                   )}
                 </div>
                 <span style="color: var(--text-muted); font-size: 0.8rem; font-family: monospace;">
@@ -347,7 +383,7 @@ const socialMeta = getSocialPostMeta(article.origin_url, article.origin_platform
             </div>
             
             <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.2rem;">
-              <span style={{ background: socialMeta.type === 'telegram' ? 'rgba(0, 136, 204, 0.1)' : socialMeta.type === 'x' ? 'rgba(255,255,255,0.05)' : 'rgba(220, 39, 67, 0.1)', color: socialMeta.type === 'telegram' ? '#0088cc' : '#ffffff', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold', textTransform: 'uppercase', border: '1px solid rgba(255,255,255,0.03)' }}>
+              <span style={`background: ${socialMeta.type === 'telegram' ? 'rgba(0, 136, 204, 0.1)' : socialMeta.type === 'x' ? 'rgba(255,255,255,0.05)' : 'rgba(220, 39, 67, 0.1)'}; color: ${socialMeta.type === 'telegram' ? '#0088cc' : '#ffffff'}; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.03);`}>
                 {article.origin_platform}
               </span>
               <span style="font-size: 0.75rem; color: var(--text-muted);">
@@ -531,24 +567,47 @@ const socialMeta = getSocialPostMeta(article.origin_url, article.origin_platform
         </div>
       )}
 
-      <!-- Auditoría del Bulómetro -->
-      <div class="cyber-card" style="padding: 1.5rem; background: rgba(18, 22, 41, 0.25);">
-        <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-purple); font-size: 0.7rem; letter-spacing: 0.05em; display: block; margin-bottom: 1rem;">Métricas de Auditoría</span>
-        
-        <div style="display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.85rem;">
-          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-            <span style="color: var(--text-muted);">Revisión Humana:</span>
-            <span style="color: var(--neon-green); font-weight: 700;">Verificada</span>
+      <!-- Auditoría del Bulómetro y Termómetro de NEWNEWS -->
+      <div class="cyber-card" style="padding: 1.5rem; background: rgba(18, 22, 41, 0.25); display: flex; flex-direction: column; gap: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+          <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-purple); font-size: 0.7rem; letter-spacing: 0.05em;">Termómetro NewNews</span>
+          <span style="font-size: 0.8rem; font-weight: bold; color: var(--text-main); font-family: monospace;">
+            {article.emoji_tag || '🧊 Falta contexto'}
+          </span>
+        </div>
+
+        <!-- Barra de progreso / Termómetro -->
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.35rem; font-family: monospace;">
+            <span>Nivel: <strong>{termometroLabel}</strong></span>
+            <span>{article.newnews_score || 50}%</span>
           </div>
-          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-            <span style="color: var(--text-muted);">Riesgo de Desinformación:</span>
-            <span style="color: var(--neon-rose); font-weight: 700;">Alto</span>
-          </div>
-          <div style="display: flex; justify-content: space-between;">
-            <span style="color: var(--text-muted);">Fuentes Indexadas:</span>
-            <span style="color: var(--text-main); font-weight: 700;">{sources.length} oficiales</span>
+          <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);">
+            <div style={`width: ${article.newnews_score || 50}%; height: 100%; background: ${(article.newnews_score || 50) <= 40 ? 'var(--neon-green)' : (article.newnews_score || 50) <= 70 ? 'var(--neon-amber)' : 'var(--neon-rose)'}; box-shadow: 0 0 10px ${(article.newnews_score || 50) <= 40 ? 'var(--neon-green)' : (article.newnews_score || 50) <= 70 ? 'var(--neon-amber)' : 'var(--neon-rose)'};`}></div>
           </div>
         </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.82rem; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">Revisión Editorial:</span>
+            <span style="color: var(--neon-green); font-weight: bold; font-family: monospace;">Verificada ✓</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">Fuentes oficiales:</span>
+            <span style="color: var(--neon-blue); font-weight: bold; font-family: monospace;">{sources.length} indexadas</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Truco Usado / Prebunking didáctico -->
+      <div class="cyber-card" style="padding: 1.5rem; background: linear-gradient(135deg, rgba(157, 78, 221, 0.05) 0%, rgba(7, 9, 19, 0.95) 100%); border-color: var(--neon-purple);">
+        <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-purple); font-size: 0.7rem; letter-spacing: 0.08em; display: block; margin-bottom: 0.5rem;">🧠 Aprende el truco de manipulación</span>
+        <strong style="font-size: 0.9rem; color: #ffffff; display: block; margin-bottom: 0.35rem; text-transform: uppercase; font-family: var(--font-title);">
+          Técnica: {article.trick_used || 'dato sin base'}
+        </strong>
+        <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.45; margin: 0;">
+          {trickDesc}
+        </p>
       </div>
 
     </section>

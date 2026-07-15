@@ -9,7 +9,7 @@ db.exec('PRAGMA busy_timeout = 5000;');
 db.exec('PRAGMA journal_mode = WAL;');
 
 // Obtener categorías dinámicas
-const rawCategories = db.prepare("SELECT DISTINCT category FROM articles WHERE status = 'publicado'").all() as any[];
+const rawCategories = db.prepare("SELECT DISTINCT category FROM topics WHERE status = 'activo'").all() as any[];
 const categories = rawCategories.map(c => {
   const cat = c.category;
   const slug = cat.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
@@ -73,9 +73,16 @@ function getCategoryInitials(category) {
   const c = (category || '').toLowerCase();
   if (c.includes('inmigr') || c.includes('delin')) return 'MIG';
   if (c.includes('emple') || c.includes('paro')) return 'EMP';
-  if (c.includes('vivien') || c.includes('okup')) return 'VIV';
+  if (c.includes('vivien') || c.includes('okup') || c.includes('vida imposible')) return 'VIV';
   if (c.includes('infla') || c.includes('ipc') || c.includes('vida')) return 'IPC';
   if (c.includes('auto') || c.includes('fisc') || c.includes('haci')) return 'AUT';
+  if (c.includes('historia') || c.includes('memo')) return 'HIS';
+  if (c.includes('corrupc') || c.includes('transpa')) return 'COR';
+  if (c.includes('sanid')) return 'SAN';
+  if (c.includes('justic')) return 'JUS';
+  if (c.includes('consumo')) return 'CON';
+  if (c.includes('segurid') || c.includes('ciberestafa')) return 'SEC';
+  if (c.includes('catalu') || c.includes('independ')) return 'CAT';
   if (c.includes('eco')) return 'ECO';
   return 'GEN';
 }
@@ -130,6 +137,27 @@ function formatOriginalDate(dateStr) {
       <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.45; margin-top: 0.5rem;">
         Nuestros motores analizan la viralidad de las afirmaciones que circulan en TikTok, YouTube y X, evaluando la presencia de enlaces de afiliados y contrastando los datos con registros oficiales de España.
       </p>
+    </section>
+
+    <!-- Buscador Grande del Radar (guia02.md) -->
+    <section style="margin-bottom: 2rem;">
+      <div class="cyber-card" style="padding: 1rem 1.25rem; background: linear-gradient(180deg, rgba(18, 22, 41, 0.45) 0%, rgba(7, 9, 19, 0.8) 100%); border-color: rgba(0, 240, 255, 0.25);">
+        <form action={`${cleanBase}/radar`} method="GET" style="display: flex; gap: 0.75rem; align-items: center; width: 100%;">
+          <div style="position: relative; flex: 1;">
+            <span style="position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); font-size: 1.1rem; pointer-events: none;">📡</span>
+            <input 
+              type="text" 
+              name="text" 
+              placeholder="Pega un enlace de TikTok, YouTube, X o escribe una frase para auditar..." 
+              required 
+              style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); color: #fff; padding: 0.75rem 1rem 0.75rem 2.6rem; border-radius: 8px; font-size: 0.85rem; outline: none; transition: border-color 0.2s;" 
+            />
+          </div>
+          <button type="submit" class="cyber-btn" style="padding: 0.75rem 1.25rem; font-size: 0.85rem; border-radius: 8px; font-weight: 800; text-transform: uppercase; cursor: pointer; border-color: var(--neon-blue); color: var(--neon-blue);">
+            Interceptar
+          </button>
+        </form>
+      </div>
     </section>
 
     <!-- ═══ SECCIÓN DE "STORIES" (TEMAS ACTIVOS) ═══ -->
@@ -201,6 +229,14 @@ function formatOriginalDate(dateStr) {
                       <span style="font-size: 0.7rem; color: var(--text-muted); display: block;">
                         Categoría: <a href={`${cleanBase}/categoria/${getCategorySlug(featuredArticle.category)}`} style="color: var(--neon-blue); text-decoration: none; font-weight: 700;">{featuredArticle.category}</a> &bull; Incorporado: <strong style="color: var(--neon-blue);">{getRelativeTime(featuredArticle.published_at)}</strong>
                       </span>
+                      <div style="margin-top: 0.25rem; font-size: 0.7rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                        <span style="background: rgba(157, 78, 221, 0.12); border: 1px solid rgba(157, 78, 221, 0.3); border-radius: 4px; padding: 0.1rem 0.4rem; color: #ffffff; font-weight: bold;">
+                          {featuredArticle.emoji_tag || '🧊 Falta contexto'}
+                        </span>
+                        <span style="font-family: monospace; color: var(--neon-amber); font-weight: 800;">
+                          🌡️ Termómetro: {featuredArticle.newnews_score || 50}%
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <span class={"verdict-badge " + getVerdictClass(featuredArticle.verdict)}>
@@ -214,9 +250,14 @@ function formatOriginalDate(dateStr) {
                       {featuredArticle.title}
                     </h2>
                   </a>
-                  <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.5;">
+                  <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.25rem;">
                     {featuredArticle.subtitle}
                   </p>
+                  {featuredArticle.multimedia_url && (
+                    <div style="margin-bottom: 1.25rem; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); max-height: 360px; background: #000; display: flex; align-items: center; justify-content: center;">
+                      <img src={featuredArticle.multimedia_url} alt="Portada" style="width: 100%; height: 100%; object-fit: cover; max-height: 360px;" />
+                    </div>
+                  )}
                 </div>
 
                 <div style="background: rgba(255, 51, 102, 0.02); border-left: 2px solid var(--neon-rose); padding: 1rem 1.25rem; border-radius: 0 12px 12px 0; margin-bottom: 1.5rem;">
@@ -260,6 +301,14 @@ function formatOriginalDate(dateStr) {
                       <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">
                         Categoría: <a href={`${cleanBase}/categoria/${getCategorySlug(art.category)}`} style="color: var(--neon-purple); text-decoration: none; font-weight: 700;">{art.category}</a> &bull; {getRelativeTime(art.published_at)}
                       </span>
+                      <div style="margin-top: 0.2rem; font-size: 0.65rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+                        <span style="background: rgba(157, 78, 221, 0.1); border: 1px solid rgba(157, 78, 221, 0.2); border-radius: 4px; padding: 0.05rem 0.3rem; color: #ffffff; font-weight: bold;">
+                          {art.emoji_tag || '🧊 Falta contexto'}
+                        </span>
+                        <span style="font-family: monospace; color: var(--neon-amber); font-weight: 700;">
+                          🌡️ {art.newnews_score || 50}%
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <span class={"verdict-badge " + getVerdictClass(art.verdict)} style="padding: 0.25rem 0.6rem; font-size: 0.65rem;">
@@ -272,9 +321,14 @@ function formatOriginalDate(dateStr) {
                       {art.title}
                     </h3>
                   </a>
-                  <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.4;">
+                  <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 1rem;">
                     {art.subtitle}
                   </p>
+                  {art.multimedia_url && (
+                    <div style="margin-bottom: 1rem; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); max-height: 220px; background: #000; display: flex; align-items: center; justify-content: center;">
+                      <img src={art.multimedia_url} alt="Portada" style="width: 100%; height: 100%; object-fit: cover; max-height: 220px;" />
+                    </div>
+                  )}
                 </div>
                  <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
                   <span style="font-size: 0.7rem; color: var(--text-muted);">
@@ -396,7 +450,7 @@ function formatOriginalDate(dateStr) {
                 <span style="font-weight: 800; color: var(--neon-rose);">{t.noise_level}%</span>
               </div>
               <div style="background: rgba(7, 9, 19, 0.6); height: 6px; border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden;">
-                <div style={{ background: 'linear-gradient(90deg, var(--neon-purple), var(--neon-rose))', width: `${t.noise_level}%`, height: '100%' }}></div>
+                <div style={`background: linear-gradient(90deg, var(--neon-purple), var(--neon-rose)); width: ${t.noise_level}%; height: 100%;`}></div>
               </div>
             </div>
           ))}

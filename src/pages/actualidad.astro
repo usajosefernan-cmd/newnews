@@ -57,29 +57,32 @@ function formatOriginalDate(dateString) {
     minute: '2-digit'
   });
 }
+
+const base = import.meta.env.BASE_URL;
+const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
 ---
 
-<Layout title="Feed de Actualidad y Verificaciones">
-  <div class="container" style="padding-top: 2rem; padding-bottom: 5rem; max-width: 900px;">
+<Layout title="Feed de Actualidad" description="Informes cronológicos de contrastación y verificación de bulos en España.">
+  <div class="container" style="padding-top: 1.5rem; padding-bottom: 5rem; max-width: 680px;">
     
-    <div style="margin-bottom: 2.5rem; border-bottom: 2px solid var(--border-color); padding-bottom: 1.5rem;">
-      <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem; font-family: var(--font-title); font-weight: 850; letter-spacing: -0.02em;">
-        📡 Feed de <span class="text-gradient-rose">Actualidad Directa</span>
+    <div style="margin-bottom: 2rem;">
+      <h1 class="text-gradient-rose" style="font-size: 2.2rem; font-weight: 850; font-family: var(--font-title); letter-spacing: -0.04em; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+        <span style="font-size: 1.8rem;">⚡</span> Feed de Actualidad
       </h1>
       <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0; line-height: 1.4;">
-        Desmentidos y auditorías en tiempo real ordenados por fecha de publicación. Contrasta las últimas declaraciones virales analizadas.
+        Todos los bulos y claims analizados por el cortafuegos, ordenados de forma cronológica.
       </p>
     </div>
 
-    <!-- Filtros por Categoría -->
+    <!-- Filtro de Categorías -->
     <div style="display: flex; gap: 0.5rem; margin-bottom: 2rem; flex-wrap: wrap; align-items: center;">
       <span style="font-size: 0.75rem; font-weight: bold; color: var(--text-muted); text-transform: uppercase; margin-right: 0.5rem;">Filtrar por Área:</span>
-      <a href="/actualidad" class="cyber-btn" style="font-size: 0.75rem; padding: 0.35rem 0.75rem; text-decoration: none; border-color: var(--neon-blue); color: var(--neon-blue);">
+      <a href={`${cleanBase}/actualidad`} class="cyber-btn" style="font-size: 0.75rem; padding: 0.35rem 0.75rem; text-decoration: none; border-color: var(--neon-blue); color: var(--neon-blue);">
         Ver todo
       </a>
       {categories.map(cat => (
         <a 
-          href={`/categoria/${cat.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')}`} 
+          href={`${cleanBase}/categoria/${cat.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')}`} 
           class="cyber-btn" 
           style="font-size: 0.75rem; padding: 0.35rem 0.75rem; text-decoration: none;"
         >
@@ -98,7 +101,7 @@ function formatOriginalDate(dateString) {
                 {art.verdict}
               </span>
               <a 
-                href={`/categoria/${art.category.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')}`}
+                href={`${cleanBase}/categoria/${art.category.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')}`}
                 style="font-size: 0.7rem; font-weight: bold; color: var(--neon-blue); text-decoration: none; text-transform: uppercase;"
               >
                 #{art.category}
@@ -111,13 +114,18 @@ function formatOriginalDate(dateString) {
 
           <div>
             <h2 style="font-size: 1.35rem; margin-top: 0; margin-bottom: 0.35rem; font-weight: 750; font-family: var(--font-title); line-height: 1.25;">
-              <a href={`/noticia/${art.slug}`} style="color: var(--text-main); text-decoration: none; transition: color 0.15s;">
+              <a href={`${cleanBase}/noticia/${art.slug}`} style="color: var(--text-main); text-decoration: none; transition: color 0.15s;">
                 {art.title}
               </a>
             </h2>
             <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.4; margin: 0 0 0.75rem 0;">
               {art.subtitle}
             </p>
+            {art.multimedia_url && (
+              <div style="margin-bottom: 1rem; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); max-height: 220px; background: #000; display: flex; align-items: center; justify-content: center;">
+                <img src={art.multimedia_url} alt="Portada" style="width: 100%; height: 100%; object-fit: cover; max-height: 220px;" />
+              </div>
+            )}
             {art.claim && (
               <div style="background: rgba(0,0,0,0.15); border-left: 2px solid var(--border-color); padding: 0.5rem 0.75rem; font-size: 0.8rem; font-style: italic; color: var(--text-muted); margin-bottom: 0.5rem;">
                 <strong>Claim viral:</strong> "{art.claim}"
@@ -127,7 +135,7 @@ function formatOriginalDate(dateString) {
 
           <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.75rem; font-size: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
             {art.topic_title ? (
-              <span>Expediente: <a href={`/tema/${art.topic_slug}`} style="color: var(--neon-purple); text-decoration: none; font-weight: bold;">{art.topic_title}</a></span>
+              <span>Expediente: <a href={`${cleanBase}/tema/${art.topic_slug}`} style="color: var(--neon-purple); text-decoration: none; font-weight: bold;">{art.topic_title}</a></span>
             ) : (
               <span style="color: var(--text-muted);">Expediente general</span>
             )}
@@ -137,7 +145,7 @@ function formatOriginalDate(dateString) {
                 <span> &bull; Post: <strong style="color: var(--text-main);">{formatOriginalDate(art.origin_date)}</strong></span>
               )}
             </span>
-            <a href={`/noticia/${art.slug}`} style="color: var(--neon-blue); text-decoration: none; font-weight: 800; display: inline-flex; align-items: center; gap: 0.2rem;">
+            <a href={`${cleanBase}/noticia/${art.slug}`} style="color: var(--neon-blue); text-decoration: none; font-weight: 800; display: inline-flex; align-items: center; gap: 0.2rem;">
               Auditar hechos e informe &rarr;
             </a>
           </div>

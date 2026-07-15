@@ -36,8 +36,36 @@ if (!aiSuccess) {
   process.exit(1);
 }
 
-// 3. Ejecutar Build de Astro para actualizar el portal estático
-const buildSuccess = runCommand('npm run build', 'Reconstruyendo Portal Estático (Astro Build)');
+// 3. Ejecutar Build de Astro usando swap atómico para evitar caídas de servidor
+console.log(`\n🔹 [PROCESO] Reconstruyendo Portal Estático (Astro Build Atómico)...`);
+let buildSuccess = false;
+try {
+  execSync('npx astro build --outDir dist_temp', { stdio: 'inherit', env: process.env });
+  
+  const distPath = path.resolve('dist');
+  const tempPath = path.resolve('dist_temp');
+  const backupPath = path.resolve('dist_backup');
+  
+  if (fs.existsSync(backupPath)) {
+    fs.rmSync(backupPath, { recursive: true, force: true });
+  }
+  
+  if (fs.existsSync(distPath)) {
+    fs.renameSync(distPath, backupPath);
+  }
+  
+  fs.renameSync(tempPath, distPath);
+  
+  if (fs.existsSync(backupPath)) {
+    fs.rmSync(backupPath, { recursive: true, force: true });
+  }
+  
+  console.log(`✅ [EXITO] Reconstruyendo Portal Estático (Astro Build Atómico) completado.`);
+  buildSuccess = true;
+} catch (error) {
+  console.error(`❌ [ERROR] Reconstruyendo Portal Estático (Astro Build Atómico) falló.`);
+  console.error(error.message);
+}
 
 if (!buildSuccess) {
   console.error('⚠️ El build de Astro ha fallado. Revisa los errores del compilador.');

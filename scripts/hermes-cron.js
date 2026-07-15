@@ -33,8 +33,37 @@ runStep('node scripts/ai-pipeline.js', 'Pipeline IA (Análisis y Redacción)');
 // 3. Sincronizar e indexar la base de datos
 runStep('node scripts/sync.js', 'Sincronizador de Datos');
 
-// 4. Reconstruir estáticamente el portal para publicar cambios
-runStep('npm run build', 'Compilación Astro (Deploy/Build)');
+// 4. Reconstruir estáticamente el portal para publicar cambios usando swap atómico
+console.log(`\n======================================================`);
+console.log(`🚀 [PASO] Ejecutando: Compilación Astro Atómica (Deploy/Build)...`);
+console.log(`======================================================`);
+try {
+  // Compilar Astro a la carpeta temporal dist_temp
+  execSync('npx astro build --outDir dist_temp', { stdio: 'inherit', env: process.env });
+  
+  const distPath = path.resolve('dist');
+  const tempPath = path.resolve('dist_temp');
+  const backupPath = path.resolve('dist_backup');
+  
+  if (fs.existsSync(backupPath)) {
+    fs.rmSync(backupPath, { recursive: true, force: true });
+  }
+  
+  if (fs.existsSync(distPath)) {
+    fs.renameSync(distPath, backupPath);
+  }
+  
+  fs.renameSync(tempPath, distPath);
+  
+  if (fs.existsSync(backupPath)) {
+    fs.rmSync(backupPath, { recursive: true, force: true });
+  }
+  
+  console.log(`\n✅ [PASO] Completado: Compilación Astro Atómica`);
+} catch (err) {
+  console.error(`\n❌ [ERROR] Falló el paso: Compilación Astro Atómica`);
+  console.error(err.message);
+}
 
 console.log('\n======================================================');
 console.log(`🎉 [Hermes Cron] Ciclo completo de automatización finalizado con éxito.`);

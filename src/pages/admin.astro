@@ -5,6 +5,11 @@ import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 import { analyzeUrl } from '../../scripts/check-url.js';
 import { execSync } from 'node:child_process';
+import DashboardPanel from '../components/admin/DashboardPanel.astro';
+import AprobacionPanel from '../components/admin/AprobacionPanel.astro';
+import TriagePanel from '../components/admin/TriagePanel.astro';
+import MotorPanel from '../components/admin/MotorPanel.astro';
+import RedactorPanel from '../components/admin/RedactorPanel.astro';
 
 const baseRoute = Astro.url.pathname.includes('/pro/newnews') ? '/pro/newnews' : '/';
 const cleanBase = baseRoute.endsWith('/') ? baseRoute.slice(0, -1) : baseRoute;
@@ -67,15 +72,18 @@ if (Astro.request.method === 'POST') {
       const whatIsNotProven = data.get('what_is_not_proven')?.toString() || '';
       const topicId = data.get('topic_id')?.toString() || '';
       const status = data.get('status')?.toString() || 'borrador';
+      const trickUsed = data.get('trick_used')?.toString() || 'dato sin base';
+      const newnewsScore = parseInt(data.get('newnews_score')?.toString() || '50', 10);
+      const emojiTag = data.get('emoji_tag')?.toString() || '🧊 Falta contexto';
 
       const originDate = data.get('origin_date')?.toString() || new Date().toISOString();
       db.prepare(`
         UPDATE articles 
         SET title = ?, subtitle = ?, verdict = ?, explanation = ?, 
             what_is_true = ?, what_is_false = ?, what_lacks_context = ?, what_is_not_proven = ?,
-            topic_id = ?, status = ?, origin_date = ?, updated_at = datetime('now')
+            topic_id = ?, status = ?, origin_date = ?, trick_used = ?, newnews_score = ?, emoji_tag = ?, updated_at = datetime('now')
         WHERE id = ?
-      `).run(title, subtitle, verdict, explanation, whatIsTrue, whatIsFalse, whatLacksContext, whatIsNotProven, topicId, status, originDate, articleId);
+      `).run(title, subtitle, verdict, explanation, whatIsTrue, whatIsFalse, whatLacksContext, whatIsNotProven, topicId, status, originDate, trickUsed, newnewsScore, emojiTag, articleId);
 
       message = `✓ Artículo "${title.substring(0, 45)}..." actualizado correctamente.`;
       messageType = 'success';
@@ -100,6 +108,9 @@ if (Astro.request.method === 'POST') {
       const claim = data.get('claim')?.toString() || '';
       const originPlatform = data.get('origin_platform')?.toString() || 'Manual';
       const originUrl = data.get('origin_url')?.toString() || '';
+      const trickUsed = data.get('trick_used')?.toString() || 'dato sin base';
+      const newnewsScore = parseInt(data.get('newnews_score')?.toString() || '50', 10);
+      const emojiTag = data.get('emoji_tag')?.toString() || '🧊 Falta contexto';
 
       if (title.trim()) {
         const id = `art-manual-${Date.now()}`;
@@ -110,12 +121,13 @@ if (Astro.request.method === 'POST') {
 
         const originDate = data.get('origin_date')?.toString() || new Date().toISOString();
         db.prepare(`
-          INSERT INTO articles (id, topic_id, slug, title, subtitle, claim, origin_platform, origin_url, origin_summary, category, verdict, confidence, summary, explanation, what_is_true, what_is_false, what_lacks_context, what_is_not_proven, status, human_review_required, published_at, origin_date, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, '', ?, ?, 'Alta', ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, datetime('now'), datetime('now'))
+          INSERT INTO articles (id, topic_id, slug, title, subtitle, claim, origin_platform, origin_url, origin_summary, category, verdict, confidence, summary, explanation, what_is_true, what_is_false, what_lacks_context, what_is_not_proven, status, human_review_required, published_at, origin_date, trick_used, newnews_score, emoji_tag, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, '', ?, ?, 'Alta', ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
         `).run(
           id, topicId || null, slug, title, subtitle, claim, originPlatform, originUrl,
           category, verdict, subtitle, explanation, whatIsTrue, whatIsFalse, whatLacksContext, whatIsNotProven,
-          status, status === 'publicado' ? new Date().toISOString() : null, originDate
+          status, status === 'publicado' ? new Date().toISOString() : null, originDate,
+          trickUsed, newnewsScore, emojiTag
         );
 
         message = `✓ Nuevo análisis de desmentido "${title}" guardado correctamente en la base de datos.`;
@@ -302,12 +314,103 @@ if (Astro.request.method === 'POST') {
     else if (action === 'trigger_ai') {
       try {
         commandOutput = execSync('node scripts/ai-pipeline.js', { encoding: 'utf-8', stdio: 'pipe' });
-        message = `✓ Pipeline de IA completado. Nuevos borradores generados.`;
+        message = `✓ Pipeline de IA completado de forma modular. Nuevos borradores generados.`;
         messageType = 'success';
       } catch (err: any) {
         commandOutput = err.stdout || err.message;
         message = `✗ Error en la IA: ${err.message}`;
         messageType = 'error';
+      }
+    }
+    else if (action === 'approve_submission') {
+      const submissionId = data.get('submission_id')?.toString() || '';
+      const suggestedTopicId = data.get('topic_id')?.toString() || '';
+
+      const sub = db.prepare("SELECT * FROM user_submissions WHERE id = ?").get(submissionId) as any;
+      if (sub) {
+        // Mover a scraped_items como pendiente para que el pipeline lo procese de forma completa
+        const radarId = `radar-user-${Date.now()}`;
+        const topicTitle = db.prepare("SELECT title FROM topics WHERE id = ?").get(suggestedTopicId)?.title || 'General';
+
+        db.prepare(`
+          INSERT INTO scraped_items (id, platform, url, text, author_public_name, metrics_json, detected_claim, suggested_topic, virality_score, risk_score, status, created_at)
+          VALUES (?, 'Usuario', ?, ?, 'Usuario Anónimo', '{}', ?, ?, 8.0, 7.0, 'pendiente', datetime('now'))
+        `).run(radarId, sub.submitted_url || null, sub.submitted_text || '', sub.submitted_text ? sub.submitted_text.substring(0, 100) : 'Link', topicTitle);
+
+        db.prepare("UPDATE user_submissions SET status = 'en_cola', suggested_topic_id = ?, reason = 'Aprobado para investigación' WHERE id = ?").run(suggestedTopicId, submissionId);
+
+        message = `✓ Envío de usuario aprobado e insertado en la cola del radar.`;
+        messageType = 'success';
+
+        // Lanzar pipeline de IA en segundo plano
+        try {
+          execSync('node scripts/ai-pipeline.js', { encoding: 'utf-8', env: process.env });
+          execSync('node scripts/sync.js', { encoding: 'utf-8', env: process.env });
+        } catch (e) {}
+      }
+    }
+    else if (action === 'discard_submission') {
+      const submissionId = data.get('submission_id')?.toString() || '';
+      const reason = data.get('reason')?.toString() || 'Baja relevancia sociopolítica.';
+      
+      db.prepare("UPDATE user_submissions SET status = 'descartado_por_baja_relevancia', reason = ? WHERE id = ?").run(reason, submissionId);
+      message = `✓ Envío descartado por baja relevancia.`;
+      messageType = 'error';
+    }
+    else if (action === 'reprocess_phase') {
+      const articleId = data.get('article_id')?.toString() || '';
+      const phase = data.get('phase')?.toString() || '';
+
+      if (articleId && phase) {
+        // Forzar reprocesado de fase
+        try {
+          const art = db.prepare("SELECT * FROM articles WHERE id = ?").get(articleId) as any;
+          if (art) {
+            if (phase === '08-article-writer') {
+              const { writeArticle } = await import('../../scripts/newnews-engine/08-article-writer.js' as any);
+              const sources = db.prepare("SELECT * FROM sources WHERE article_id = ?").all(articleId) as any[];
+              const updated = await writeArticle(art.claim, {
+                verdict: art.verdict,
+                verdict_reasoning: art.explanation,
+                what_is_true: art.what_is_true,
+                what_is_false: art.what_is_false,
+                what_lacks_context: art.what_lacks_context,
+                what_is_not_proven: art.what_is_not_proven
+              }, sources);
+
+              db.prepare(`
+                UPDATE articles 
+                SET title = ?, subtitle = ?, summary = ?, explanation = ?, updated_at = datetime('now')
+                WHERE id = ?
+              `).run(updated.title, updated.subtitle, updated.summary, updated.explanation, articleId);
+              message = `✓ Fase 08 (Redacción) reprocesada correctamente para este artículo.`;
+              messageType = 'success';
+            } else if (phase === '11-social-writer') {
+              const { writeSocialPosts } = await import('../../scripts/newnews-engine/11-social-writer.js' as any);
+              const posts = await writeSocialPosts(art.title, art.subtitle, art.verdict, art.claim);
+              
+              db.prepare("DELETE FROM social_posts WHERE article_id = ?").run(articleId);
+              const insertSocialPost = db.prepare(`
+                INSERT OR REPLACE INTO social_posts (id, article_id, platform, format, content, status, scheduled_at, published_at)
+                VALUES (?, ?, ?, ?, ?, 'borrador', null, null)
+              `);
+              posts.forEach((post: any, idx: number) => {
+                insertSocialPost.run(
+                  `soc-ai-${Date.now()}-${idx}-${Math.floor(Math.random() * 100)}`,
+                  articleId,
+                  post.platform,
+                  post.format,
+                  post.content
+                );
+              });
+              message = `✓ Fase 11 (Social Writer) reprocesada correctamente. Hilos sociales actualizados.`;
+              messageType = 'success';
+            }
+          }
+        } catch (e: any) {
+          message = `❌ Error al reprocesar fase: ${e.message}`;
+          messageType = 'error';
+        }
       }
     }
     else if (action === 'create_party') {
@@ -577,6 +680,13 @@ const allDeclarations = db.prepare(`
 
 const verificationLogs = db.prepare("SELECT * FROM verification_logs ORDER BY created_at DESC").all() as any[];
 
+// Cargar envíos del radar ciudadano
+const userSubmissions = db.prepare("SELECT * FROM user_submissions ORDER BY created_at DESC").all() as any[];
+
+// Cargar información de caches
+const topicCaches = db.prepare("SELECT * FROM topic_cache").all() as any[];
+const claimCaches = db.prepare("SELECT * FROM claim_cache ORDER BY last_seen DESC LIMIT 50").all() as any[];
+
 db.close();
 
 // Mapa de veredicto a color neón
@@ -636,6 +746,8 @@ const getVerdictClass = (verdict) => {
     <nav class="admin-tabs-nav">
       <button class="admin-tab-btn active" data-target="pane-dashboard">📊 Dashboard</button>
       <button class="admin-tab-btn" data-target="pane-aprobacion">📥 Cola Moderación ({draftsWithDetails.length})</button>
+      <button class="admin-tab-btn" data-target="pane-user-submissions">📩 Triage Usuarios ({userSubmissions.filter(s => s.status === 'recibido').length})</button>
+      <button class="admin-tab-btn" data-target="pane-motor">⚙️ Motor NEWNEWS</button>
       <button class="admin-tab-btn" data-target="pane-redactor">✍️ Plantilla Redactor</button>
       <button class="admin-tab-btn" data-target="pane-publicados">📰 Publicados ({publishedWithDetails.length})</button>
       <button class="admin-tab-btn" data-target="pane-temas">📁 Expedientes</button>
@@ -649,338 +761,29 @@ const getVerdictClass = (verdict) => {
 
       <!-- PESTAÑA 1: DASHBOARD & CONSOLA -->
       <div id="pane-dashboard" class="admin-tab-panel active">
-        <div class="dashboard-grid">
-          
-          <!-- Controles de Procesos en Caliente -->
-          <div class="cyber-card" style="padding: 1.5rem;">
-            <h3 class="card-title">⚙️ Consola de Control de Procesos en Vivo</h3>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
-              Ejecuta los motores del portal manualmente y observa su flujo detallado en tiempo real (proveedor de IA, pasos de compilación, etc.).
-            </p>
-            <div class="console-actions" style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
-              <button onclick="runAdminJob('cron')" class="cyber-btn accent" id="btn-job-cron" style="cursor: pointer; border-radius: 8px; font-weight: bold; font-size: 0.75rem; padding: 0.6rem 1rem;">📦 Ciclo Completo (Cron)</button>
-              <button onclick="runAdminJob('radar')" class="cyber-btn" id="btn-job-radar" style="border-color: var(--neon-blue); color: var(--neon-blue); cursor: pointer; border-radius: 8px; font-weight: bold; font-size: 0.75rem; padding: 0.6rem 1rem;">📡 Iniciar Radar</button>
-              <button onclick="runAdminJob('ai')" class="cyber-btn" id="btn-job-ai" style="border-color: var(--neon-rose); color: var(--neon-rose); cursor: pointer; border-radius: 8px; font-weight: bold; font-size: 0.75rem; padding: 0.6rem 1rem;">🤖 Iniciar IA (Borradores)</button>
-              <button onclick="runAdminJob('sync')" class="cyber-btn" id="btn-job-sync" style="border-color: var(--neon-amber); color: var(--neon-amber); cursor: pointer; border-radius: 8px; font-weight: bold; font-size: 0.75rem; padding: 0.6rem 1rem;">🔄 Sincronizar DB</button>
-              <button onclick="runAdminJob('build')" class="cyber-btn" id="btn-job-build" style="border-color: var(--neon-purple); color: var(--neon-purple); cursor: pointer; border-radius: 8px; font-weight: bold; font-size: 0.75rem; padding: 0.6rem 1rem;">🚀 Compilar Web</button>
-            </div>
-          </div>
-
-          <!-- Estado del Scraper y Reglas de Negocio -->
-          <div class="cyber-card" style="padding: 1.5rem;">
-            <h3 class="card-title">🛡️ Estado de Salud del Scraper</h3>
-            <div class="info-list">
-              <div class="info-item">
-                <span>Último escaneo general:</span>
-                <strong style="color: var(--neon-green);">ÉXITO (Automático)</strong>
-              </div>
-              <div class="info-item">
-                <span>Filtro de Temporalidad:</span>
-                <strong style="color: var(--neon-blue);">24h (Actualidad) / 1 Año (Temas)</strong>
-              </div>
-              <div class="info-item">
-                <span>Motor de Base de Datos:</span>
-                <strong>SQLite Sync Engine</strong>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Terminal Cyberpunk de Output en Vivo -->
-        <div class="terminal-cyberpunk" id="admin-terminal" style="display: block; margin-top: 1.5rem;">
-          <div class="terminal-header" style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 1rem;">
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-              <span class="terminal-dot red"></span>
-              <span class="terminal-dot yellow"></span>
-              <span class="terminal-dot green"></span>
-              <span class="terminal-title" id="terminal-job-title" style="font-family: monospace; font-size: 0.75rem; color: #a9b2c3;">TERMINAL@NEWNEWS:~$ listo para ejecutar</span>
-            </div>
-            <span id="terminal-status" style="color: var(--neon-green); font-family: monospace; font-size: 0.7rem; font-weight: bold;">IDLE</span>
-          </div>
-          <div class="terminal-body" id="admin-terminal-body" style="background: #05070e; max-height: 400px; overflow-y: auto; padding: 1.25rem; font-family: monospace; font-size: 0.75rem; color: #a9b2c3; line-height: 1.5; border-radius: 0 0 12px 12px; scroll-behavior: smooth; text-align: left; border-top: 1px solid rgba(255,255,255,0.05);">
-            <div style="color: var(--text-muted);">> Selecciona un proceso arriba para ver sus logs de ejecución en vivo...</div>
-          </div>
-        </div>
+        <DashboardPanel pendingCount={pendingRadarItems.length} />
       </div>
 
       <!-- PESTAÑA 2: COLA DE MODERACIÓN (BORRADORES DE LA IA) -->
       <div id="pane-aprobacion" class="admin-tab-panel">
-        <h2 class="section-title">📥 Cola de Moderación: Borradores redactados por IA</h2>
-        <div class="cards-list">
-          {draftsWithDetails.map(art => (
-            <div class={`cyber-card ${getVerdictClass(art.verdict)}`} style="padding: 1.5rem;">
-              <div class="card-meta">
-                <span class={`verdict-badge ${art.verdict.toLowerCase().replace(' ', '-')}`}>
-                  Veredicto sugerido: {art.verdict}
-                </span>
-                <span style="font-size: 0.8rem;">Tema: <strong>{art.topic_title || 'General'}</strong></span>
-                <span style="font-size: 0.8rem; color: var(--text-muted);">Confianza: {art.confidence || 'Media'}</span>
-              </div>
-              
-              <div class="card-content">
-                <h3 class="article-title">{art.title}</h3>
-                <p class="article-subtitle">{art.subtitle}</p>
-                <div class="claim-block">
-                  <strong>Reclamación original:</strong> "{art.claim}"
-                </div>
-              </div>
+        <AprobacionPanel draftsWithDetails={draftsWithDetails} activeTopics={activeTopics} getVerdictClass={getVerdictClass} />
+      </div>
 
-              <!-- Formulario de Edición y Aprobación en Bloque -->
-              <details class="accordion-edit">
-                <summary>✏️ Editar y Aprobar Borrador</summary>
-                <form method="POST" class="edit-form">
-                  <input type="hidden" name="action" value="edit_article" />
-                  <input type="hidden" name="article_id" value={art.id} />
-                  
-                  <div class="form-grid">
-                    <div class="form-group">
-                      <label>Título del Análisis:</label>
-                      <input type="text" name="title" value={art.title} required class="edit-input" />
-                    </div>
-                    <div class="form-group">
-                      <label>Veredicto Oficial:</label>
-                      <select name="verdict" class="edit-input">
-                        <option value="Falso" selected={art.verdict === 'Falso'}>Falso</option>
-                        <option value="Verdadero" selected={art.verdict === 'Verdadero'}>Verdadero</option>
-                        <option value="Engañoso" selected={art.verdict === 'Engañoso'}>Engañoso</option>
-                        <option value="Falta contexto" selected={art.verdict === 'Falta contexto'}>Falta contexto</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div class="form-group">
-                    <label>Subtítulo / Copete didáctico:</label>
-                    <input type="text" name="subtitle" value={art.subtitle} required class="edit-input" />
-                  </div>
-
-                  <div class="form-group">
-                    <label>Explicación Detallada (Leyes/Datos oficiales):</label>
-                    <textarea name="explanation" rows="5" required class="edit-input">{art.explanation}</textarea>
-                  </div>
-
-                  <div class="form-grid-4">
-                    <div class="form-group">
-                      <label>¿Qué es Verdad? (Cifras):</label>
-                      <textarea name="what_is_true" rows="2" class="edit-input">{art.what_is_true}</textarea>
-                    </div>
-                    <div class="form-group">
-                      <label>¿Qué es Bulo / Mentira?:</label>
-                      <textarea name="what_is_false" rows="2" class="edit-input">{art.what_is_false}</textarea>
-                    </div>
-                    <div class="form-group">
-                      <label>¿Qué falta de contexto?:</label>
-                      <textarea name="what_lacks_context" rows="2" class="edit-input">{art.what_lacks_context}</textarea>
-                    </div>
-                    <div class="form-group">
-                      <label>¿Qué no está probado?:</label>
-                      <textarea name="what_is_not_proven" rows="2" class="edit-input">{art.what_is_not_proven}</textarea>
-                    </div>
-                  </div>
-
-                  <div class="form-grid">
-                    <div class="form-group">
-                      <label>Expediente Asociado:</label>
-                      <select name="topic_id" class="edit-input">
-                        <option value="">— Ninguno (Noticia Suelta) —</option>
-                        {activeTopics.map(t => (
-                          <option value={t.id} selected={art.topic_id === t.id}>[{t.category}] {t.title}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div class="form-group">
-                      <label>Estado de publicación:</label>
-                      <select name="status" class="edit-input">
-                        <option value="borrador" selected>Mantener Borrador</option>
-                        <option value="publicado">Publicar en Vivo</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div class="form-actions">
-                    <button type="submit" class="cyber-btn accent" style="width: 100%;">💾 Guardar y Publicar en Web</button>
-                  </div>
-                </form>
-              </details>
-            </div>
-          ))}
-          {draftsWithDetails.length === 0 && (
-            <p class="empty-state">No hay borradores pendientes en la cola.</p>
-          )}
         </div>
+      </div>
+
+      <!-- PESTAÑA: TRIAGE DE USUARIOS (RADAR CIUDADANO) -->
+      <div id="pane-user-submissions" class="admin-tab-panel">
+        <TriagePanel userSubmissions={userSubmissions} activeTopics={activeTopics} />
+      </div>
+
+      <!-- PESTAÑA: MOTOR NEWNEWS (MONITOREO DE FASES Y CACHÉ) -->
+      <div id="pane-motor" class="admin-tab-panel">
+        <MotorPanel draftsWithDetails={draftsWithDetails} topicCaches={topicCaches} claimCaches={claimCaches} />
       </div>
 
       <!-- PESTAÑA 3: ASISTENTE REDACTOR (PLANTILLA FACT-CHECKING CON PREVISUALIZACIÓN EN VIVO) -->
       <div id="pane-redactor" class="admin-tab-panel">
-        <h2 class="section-title">✍️ Asistente de Fact-Checking (Plantilla Homogénea)</h2>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start;" class="redactor-split-grid">
-          
-          <!-- Columna Formulario -->
-          <div class="cyber-card" style="padding: 1.5rem;">
-            <form method="POST" class="edit-form" id="redactor-form">
-              <input type="hidden" name="action" value="create_article" />
-              <input type="hidden" name="status" value="publicado" />
-              
-              <div class="template-instructions" style="background: rgba(0, 240, 255, 0.05); border: 1px solid rgba(0, 240, 255, 0.15); padding: 0.85rem; border-radius: 8px; margin-bottom: 1.25rem; font-size: 0.8rem;">
-                <strong>💡 INSTRUCCIONES EDITORIALES:</strong>
-                <p style="margin: 0.25rem 0 0 0; line-height: 1.4; color: var(--text-muted);">
-                  Divide la redacción de forma estructurada. Usa datos numéricos oficiales (BOE/INE) y comprueba el veredicto. A la derecha verás cómo se maquetará en la web en caliente.
-                </p>
-              </div>
-
-              <div class="form-grid">
-                <div class="form-group">
-                  <label>Título del Análisis (Directo e Impactante):</label>
-                  <input type="text" id="inp-title" name="title" required placeholder="Ej: ¿Reciben los menores extranjeros una paga de 4.200€ al mes?" class="edit-input" />
-                </div>
-                <div class="form-group">
-                  <label>Veredicto Oficial:</label>
-                  <select id="inp-verdict" name="verdict" class="edit-input" required style="border-color: var(--neon-rose);">
-                    <option value="Falso" selected>🔴 Falso (Bulo directo)</option>
-                    <option value="Engañoso">🟡 Engañoso / Sesgado</option>
-                    <option value="Falta contexto">🔵 Falta Contexto</option>
-                    <option value="Verdadero">🟢 Verdadero / Verificado</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label>Subtítulo o Resumen Corto (Para jóvenes):</label>
-                <input type="text" id="inp-subtitle" name="subtitle" required placeholder="Resumen rápido de por qué es falso o qué ley lo regula..." class="edit-input" />
-              </div>
-
-              <div class="form-group">
-                <label>La Afirmación Viral / Claim Original:</label>
-                <input type="text" id="inp-claim" name="claim" required placeholder="Ej: 'El gobierno le da 4.200 euros en metálico al mes a cada MENA'" class="edit-input" />
-              </div>
-
-              <div class="form-grid-3" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                <div class="form-group">
-                  <label>Red Social / Origen:</label>
-                  <input type="text" id="inp-platform" name="origin_platform" placeholder="X (Twitter), TikTok, YouTube, Telegram..." class="edit-input" />
-                </div>
-                <div class="form-group">
-                  <label>Enlace al post original (URL real):</label>
-                  <input type="url" id="inp-url" name="origin_url" placeholder="https://x.com/user/status/123" class="edit-input" />
-                </div>
-                <div class="form-group">
-                  <label>Fecha de Publicación Original:</label>
-                  <input type="datetime-local" id="inp-origdate" name="origin_date" class="edit-input" />
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label>Explicación y Datos Contrastados (INE/BOE):</label>
-                <textarea id="inp-explanation" name="explanation" rows="6" required placeholder="Redacta la argumentación citando fuentes del BOE o del INE. Recuerda citar el artículo exacto de la ley." class="edit-input"></textarea>
-              </div>
-
-              <!-- Ficha didáctica estructurada -->
-              <h3 class="sub-form-title">📋 Ficha de Análisis Rápido (Desglose Didáctico)</h3>
-              <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
-                <div class="form-group">
-                  <label>¿Qué es Verdad? (Cifras/Leyes):</label>
-                  <textarea id="inp-true" name="what_is_true" rows="2" required placeholder="Qué parte de la noticia sí tiene base real..." class="edit-input"></textarea>
-                </div>
-                <div class="form-group">
-                  <label>¿Qué es Mentira / Bulo?:</label>
-                  <textarea id="inp-false" name="what_is_false" rows="2" required placeholder="Lo falso, descontextualizado o manipulado..." class="edit-input"></textarea>
-                </div>
-                <div class="form-group">
-                  <label>¿Qué falta contextualizar?:</label>
-                  <textarea id="inp-lacks" name="what_lacks_context" rows="2" placeholder="Información crucial omitida..." class="edit-input"></textarea>
-                </div>
-                <div class="form-group">
-                  <label>¿Qué no está probado?:</label>
-                  <textarea id="inp-unproven" name="what_is_not_proven" rows="2" placeholder="Rumores o especulaciones sin evidencias..." class="edit-input"></textarea>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label>Vincular a un Expediente Temático (Dossier):</label>
-                <select name="topic_id" class="edit-input" required>
-                  <option value="">— Ninguno (Noticia suelta de actualidad) —</option>
-                  {activeTopics.map(t => (
-                    <option value={t.id}>[{t.category}] {t.title}</option>
-                  ))}
-                </select>
-              </div>
-
-              <button type="submit" class="cyber-btn accent" style="width: 100%; font-weight: 800; margin-top: 1rem; padding: 0.85rem;">
-                🚀 Publicar Análisis en el Portal
-              </button>
-            </form>
-          </div>
-
-          <!-- Columna Previsualización Reactiva -->
-          <div class="cyber-card" style="padding: 1.5rem; position: sticky; top: 90px; max-height: calc(100vh - 120px); overflow-y: auto; border-color: var(--neon-purple);">
-            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1.25rem;">
-              <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-purple); font-size: 0.75rem; letter-spacing: 0.05em;">👁️ Previsualización en Vivo</span>
-              <span style="font-size: 0.7rem; background: rgba(157, 78, 221, 0.1); color: var(--neon-purple); padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: bold;">Mobile-First Mockup</span>
-            </div>
-
-            <!-- Cabecera de la noticia -->
-            <div style="margin-bottom: 1.5rem;">
-              <h1 id="prev-title" style="font-size: 1.5rem; line-height: 1.2; font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem;">
-                [Título del Análisis]
-              </h1>
-              <p id="prev-subtitle" style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.4; margin: 0;">
-                [Subtítulo explicativo del análisis]
-              </p>
-            </div>
-
-            <!-- Caja del veredicto -->
-            <div id="prev-verdict-box" class="cyber-card rose" style="padding: 1rem; margin-bottom: 1.5rem; background: linear-gradient(180deg, rgba(18, 22, 41, 0.8) 0%, rgba(7, 9, 19, 0.95) 100%);">
-              <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.5rem; margin-bottom: 0.5rem;">
-                <span style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-muted); font-weight: 800;">Veredicto</span>
-                <span id="prev-verdict-badge" class="verdict-badge falso" style="font-size: 0.8rem; padding: 0.25rem 0.65rem;">Falso</span>
-              </div>
-              <p id="prev-verdict-text" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin: 0;">
-                El sistema de seguros sociales en España es fruto de una evolución de más de un siglo...
-              </p>
-            </div>
-
-            <!-- Embed simulado interactivo -->
-            <div id="prev-embed-container" class="cyber-card" style="padding: 1rem; background: rgba(0,0,0,0.25); border-color: rgba(255,255,255,0.05); margin-bottom: 1.5rem;">
-              <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-rose); font-size: 0.65rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.75rem;">Publicación Viral de Origen</span>
-              
-              <!-- Tarjeta / Link del post original -->
-              <div id="prev-embed-mockup" style="background: rgba(10, 15, 30, 0.6); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.85rem; margin-bottom: 0.75rem;">
-                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                  <span id="prev-embed-icon" style="font-size: 1rem;">🔗</span>
-                  <span id="prev-embed-platform" style="font-weight: bold; font-size: 0.8rem; color: #fff;">X (Twitter)</span>
-                </div>
-                <p id="prev-embed-claim" style="font-size: 0.85rem; font-style: italic; color: #e2e8f0; line-height: 1.4; margin: 0; border-left: 2px solid var(--neon-rose); padding-left: 0.5rem;">
-                  "[Texto de la afirmación viral]"
-                </p>
-              </div>
-
-              <div id="prev-embed-hint" style="font-size: 0.7rem; color: var(--text-muted); text-align: center;">
-                El enlace incrustará un widget interactivo oficial de la red social en el portal de producción.
-              </div>
-            </div>
-
-            <!-- Ficha didáctica desglosada -->
-            <div class="cyber-card" style="padding: 1rem; border-color: rgba(255,255,255,0.05);">
-              <h4 style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-main); margin-bottom: 0.75rem; font-weight: 800;">Detalles de la Contrastación</h4>
-              <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.8rem;">
-                <div style="border-left: 2px solid var(--neon-green); padding-left: 0.5rem;">
-                  <strong style="color: var(--neon-green); display: block; font-size: 0.7rem; text-transform: uppercase;">¿Qué es verdad?</strong>
-                  <span id="prev-detail-true" style="color: var(--text-muted);">[Escribe datos que sean correctos]</span>
-                </div>
-                <div style="border-left: 2px solid var(--neon-rose); padding-left: 0.5rem;">
-                  <strong style="color: var(--neon-rose); display: block; font-size: 0.7rem; text-transform: uppercase;">¿Qué es mentira?</strong>
-                  <span id="prev-detail-false" style="color: var(--text-muted);">[Escribe datos falsificados desmentidos]</span>
-                </div>
-                <div style="border-left: 2px solid var(--neon-amber); padding-left: 0.5rem;">
-                  <strong style="color: var(--neon-amber); display: block; font-size: 0.7rem; text-transform: uppercase;">¿Falta contexto?</strong>
-                  <span id="prev-detail-lacks" style="color: var(--text-muted);">[Contexto legal omitido]</span>
-                </div>
-                <div style="border-left: 2px solid var(--neon-purple); padding-left: 0.5rem;">
-                  <strong style="color: var(--neon-purple); display: block; font-size: 0.7rem; text-transform: uppercase;">¿No está probado?</strong>
-                  <span id="prev-detail-unproven" style="color: var(--text-muted);">[Aseveraciones sin verificar]</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>

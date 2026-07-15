@@ -17,7 +17,7 @@ db.exec('PRAGMA journal_mode = WAL;');
 
 const topics = db.prepare("SELECT title, slug FROM topics WHERE status = 'activo' ORDER BY title").all() as any[];
 
-const rawCategories = db.prepare("SELECT DISTINCT category FROM articles WHERE status = 'publicado'").all() as any[];
+const rawCategories = db.prepare("SELECT DISTINCT category FROM topics WHERE status = 'activo'").all() as any[];
 const categories = rawCategories.map(c => {
   const cat = c.category;
   const slug = cat.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
@@ -106,7 +106,7 @@ const getLink = (p) => {
             </div>
           </div>
           <a href={getLink('/admin')} class="nav-link" style="font-size: 0.85rem; color: var(--neon-blue); text-decoration: none; font-weight: 800; font-family: var(--font-title); border: 1px solid rgba(0, 240, 255, 0.2); padding: 0.25rem 0.6rem; border-radius: 6px; background: rgba(0, 240, 255, 0.05);">
-            Editor
+            ADMIN
           </a>
         </nav>
 
@@ -184,7 +184,7 @@ const getLink = (p) => {
         </a>
         <a href={getLink('/admin')} class="drawer-link" style="margin-top: auto; border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          Panel Editor
+          ADMIN
         </a>
       </nav>
     </div>
@@ -223,7 +223,7 @@ const getLink = (p) => {
             <circle cx="12" cy="12" r="3"/>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68 1.65 1.65 0 0 0 10 3.17V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.32 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
           </svg>
-          <span>Editor</span>
+          <span>ADMIN</span>
         </a>
       </nav>
     </div>

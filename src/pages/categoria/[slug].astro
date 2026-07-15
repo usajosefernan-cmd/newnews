@@ -129,6 +129,8 @@ const getVerdictClass = (verdict) => {
   if (v.includes('engañoso') || v.includes('contexto')) return 'amber';
   return 'purple';
 };
+const base = import.meta.env.BASE_URL;
+const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
 ---
 
 <Layout title={`Vertical: ${categoryName}`}>
@@ -137,7 +139,7 @@ const getVerdictClass = (verdict) => {
     <!-- Cabecera Premium -->
     <div style="margin-bottom: 2rem; border-bottom: 2px solid var(--border-color); padding-bottom: 1.5rem;">
       <div style="margin-bottom: 0.5rem; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
-        <a href="/" style="text-decoration: none; color: var(--text-muted);">NEWNEWS</a> / <a href="/temas" style="text-decoration: none; color: var(--text-muted);">Verticales</a> / <span style="color: var(--neon-blue);">{categoryName}</span>
+        <a href={`${cleanBase}/`} style="text-decoration: none; color: var(--text-muted);">NEWNEWS</a> / <a href={`${cleanBase}/temas`} style="text-decoration: none; color: var(--text-muted);">Verticales</a> / <span style="color: var(--neon-blue);">{categoryName}</span>
       </div>
       <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
         <span style="font-size: 2.2rem;">📂</span>
@@ -197,13 +199,18 @@ const getVerdictClass = (verdict) => {
 
             <div>
               <h2 style="font-size: 1.4rem; margin-top: 0; margin-bottom: 0.35rem; font-weight: 750; font-family: var(--font-title); line-height: 1.25;">
-                <a href={`/noticia/${art.slug}`} style="color: var(--text-main); text-decoration: none; transition: color 0.15s;">
+                <a href={`${cleanBase}/noticia/${art.slug}`} style="color: var(--text-main); text-decoration: none; transition: color 0.15s;">
                   {art.title}
                 </a>
               </h2>
               <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.4; margin: 0 0 0.75rem 0;">
                 {art.subtitle}
               </p>
+              {art.multimedia_url && (
+                <div style="margin-bottom: 1rem; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); max-height: 220px; background: #000; display: flex; align-items: center; justify-content: center;">
+                  <img src={art.multimedia_url} alt="Portada" style="width: 100%; height: 100%; object-fit: cover; max-height: 220px;" />
+                </div>
+              )}
               {art.claim && (
                 <div style="background: rgba(0,0,0,0.15); border-left: 2px solid var(--border-color); padding: 0.5rem 0.75rem; font-size: 0.8rem; font-style: italic; color: var(--text-muted); margin-bottom: 0.5rem;">
                   <strong>Claim viral:</strong> "{art.claim}"
@@ -213,11 +220,11 @@ const getVerdictClass = (verdict) => {
 
             <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.75rem; font-size: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
               {art.topic_title ? (
-                <span>Dossier: <a href={`/tema/${art.topic_slug}`} style="color: var(--neon-purple); text-decoration: none; font-weight: bold;">{art.topic_title}</a></span>
+                <span>Dossier: <a href={`${cleanBase}/tema/${art.topic_slug}`} style="color: var(--neon-purple); text-decoration: none; font-weight: bold;">{art.topic_title}</a></span>
               ) : (
                 <span style="color: var(--text-muted);">Expediente suelto</span>
               )}
-              <a href={`/noticia/${art.slug}`} style="color: var(--neon-blue); text-decoration: none; font-weight: 800; display: inline-flex; align-items: center; gap: 0.2rem;">
+              <a href={`${cleanBase}/noticia/${art.slug}`} style="color: var(--neon-blue); text-decoration: none; font-weight: 800; display: inline-flex; align-items: center; gap: 0.2rem; text-decoration: none;">
                 Auditar hechos e informe &rarr;
               </a>
             </div>
@@ -258,7 +265,7 @@ const getVerdictClass = (verdict) => {
               <span style="color: var(--neon-rose); font-weight: 700;">{stats.falsos} ({stats.total > 0 ? Math.round((stats.falsos/stats.total)*100) : 0}%)</span>
             </div>
             <div style="background: rgba(0,0,0,0.4); height: 6px; border-radius: 4px; overflow: hidden; border: 1px solid var(--border-color);">
-              <div style={{ background: 'var(--neon-rose)', width: `${stats.total > 0 ? (stats.falsos/stats.total)*100 : 0}%`, height: '100%' }}></div>
+              <div style={`background: var(--neon-rose); width: ${stats.total > 0 ? (stats.falsos/stats.total)*100 : 0}%; height: 100%;`}></div>
             </div>
           </div>
           <div>
@@ -267,7 +274,7 @@ const getVerdictClass = (verdict) => {
               <span style="color: var(--neon-amber); font-weight: 700;">{stats.enganosos} ({stats.total > 0 ? Math.round((stats.enganosos/stats.total)*100) : 0}%)</span>
             </div>
             <div style="background: rgba(0,0,0,0.4); height: 6px; border-radius: 4px; overflow: hidden; border: 1px solid var(--border-color);">
-              <div style={{ background: 'var(--neon-amber)', width: `${stats.total > 0 ? (stats.enganosos/stats.total)*100 : 0}%`, height: '100%' }}></div>
+              <div style={`background: var(--neon-amber); width: ${stats.total > 0 ? (stats.enganosos/stats.total)*100 : 0}%; height: 100%;`}></div>
             </div>
           </div>
           <div>
@@ -276,7 +283,7 @@ const getVerdictClass = (verdict) => {
               <span style="color: var(--neon-green); font-weight: 700;">{stats.verdaderos} ({stats.total > 0 ? Math.round((stats.verdaderos/stats.total)*100) : 0}%)</span>
             </div>
             <div style="background: rgba(0,0,0,0.4); height: 6px; border-radius: 4px; overflow: hidden; border: 1px solid var(--border-color);">
-              <div style={{ background: 'var(--neon-green)', width: `${stats.total > 0 ? (stats.verdaderos/stats.total)*100 : 0}%`, height: '100%' }}></div>
+              <div style={`background: var(--neon-green); width: ${stats.total > 0 ? (stats.verdaderos/stats.total)*100 : 0}%; height: 100%;`}></div>
             </div>
           </div>
         </div>

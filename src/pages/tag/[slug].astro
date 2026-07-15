@@ -37,16 +37,19 @@ const getVerdictClass = (verdict) => {
   if (v.includes('engañoso') || v.includes('contexto')) return 'amber';
   return 'purple';
 };
+
+const base = import.meta.env.BASE_URL;
+const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
 ---
 
 <Layout title={`Etiqueta: #${tagName}`}>
-  <div class="container" style="padding-top: 2rem; padding-bottom: 5rem; max-width: 900px;">
+  <div class="container" style="padding-top: 1.5rem; padding-bottom: 5rem; max-width: 680px;">
     
-    <div style="margin-bottom: 2.5rem; border-bottom: 2px solid var(--border-color); padding-bottom: 1.5rem;">
-      <div style="margin-bottom: 0.5rem; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
-        <a href="/" style="text-decoration: none;">Radar</a> / <a href="/actualidad" style="text-decoration: none;">Actualidad</a> / <span style="color: var(--neon-blue);">Etiqueta</span>
+    <div style="margin-bottom: 2rem;">
+      <div style="margin-bottom: 0.5rem; font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">
+        <a href={`${cleanBase}/`} style="text-decoration: none;">Radar</a> / <a href={`${cleanBase}/actualidad`} style="text-decoration: none;">Actualidad</a> / <span style="color: var(--neon-blue);">Etiqueta</span>
       </div>
-      <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem; font-family: var(--font-title); font-weight: 850; letter-spacing: -0.02em;">
+      <h1 style="font-size: 2.2rem; margin-bottom: 0.5rem; font-family: var(--font-title); font-weight: 850; letter-spacing: -0.04em;">
         🏷️ Etiqueta: <span class="text-gradient-rose">#{tagName}</span>
       </h1>
       <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0; line-height: 1.4;">
@@ -64,7 +67,7 @@ const getVerdictClass = (verdict) => {
                 {art.verdict}
               </span>
               <a 
-                href={`/categoria/${art.category.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')}`}
+                href={`${cleanBase}/categoria/${art.category.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')}`}
                 style="font-size: 0.7rem; font-weight: bold; color: var(--text-muted); text-decoration: none; text-transform: uppercase;"
               >
                 #{art.category}
@@ -83,13 +86,18 @@ const getVerdictClass = (verdict) => {
 
           <div>
             <h2 style="font-size: 1.35rem; margin-top: 0; margin-bottom: 0.35rem; font-weight: 750; font-family: var(--font-title); line-height: 1.25;">
-              <a href={`/noticia/${art.slug}`} style="color: var(--text-main); text-decoration: none; transition: color 0.15s;">
+              <a href={`${cleanBase}/noticia/${art.slug}`} style="color: var(--text-main); text-decoration: none; transition: color 0.15s;">
                 {art.title}
               </a>
             </h2>
             <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.4; margin: 0 0 0.75rem 0;">
               {art.subtitle}
             </p>
+            {art.multimedia_url && (
+              <div style="margin-bottom: 1rem; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); max-height: 220px; background: #000; display: flex; align-items: center; justify-content: center;">
+                <img src={art.multimedia_url} alt="Portada" style="width: 100%; height: 100%; object-fit: cover; max-height: 220px;" />
+              </div>
+            )}
             {art.claim && (
               <div style="background: rgba(0,0,0,0.15); border-left: 2px solid var(--border-color); padding: 0.5rem 0.75rem; font-size: 0.8rem; font-style: italic; color: var(--text-muted); margin-bottom: 0.5rem;">
                 <strong>Claim viral:</strong> "{art.claim}"
@@ -99,11 +107,11 @@ const getVerdictClass = (verdict) => {
 
           <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.75rem; font-size: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
             {art.topic_title ? (
-              <span>Expediente: <a href={`/tema/${art.topic_slug}`} style="color: var(--neon-purple); text-decoration: none; font-weight: bold;">{art.topic_title}</a></span>
+              <span>Expediente: <a href={`${cleanBase}/tema/${art.topic_slug}`} style="color: var(--neon-purple); text-decoration: none; font-weight: bold;">{art.topic_title}</a></span>
             ) : (
               <span style="color: var(--text-muted);">Expediente general</span>
             )}
-            <a href={`/noticia/${art.slug}`} style="color: var(--neon-blue); text-decoration: none; font-weight: 800; display: inline-flex; align-items: center; gap: 0.2rem;">
+            <a href={`${cleanBase}/noticia/${art.slug}`} style="color: var(--neon-blue); text-decoration: none; font-weight: 800; display: inline-flex; align-items: center; gap: 0.2rem;">
               Auditar hechos e informe &rarr;
             </a>
           </div>

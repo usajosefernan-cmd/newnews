@@ -59,6 +59,9 @@ db.exec(`
     origin_date TEXT,
     multimedia_url TEXT,
     multimedia_type TEXT,
+    trick_used TEXT,
+    newnews_score INTEGER DEFAULT 0,
+    emoji_tag TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     FOREIGN KEY(topic_id) REFERENCES topics(id) ON DELETE SET NULL
@@ -73,6 +76,15 @@ try {
 } catch (e) {}
 try {
   db.exec("ALTER TABLE articles ADD COLUMN multimedia_type TEXT;");
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE articles ADD COLUMN trick_used TEXT;");
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE articles ADD COLUMN newnews_score INTEGER DEFAULT 0;");
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE articles ADD COLUMN emoji_tag TEXT;");
 } catch (e) {}
 
 // Tabla sources (Fuentes originales de los desmentidos)
@@ -270,6 +282,59 @@ db.exec(`
     scraped_metadata_json TEXT,
     execution_log TEXT NOT NULL,
     created_at TEXT NOT NULL
+  );
+`);
+
+// Tabla user_submissions (Envios y triage de usuarios en /radar)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS user_submissions (
+    id TEXT PRIMARY KEY,
+    submitted_url TEXT,
+    submitted_text TEXT,
+    detected_claim TEXT,
+    suggested_topic_id TEXT,
+    virality_status TEXT,
+    relevance_score REAL DEFAULT 0.0,
+    status TEXT DEFAULT 'recibido',
+    reason TEXT,
+    created_at TEXT NOT NULL
+  );
+`);
+
+// Tabla topic_cache (Cache semantica de temas y fuentes)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS topic_cache (
+    topic_id TEXT PRIMARY KEY,
+    canonical_summary TEXT,
+    trusted_sources_json TEXT,
+    recurring_confusions_json TEXT,
+    known_claims_json TEXT,
+    source_strategy_json TEXT,
+    last_updated TEXT NOT NULL
+  );
+`);
+
+// Tabla claim_cache (Historico de desmentidos para reutilizacion directa)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS claim_cache (
+    normalized_claim_hash TEXT PRIMARY KEY,
+    similar_claims_json TEXT,
+    previous_verdict TEXT,
+    previous_sources_json TEXT,
+    previous_article_id TEXT,
+    reuse_allowed INTEGER DEFAULT 1,
+    last_seen TEXT NOT NULL
+  );
+`);
+
+// Tabla source_strategy_cache (Estrategias de fuentes por area semantica)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS source_strategy_cache (
+    semantic_area TEXT PRIMARY KEY,
+    source_types_json TEXT,
+    preferred_sources_json TEXT,
+    validation_rules_json TEXT,
+    last_successful_use TEXT NOT NULL
   );
 `);
 

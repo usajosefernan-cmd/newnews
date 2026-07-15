@@ -1,7 +1,7 @@
 # 📡 NEWNEWS: Portal de Verificación y Cortafuegos de Desinformación
 
 > [!NOTE]
-> **NEWNEWS** es una plataforma autónoma e inteligente de auditoría de hechos, desmentidos y contrastación de información que actúa como cortafuegos contra la desinformación en España, contrastando noticias con bases de datos públicas oficiales (BOE, INE) y resoluciones judiciales.
+> **NEWNEWS** es una plataforma autónoma e inteligente de auditoría de hechos, desmentidos y contrastación de información que actúa como cortafuegos contra la desinformación en España, contrastando noticias de manera dinámica con bases de datos públicas oficiales e institucionales de España y Europa de acuerdo con la naturaleza del tema analizado.
 
 ---
 
@@ -11,9 +11,9 @@ El portal es el resultado de la colaboración simbiótica entre dos entidades au
 
 ```mermaid
 graph TD
-    A[Redes Sociales & Feeds RSS] -->|1. Extracción Volumétrica| B[Orquestador Hermes VPS]
-    B -->|2. Detección de Hype/Tendencias| C[Pipeline de IA]
-    C -->|3. Contraste de Datos| D[Fuentes Oficiales: BOE & INE]
+    A[Búsqueda Semántica de Redes: YouTube, TikTok, Telegram, X, Reddit, RSS] -->|1. Extracción Volumétrica| B[Orquestador Hermes VPS]
+    B -->|2. Detección de Hype/Tendencias/Bulos| C[Pipeline de IA]
+    C -->|3. Contraste de Datos| D[Fuentes Oficiales Dinámicas: BOE, INE, SEPE, AEAT, AEMET, Ministerios]
     C -->|4. Generación de Desmentido| E[Base de Datos SQLite]
     E -->|5. Compilación del Portal| F[Servidor Web Astro]
     G[Antigravity IDE Agent] -->|Desarrollo, Refactorización y Código| F
@@ -27,8 +27,8 @@ graph TD
 
 ### 🛡️ 2. El Orquestador Autónomo: Hermes
 **Hermes** es el motor que le da vida al portal en tiempo real. Se ejecuta en segundo plano en una **VPS de Oracle Cloud** de forma persistente y está compuesto por un swarm de scripts automatizados y tareas programadas (`cron` de Unix):
-* **Radar Dinámico (`radar-cron.js`):** Monitoriza continuamente redes sociales (como X/Twitter a través de feeds alternativos Nitter y Reddit) para extraer tendencias de alto impacto en España.
-* **Pipeline de IA (`ai-pipeline.js`):** Toma las URLs o afirmaciones virales sospechosas y extrae el texto principal. Invoca a **Gemini 2.5 Flash** (con fallback local) para redactar desmentidos objetivos y neutrales basados exclusivamente en la legislación del BOE, datos demográficos del INE o resoluciones del poder judicial.
+* **Radar Dinámico (`radar-cron.js`):** Escanea múltiples plataformas de redes sociales (YouTube, TikTok, Telegram, X/Twitter a través de Nitter, Reddit y feeds RSS) mediante búsqueda semántica de situaciones, debates, bulos, desinformación o trending topics de alto impacto.
+* **Pipeline de IA (`ai-pipeline.js`):** Toma las URLs o afirmaciones virales sospechosas y extrae el texto principal. Invoca a **Gemini 2.5 Flash** (con fallback local) para redactar desmentidos objetivos y neutrales basados en fuentes oficiales dinámicas según la naturaleza de cada tema (ej. SEPE/EPA para empleo, Agencia Tributaria para impuestos, BOE para legislación, AEMET para climatología, resoluciones judiciales oficiales de España, Eurostat, ministerios correspondientes y organismos competentes).
 * **Cron de Compilación (`hermes-cron.js`):** Orquesta el ciclo completo de manera automatizada:
   $$\text{Radar} \longrightarrow \text{Pipeline de IA} \longrightarrow \text{Sincronización de Base de Datos} \longrightarrow \text{Build en Caliente de Astro}$$
   Al finalizar la compilación estática, se actualizan las páginas estáticas del portal web en milisegundos sin causar tiempo de inactividad.
@@ -111,5 +111,5 @@ npm run dev
 ## ⚖️ Código Deontológico
 Toda la automatización del portal se rige estrictamente bajo el Código Deontológico de la FAPE:
 1. **Neutralidad Editorial:** Separación rígida entre datos objetivos y opiniones. Se detecta el hype comercial y el clickbait.
-2. **Uso de Fuentes Primarias:** Queda estrictamente prohibido delegar la verificación en agencias secundarias (Newtral, Maldita). Los contrastes se hacen directamente contra el BOE, el INE y resoluciones judiciales oficiales de España.
+2. **Uso de Fuentes Primarias Oficiales:** Queda estrictamente prohibido delegar la verificación en agencias secundarias (Newtral, Maldita). Los contrastes se hacen directamente contra fuentes primarias oficiales del ámbito correspondiente (BOE, INE, SEPE, AEAT, AEMET, Eurostat, ministerios correspondientes y resoluciones de los tribunales competentes).
 3. **Independencia Financiera:** El portal no recibe financiación, opera de forma libre, objetiva y completamente factual.
