@@ -37,7 +37,7 @@ const sources = db.prepare("SELECT * FROM sources WHERE article_id = ?").all(art
 // Cargar posts sociales
 const socialPosts = db.prepare("SELECT * FROM social_posts WHERE article_id = ?").all(article.id) as any[];
 
-// Cargar art??????culos relacionados (mismo tema)
+// Cargar artículos relacionados (mismo tema)
 const relatedSameTopic = db.prepare(`
   SELECT * FROM articles 
   WHERE topic_id = ? AND id != ? AND status = 'publicado' 
@@ -45,7 +45,7 @@ const relatedSameTopic = db.prepare(`
   LIMIT 2
 `).all(article.topic_id, article.id) as any[];
 
-// Cargar art??????culos relacionados (otros temas)
+// Cargar artículos relacionados (otros temas)
 const relatedOtherTopics = db.prepare(`
   SELECT * FROM articles 
   WHERE topic_id != ? AND status = 'publicado' 
@@ -74,12 +74,12 @@ if (scrapedItem && scrapedItem.metrics_json) {
 const viralityScore = scrapedItem?.virality_score || null;
 const riskScore = scrapedItem?.risk_score || null;
 
-// Mapa de veredicto a color ne??????n
+// Mapa de veredicto a color neón
 const getVerdictClass = (verdict) => {
   const v = verdict.toLowerCase();
   if (v.includes('verdadero')) return 'green';
   if (v.includes('falso')) return 'rose';
-  if (v.includes('enga??oso') || v.includes('contexto')) return 'amber';
+  if (v.includes('engañoso') || v.includes('contexto')) return 'amber';
   return 'purple';
 };
 
@@ -96,7 +96,7 @@ function getRelativeTime(dateString) {
   if (diffMin < 1) return 'hace unos segundos';
   if (diffMin < 60) return `hace ${diffMin} min`;
   if (diffHours < 24) return `hace ${diffHours} h`;
-  return `hace ${diffDays} d??????as`;
+  return `hace ${diffDays} días`;
 }
 
 function formatOriginalDate(dateString) {
@@ -134,7 +134,7 @@ const formatDisplayName = (username) => {
   const u = username.toLowerCase();
   if (u === 'alviseperez') return 'Alvise P??????rez';
   if (u === 'alvsjng') return 'Alvisjng';
-  if (u === 'vox_es') return 'VOX Espa??a';
+  if (u === 'vox_es') return 'VOX España';
   if (u === 'ppopular') return 'Partido Popular';
   if (u === 'psoe') return 'PSOE';
   if (u === 'empleo_es') return 'Ministerio de Trabajo';
@@ -159,7 +159,7 @@ const getSocialPostMeta = (url, platform) => {
   if (!url) return null;
   const lowerPlat = platform.toLowerCase();
   
-  // Usar la fecha original de publicacion (origin_date) si est?????? disponible, si no published_at
+  // Usar la fecha original de publicacion (origin_date) si est??💡 disponible, si no published_at
   const dateObj = article.origin_date ? new Date(article.origin_date) : new Date(article.published_at);
   const dateStr = dateObj.toLocaleString('es-ES', {
     day: '2-digit',
@@ -300,11 +300,11 @@ if (termometroScore <= 20) {
 
 // Precalculados para el truco usado
 const trickUsed = (article.trick_used || '').toLowerCase();
-let trickDesc = 'Se utilizan afirmaciones gen??????ricas descontextualizadas del marco legal oficial del BOE o del INE para generar desinformaci??????n.';
+let trickDesc = 'Se utilizan afirmaciones gen??????ricas descontextualizadas del marco legal oficial del BOE o del INE para generar desinformación.';
 if (trickUsed === 'cherry-picking') {
-  trickDesc = 'Se seleccionan ??nicamente datos parciales o favorables al sesgo para omitir el contexto general completo que desmiente la afirmaci??????n.';
+  trickDesc = 'Se seleccionan únicamente datos parciales o favorables al sesgo para omitir el contexto general completo que desmiente la afirmaci??????n.';
 } else if (trickUsed === 'falso dilema') {
-  trickDesc = 'Se presenta la situaci??????n como si solo existieran dos opciones extremas excluyentes, ocultando la existencia de matices intermedios o terceras v??????as jur??????dicas.';
+  trickDesc = 'Se presenta la situación como si solo existieran dos opciones extremas excluyentes, ocultando la existencia de matices intermedios o terceras v??????as jur??????dicas.';
 } else if (trickUsed === 'culpa colectiva') {
   trickDesc = 'Se atribuye a todo un grupo social (por origen, nacionalidad o religi??????n) la responsabilidad directa o indirecta por el acto delictivo de un individuo aislado.';
 } else if (trickUsed === 'dato sin base') {
@@ -312,11 +312,11 @@ if (trickUsed === 'cherry-picking') {
 } else if (trickUsed === 'v??????deo recortado') {
   trickDesc = 'Se extrae un fragmento de audio o v??????deo de pocos segundos para descontextualizar las declaraciones completas o la fecha real del suceso.';
 } else if (trickUsed === 'autoridad falsa') {
-  trickDesc = 'Se atribuye la informaci??????n a supuestos portales de investigaci??????n, expertos autodeclarados o fuentes no oficiales para forzar veracidad.';
+  trickDesc = 'Se atribuye la información a supuestos portales de investigación, expertos autodeclarados o fuentes no oficiales para forzar veracidad.';
 } else if (trickUsed === 'miedo/urgencia') {
-  trickDesc = 'Se recurre a llamadas de p??????nico moral o urgencia ("lo ocultan", "secreto", "??????ltimas unidades") para activar una creencia emocional irracional.';
+  trickDesc = 'Se recurre a llamadas de p????único moral o urgencia ("lo ocultan", "secreto", "??????ltimas unidades") para activar una creencia emocional irracional.';
 } else if (trickUsed === 'promoci??????n encubierta') {
-  trickDesc = 'Se recomienda un producto o inversi??n con enlaces de referidos camuflados de recomendaci??????n sincera, ocultando el incentivo econ??mico detr??????s.';
+  trickDesc = 'Se recomienda un producto o inversión con enlaces de referidos camuflados de recomendaci??????n sincera, ocultando el incentivo econ??mico detr??????s.';
 }
 ---
 
@@ -414,7 +414,7 @@ if (trickUsed === 'cherry-picking') {
           {/* Contenido / Claim Original (Resaltado con advertencia de Bulo) */}
           <div style="background: rgba(220, 39, 67, 0.03); border: 1px solid rgba(220, 39, 67, 0.2); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; position: relative; margin-top: 0.5rem;">
             <span style="position: absolute; top: -0.5rem; left: 1rem; background: #070913; padding: 0 0.5rem; font-size: 0.65rem; color: var(--neon-rose); font-weight: 800; letter-spacing: 0.05em; border: 1px solid rgba(220, 39, 67, 0.2); border-radius: 4px;">
-              ?????????? AFIRMACI??????N VIRAL DETECTADA
+              ??????💡 AFIRMACI??????N VIRAL DETECTADA
             </span>
             <p style="font-style: italic; color: #ffffff; font-size: 1.05rem; line-height: 1.45; font-weight: 600; margin: 0.5rem 0 0.5rem 0;">
               "{article.claim}"
@@ -429,7 +429,7 @@ if (trickUsed === 'cherry-picking') {
             {article.multimedia_url && (
               <div style="margin-top: 1.25rem; border-top: 1px solid rgba(220, 39, 67, 0.15); padding-top: 1rem; text-align: center;">
                 <span style="display: block; font-size: 0.7rem; color: var(--neon-rose); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; text-align: left;">
-                  ???????? Archivo Adjunto Desmentido:
+                  ????💡 Archivo Adjunto Desmentido:
                 </span>
                 
                 {article.multimedia_type === 'video' || article.multimedia_url.includes('.mp4') ? (
@@ -510,29 +510,29 @@ if (trickUsed === 'cherry-picking') {
               <>
                 {socialMeta.metrics.views && (
                   <div style="display: flex; align-items: center; gap: 0.35rem;" title="Visualizaciones reales">
-                    ???????? <strong>{socialMeta.metrics.views}</strong> <span style="font-size: 0.7rem; color: rgba(255,255,255,0.3);">Vistas</span>
+                    ????💡 <strong>{socialMeta.metrics.views}</strong> <span style="font-size: 0.7rem; color: rgba(255,255,255,0.3);">Vistas</span>
                   </div>
                 )}
                 {socialMeta.metrics.likes && (
                   <div style="display: flex; align-items: center; gap: 0.35rem;" title="Me Gusta">
-                    ?????????? <strong>{socialMeta.metrics.likes}</strong> <span style="font-size: 0.7rem; color: rgba(255,255,255,0.3);">Likes</span>
+                    ??????💡 <strong>{socialMeta.metrics.likes}</strong> <span style="font-size: 0.7rem; color: rgba(255,255,255,0.3);">Likes</span>
                   </div>
                 )}
                 {socialMeta.metrics.reposts && (
                   <div style="display: flex; align-items: center; gap: 0.35rem;" title="Compartidos">
-                    ???? <strong>{socialMeta.metrics.reposts}</strong> <span style="font-size: 0.7rem; color: rgba(255,255,255,0.3);">Compartidos</span>
+                    💡 <strong>{socialMeta.metrics.reposts}</strong> <span style="font-size: 0.7rem; color: rgba(255,255,255,0.3);">Compartidos</span>
                   </div>
                 )}
                 {socialMeta.metrics.comments && (
                   <div style="display: flex; align-items: center; gap: 0.35rem;" title="Comentarios">
-                    ???? <strong>{socialMeta.metrics.comments}</strong> <span style="font-size: 0.7rem; color: rgba(255,255,255,0.3);">Comentarios</span>
+                    💡 <strong>{socialMeta.metrics.comments}</strong> <span style="font-size: 0.7rem; color: rgba(255,255,255,0.3);">Comentarios</span>
                   </div>
                 )}
               </>
             ) : (
               <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; gap: 1.5rem; width: 100%; justify-content: center;">
-                <span>???? Score de Viralidad: <strong style="color: var(--neon-purple);">{viralityScore !== null ? `${viralityScore}/10` : 'Pendiente'}</strong></span>
-                <span>?????????? Nivel de Alerta: <strong style="color: var(--neon-rose);">{riskScore !== null ? `${riskScore}/10` : 'Pendiente'}</strong></span>
+                <span>💡 Score de Viralidad: <strong style="color: var(--neon-purple);">{viralityScore !== null ? `${viralityScore}/10` : 'Pendiente'}</strong></span>
+                <span>??????💡 Nivel de Alerta: <strong style="color: var(--neon-rose);">{riskScore !== null ? `${riskScore}/10` : 'Pendiente'}</strong></span>
               </div>
             )}
           </div>
@@ -541,7 +541,7 @@ if (trickUsed === 'cherry-picking') {
           <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed rgba(255,255,255,0.06); padding-top: 0.85rem; margin-top: 0.85rem; font-size: 0.8rem; flex-wrap: wrap; gap: 0.5rem;">
             <span style="color: var(--text-muted);">Enlace Oficial:</span>
             <a href={socialMeta.url} target="_blank" rel="noopener noreferrer" style="color: var(--neon-blue); text-decoration: none; font-weight: 800; display: inline-flex; align-items: center; gap: 0.35rem; transition: color 0.15s;">
-              <span>Ver publicaci??????n original en {article.origin_platform}</span>
+              <span>Ver publicación original en {article.origin_platform}</span>
               <span style="font-size: 0.95rem;">&rarr;</span>
             </a>
           </div>
@@ -572,7 +572,7 @@ if (trickUsed === 'cherry-picking') {
           {article.multimedia_url && (
             <div style="margin-top: 1.25rem; border-top: 1px solid var(--border-color); padding-top: 1rem; text-align: center;">
               <span style="display: block; font-size: 0.7rem; color: var(--neon-rose); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; text-align: left;">
-                ???????? Archivo Multimedia Desmentido:
+                ????💡 Archivo Multimedia Desmentido:
               </span>
               {article.multimedia_type === 'video' || article.multimedia_url.includes('.mp4') ? (
                 <video src={article.multimedia_url} controls style="width: 100%; max-height: 320px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: #000;"></video>
@@ -591,7 +591,7 @@ if (trickUsed === 'cherry-picking') {
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
           <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-purple); font-size: 0.7rem; letter-spacing: 0.05em;">Term??????metro NewNews</span>
           <span style="font-size: 0.8rem; font-weight: bold; color: var(--text-main); font-family: monospace;">
-            {article.emoji_tag || '???? Falta contexto'}
+            {article.emoji_tag || '💡 Falta contexto'}
           </span>
         </div>
 
@@ -620,7 +620,7 @@ if (trickUsed === 'cherry-picking') {
 
       <!-- Truco Usado / Prebunking did??????ctico -->
       <div class="cyber-card" style="padding: 1.5rem; background: linear-gradient(135deg, rgba(157, 78, 221, 0.05) 0%, rgba(7, 9, 19, 0.95) 100%); border-color: var(--neon-purple);">
-        <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-purple); font-size: 0.7rem; letter-spacing: 0.08em; display: block; margin-bottom: 0.5rem;">???? Aprende el truco de manipulaci??????n</span>
+        <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-purple); font-size: 0.7rem; letter-spacing: 0.08em; display: block; margin-bottom: 0.5rem;">💡 Aprende el truco de manipulaci??????n</span>
         <strong style="font-size: 0.9rem; color: #ffffff; display: block; margin-bottom: 0.35rem; text-transform: uppercase; font-family: var(--font-title);">
           T??cnica: {article.trick_used || 'dato sin base'}
         </strong>
@@ -638,14 +638,14 @@ if (trickUsed === 'cherry-picking') {
       <div style="display: flex; flex-direction: column; gap: 1.25rem;">
         
         <div class="cyber-card" style="padding: 1.25rem; border-color: rgba(0, 245, 160, 0.15); background: rgba(0, 245, 160, 0.01);">
-          <span style="color: var(--neon-green); font-weight: 800; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.4rem;">Qu?????? es real</span>
+          <span style="color: var(--neon-green); font-weight: 800; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.4rem;">Qu??💡 es real</span>
           <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.45;">
             {article.what_is_true || "No hay hechos ciertos en la afirmaci??????n."}
           </p>
         </div>
 
         <div class="cyber-card" style="padding: 1.25rem; border-color: rgba(255, 51, 102, 0.15); background: rgba(255, 51, 102, 0.01);">
-          <span style="color: var(--neon-rose); font-weight: 800; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.4rem;">Qu?????? es falso</span>
+          <span style="color: var(--neon-rose); font-weight: 800; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.4rem;">Qu??💡 es falso</span>
           <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.45;">
             {article.what_is_false || "No se han detectado falsedades expl??????citas."}
           </p>
@@ -672,13 +672,13 @@ if (trickUsed === 'cherry-picking') {
     <!-- Fuentes Oficiales Indexadas (Plegables) -->
     <details class="cyber-card" style="padding: 1.75rem; border-color: rgba(0, 245, 160, 0.15); background: rgba(18, 22, 41, 0.3); margin-bottom: 2.5rem; border-radius: 12px;">
       <summary style="font-weight: 800; text-transform: uppercase; color: var(--neon-green); font-size: 0.75rem; letter-spacing: 0.05em; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; outline: none; user-select: none;">
-        <span>???? VER FUENTES OFICIALES E INFORME T??????CNICO ({sources.length})</span>
+        <span>💡 VER FUENTES OFICIALES E INFORME T??????CNICO ({sources.length})</span>
         <span style="color: var(--neon-blue); font-size: 0.7rem;">+ DESPLEGAR DOCUMENTOS</span>
       </summary>
 
       <div style="margin-top: 1.5rem; border-top: 1px dashed rgba(0, 245, 160, 0.2); padding-top: 1.25rem;">
         <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.5rem; line-height: 1.4;">
-          Respaldamos esta verificaci??????n en registros primarios oficiales y p??blicos. Pulsa en el enlace para auditar el documento t?????? mismo.
+          Respaldamos esta verificaci??????n en registros primarios oficiales y p??blicos. Pulsa en el enlace para auditar el documento t??💡 mismo.
         </p>
 
         <div style="display: flex; flex-direction: column; gap: 1.25rem;">
