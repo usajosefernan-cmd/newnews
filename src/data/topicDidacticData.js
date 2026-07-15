@@ -171,7 +171,7 @@ export const topicDidacticData = {
     pending_questions: 'Reforma de la fianza para acusaciones populares para evitar querellas temerarias o con fines exclusivamente políticos.'
   },
   'consumo-viral-productos-milagro': {
-    what_is_happening: 'El auge de redes sociales (TikTok, Instagram) facilita la difusión de publicidad encubierta de suplementos, cosméticos y dietas "milagrosas" promovidas por influencers sin control médico, eludiendo la normativa de la AEMPS y el Ministerio de Consumo.',
+    what_is_happening: 'El auge de redes sociales (TikTok, Instagram) facilita la difusión de publicidad encubierta de suplementos, cosméticos y dietas "milabras" promovidas por influencers sin control médico, eludiendo la normativa de la AEMPS y el Ministerio de Consumo.',
     what_we_know: 'El Real Decreto 1907/1996 prohíbe taxativamente la publicidad de productos con pretendida finalidad sanitaria que no estén autorizados. La Ley de Comunicación Audiovisual obliga a los creadores de contenido a advertir explícitamente cuando una recomendación es patrocinada (#Publi).',
     what_we_do_not_know: 'El número real de cuentas de influencers que operan desde paraísos fiscales o fuera de la UE para eludir la jurisdicción y las multas de la CNMC española.',
     key_facts: [
@@ -206,7 +206,7 @@ export const topicDidacticData = {
     main_sources: [
       { name: 'Advertencias de la CNMV sobre Chiringuitos Financieros y Falsos Asesores', url: 'https://www.cnmv.es/portal/Inversores/Advertencias-CNMV-Chiringuitos.aspx' },
       { name: 'INCIBE - Oficina de Seguridad del Internauta (OSI) - Alertas y Ayuda', url: 'https://www.incibe.es/ciudadania/alertas' },
-      { name: 'Registro Oficial de Entidades del Banco de España (Supervisión)', url: 'https://www.bde.es/bde/es/secciones/servicios/registro-de-entidades/' }
+      { name: 'Registro Oficial de Entidades del Banco de España (Supervisión)', url: 'https://www.bde.es/bde/es/secciones/servicios/registro-de-entities/' }
     ],
     chronology: [
       { date: 'Noviembre 2018', event: 'Entrada en vigor del RDL 19/2018 adaptando la directiva de pagos europea PSD2.' },
@@ -241,5 +241,189 @@ export const topicDidacticData = {
     ],
     quick_replies: 'La Ley de Amnistía perdona desórdenes y desobediencias, pero el Tribunal Supremo ha excluido la malversación por considerar que los encausados se ahorraron el coste del referéndum. La financiación singular de Cataluña requiere modificar la ley estatal LOFCA.',
     pending_questions: 'Pronunciamiento del Tribunal Constitucional sobre los recursos interpuestos por múltiples Comunidades Autónomas contra la ley de Amnistía.'
+  },
+  'caso-begona-gomez': {
+    what_is_happening: 'La instrucción penal abierta sobre Begoña Gómez por presuntos delitos de tráfico de influencias y corrupción en los negocios suscita un debate sobre el lawfare y el papel de las acusaciones populares sin perjuicio directo.',
+    what_we_know: 'El juez instructor abrió diligencias previas a raíz de una querella de Manos Limpias sustentada en recortes de prensa. La Fiscalía solicitó el archivo inicial, pero la Audiencia Provincial respaldó continuar la instrucción de forma acotada. El primer informe preliminar de la UCO no halló indicios delictivos vinculantes directos.',
+    what_we_do_not_know: 'El resultado final de los recursos penales de apelación contra las providencias del magistrado instructor y la citación a testigos pendientes.',
+    key_facts: [
+      'Las acusaciones populares se personaron sin fianza inicial, alegando interés general.',
+      'El delito de tráfico de influencias (Art. 429 CP) requiere demostrar una influencia personal indebida sobre funcionario para obtener beneficio económico.',
+      'Estar en fase de instrucción o diligencias previas no constituye una acusación penal firme de culpabilidad.'
+    ],
+    main_sources: [
+      { name: 'CENDOJ - Autos de la Audiencia Provincial de Madrid (Sección 3ª)', url: 'https://www.poderjudicial.es/' },
+      { name: 'Código Penal de España - Artículo 429 sobre Tráfico de Influencias', url: 'https://www.boe.es/buscar/act.php?id=BOE-A-1995-25444' }
+    ],
+    chronology: [
+      { date: 'Abril 2024', event: 'El Juzgado de Instrucción nº 41 de Madrid incoa diligencias previas.' },
+      { date: 'Mayo 2024', event: 'Se hace público el primer informe de la UCO de la Guardia Civil.' }
+    ],
+    frequent_confusions: [
+      { confusion: 'Begoña Gómez ya está procesada y a las puertas del juicio oral.', reality: 'Falso. Se encuentra en fase de diligencias previas (investigación). El juez aún debe decidir si archiva o si abre auto de procesamiento.' }
+    ],
+    quick_replies: 'El caso se encuentra en fase de instrucción (diligencias previas). La Audiencia Provincial de Madrid autorizó al juez instructor a seguir investigando de forma acotada, mientras que los informes iniciales de la UCO no confirmaron indicios delictivos.',
+    pending_questions: 'Resolución de los recursos ante la Fiscalía Europea si se constata el uso de fondos comunitarios (Red.es).'
+  },
+  'investigacion-judicial-david-sanchez': {
+    what_is_happening: 'El juzgado de Badajoz investiga a David Sánchez (hermano del presidente) por presuntos delitos contra la Hacienda Pública, tráfico de influencias y prevaricación tras denuncias relativas a su contrato con la Diputación y su residencia fiscal en Portugal.',
+    what_we_know: 'Se investiga la regularidad laboral de su puesto de alta dirección en la Diputación de Badajoz y la veracidad de su residencia fiscal portuguesa, que le eximiría de abonar el IRPF en España. El juzgado solicitó a la UCO incautar correos electrónicos oficiales en la Diputación.',
+    what_we_do_not_know: 'Si las actas y registros de su actividad laboral física acreditan una presencia habitual compatible con su cargo o si existió teletrabajo no autorizado.',
+    key_facts: [
+      'David Sánchez reside en Elvas (Portugal), a pocos kilómetros de Badajoz.',
+      'El Convenio de doble imposición España-Portugal exige acreditar residencia efectiva de más de 183 días.',
+      'La UAT de la Agencia Tributaria emitió informes preliminares sobre su situación fiscal.'
+    ],
+    main_sources: [
+      { name: 'Juzgado de Instrucción nº 3 de Badajoz - Autos Oficiales de la Causa', url: 'https://www.poderjudicial.es/' },
+      { name: 'Agencia Tributaria - Convenios de Doble Imposición España-Portugal', url: 'https://sede.agenciatributaria.gob.es/' }
+    ],
+    chronology: [
+      { date: 'Junio 2024', event: 'Incoación de diligencias de investigación y entrada de la UCO en la Diputación de Badajoz.' },
+      { date: 'Julio 2024', event: 'El juzgado solicita los informes de vida laboral a la Seguridad Social.' }
+    ],
+    frequent_confusions: [
+      { confusion: 'El hermano de Pedro Sánchez ha sido condenado por evadir impuestos en Portugal.', reality: 'Falso. El caso está en fase de instrucción inicial. No hay acusación formal de la Fiscalía ni condena judicial.' }
+    ],
+    quick_replies: 'La investigación judicial instruye si la plaza de David Sánchez en la Diputación de Badajoz cumple la normativa de altos cargos y si su tributación en Portugal es conforme a los convenios bilaterales para evitar dobles imposiciones.',
+    pending_questions: 'Informe pericial definitivo de los técnicos de Hacienda sobre los flujos patrimoniales de sus cuentas bancarias.'
+  },
+  'inflacion-y-coste-de-vida': {
+    what_is_happening: 'El coste de la vida y el aumento de los precios de la cesta de la compra centran las quejas de los ciudadanos. Se debate si las medidas de alivio (como la reducción del IVA de alimentos básicos) han sido efectivas.',
+    what_we_know: 'El INE calcula mensualmente el IPC analizando la evolución de precios de una cesta representativa de bienes y servicios. El IPC subyacente (que excluye alimentos no elaborados y productos energéticos) sirve para medir el núcleo duro de la inflación estructural.',
+    what_we_do_not_know: 'El impacto real de la especulación de márgenes empresariales en las grandes cadenas de distribución en comparación con el incremento real de costes de origen.',
+    key_facts: [
+      'El IVA de ciertos alimentos de primera necesidad fue suprimido temporalmente por el Real Decreto-ley 8/2023.',
+      'La inflación subyacente suele reaccionar de forma más lenta a las bajadas de tipos de interés del BCE.',
+      'La cesta de la compra en España ha acumulado un encarecimiento superior al 25% desde el inicio del conflicto en Ucrania.'
+    ],
+    main_sources: [
+      { name: 'INE - Índices de Precios de Consumo (IPC) y Cesta de la Compra', url: 'https://www.ine.es/' },
+      { name: 'Real Decreto-ley 8/2023 de Medidas de Alivio e Impuestos (BOE)', url: 'https://www.boe.es/' }
+    ],
+    chronology: [
+      { date: 'Diciembre 2023', event: 'Prórroga de la supresión del IVA para alimentos básicos de primera necesidad.' },
+      { date: 'Junio 2024', event: 'El BCE acuerda la primera rebaja de tipos de interés tras dos años de subidas continuas.' }
+    ],
+    frequent_confusions: [
+      { confusion: 'Que el IPC baje al 2% significa que los precios de los supermercados están bajando.', reality: 'Falso. Significa que los precios suben de forma más lenta (un 2% anual en lugar de un 8%), pero el coste acumulado sigue siendo el mismo.' }
+    ],
+    quick_replies: 'Una bajada del IPC no es una bajada de precios, sino una ralentización en su ritmo de subida. Las medidas de rebaja del IVA amortiguaron parcialmente los precios de alimentos básicos, pero el coste acumulado desde 2022 es severo.',
+    pending_questions: 'Evolución final de las rebajas fiscales temporales una vez las directrices fiscales europeas exijan recortes de déficit.'
+  },
+  'empleo-y-cifras-de-paro': {
+    what_is_happening: 'El debate político gira sobre la veracidad del descenso del paro registrado tras la reforma laboral, con críticas a la supuesta "ocultación" de parados mediante la figura de los fijos discontinuos.',
+    what_we_know: 'El desempleo se mide mediante dos vías oficiales: el Paro Registrado del SEPE (demandantes apuntados en las oficinas de empleo) y la EPA del INE (encuesta trimestral homologada por Eurostat). Los fijos discontinuos en periodo de inactividad no se computan como parados registrados según una orden ministerial vigente desde 1985.',
+    what_we_do_not_know: 'La cifra exacta de fijos discontinuos inactivos en tiempo real debido a demoras en los cruces informáticos de la Seguridad Social y las CCAA.',
+    key_facts: [
+      'La EPA es el indicador oficial de referencia internacional para comparar tasas de desempleo homogéneas en la UE.',
+      'La figura del contrato fijo discontinuo sustituyó al contrato temporal de obra y servicio tras la reforma laboral de 2021.',
+      'Los fijos discontinuos inactivos perciben desempleo si cumplen el periodo de carencia mínimo cotizado.'
+    ],
+    main_sources: [
+      { name: 'INE - Encuesta de Población Activa (EPA) Trimestral', url: 'https://www.ine.es/' },
+      { name: 'SEPE - Estadísticas Mensuales de Demandantes de Empleo y Paro Registrado', url: 'https://sepe.es/' }
+    ],
+    chronology: [
+      { date: 'Diciembre 2021', event: 'Aprobación del Real Decreto-ley 32/2021 de reforma del mercado de trabajo.' },
+      { date: 'Enero 1985', event: 'Entrada en vigor de la Orden Ministerial que regula el cómputo de fijos discontinuos inactivos.' }
+    ],
+    frequent_confusions: [
+      { confusion: 'El gobierno oculta a un millón de parados considerándolos fijos discontinuos.', reality: 'Falso. El criterio para clasificar a los fijos discontinuos inactivos como demandantes con relación laboral data de 1985, no es una invención de la última reforma laboral.' }
+    ],
+    quick_replies: 'El cálculo del paro registrado sigue las mismas reglas vigentes desde 1985 en España. La EPA, que sí mide los parados reales por encuesta activa homologada por Eurostat, ratifica el incremento del empleo y la reducción del desempleo general.',
+    pending_questions: 'Publicación de un registro detallado en tiempo real del tiempo medio de inactividad de los fijos discontinuos.'
+  },
+  'autonomos-y-fiscalidad': {
+    what_is_happening: 'El nuevo sistema de cotización por ingresos reales genera incertidumbre y quejas entre los trabajadores autónomos de rentas medias y bajas por el incremento gradual de sus cuotas obligatorias.',
+    what_we_know: 'El sistema aprobado por el Real Decreto-ley 13/2022 establece un sistema de 15 tramos de rendimiento neto. El autónomo declara sus previsión de ingresos y la Seguridad Social regulariza la cuota al año siguiente cruzando datos fiscales con la Agencia Tributaria.',
+    what_we_do_not_know: 'El volumen de devoluciones o reclamaciones que tendrá que realizar la Seguridad Social tras cruzar los primeros ejercicios fiscales completos con Hacienda.',
+    key_facts: [
+      'Las cuotas mínimas para rendimientos inferiores al SMI han bajado ligeramente, pero suben sustancialmente en tramos medios y altos.',
+      'El rendimiento neto se calcula restando de los ingresos los gastos deducibles más un 7% de gastos de difícil justificación (5% para societarios).',
+      'La tarifa plana estatal de 80 euros al mes dura 12 meses, prorrogables si los ingresos no superan el SMI.'
+    ],
+    main_sources: [
+      { name: 'Seguridad Social - Nuevo Sistema de Cotización para Autónomos (RETA)', url: 'https://www.seg-social.es/' },
+      { name: 'Real Decreto-ley 13/2022 de Modificación del RETA (BOE)', url: 'https://www.boe.es/' }
+    ],
+    chronology: [
+      { date: 'Enero 2023', event: 'Entrada en vigor del sistema de cotización por tramos de rendimientos netos reales.' },
+      { date: 'Año 2025', event: 'Inicio del primer cruce fiscal masivo para la regularización de cuotas del ejercicio 2023.' }
+    ],
+    frequent_confusions: [
+      { confusion: 'Con la nueva ley, si facturo 500 euros al mes tengo que pagar 300 euros de cuota obligatoria.', reality: 'Falso. El tramo mínimo de rendimiento neto inferior a 670€/mes contempla una cuota reducida de unos 230€/mes, y la tarifa plana cubre los inicios con 80€/mes.' }
+    ],
+    quick_replies: 'El nuevo sistema grava al autónomo según su rendimiento neto real y no sobre bases de elección voluntaria. La regularización se realiza a año vencido cruzando las declaraciones de la Renta con los registros de la Seguridad Social.',
+    pending_questions: 'Ampliación de los gastos deducibles admitidos en el RETA para equiparar la fiscalidad de autónomos individuales a la de sociedades de capital.'
+  },
+  'impuestos-y-ahorro': {
+    what_is_happening: 'El debate fiscal en España enfrenta la presión fiscal de rentas medias frente a los nuevos tributos a grandes fortunas y beneficios bancarios o energéticos.',
+    what_we_know: 'El sistema fiscal español está estructurado en impuestos directos (IRPF, Sociedades) e indirectos (IVA, Especiales) amparados por el principio de progresividad (Art. 31 CE). La Ley 38/2022 implantó el Impuesto Temporal de Solidaridad de las Grandes Fortunas para complementar el Impuesto de Patrimonio en CCAA que lo bonificaban.',
+    what_we_do_not_know: 'La recaudación final acumulada de los impuestos sobre banca y energéticas tras los recursos y litigios judiciales planteados por las patronales.',
+    key_facts: [
+      'El IRPF es un impuesto cedido parcialmente: el 50% de la recaudación y la tarifa autonómica dependen de cada Comunidad Autónoma.',
+      'El Impuesto sobre el Patrimonio está bonificado al 100% en CCAA como Madrid y Andalucía, lo que motivó el impuesto estatal de Solidaridad.',
+      'La Constitución prohíbe que el sistema tributario tenga carácter confiscatorio.'
+    ],
+    main_sources: [
+      { name: 'Agencia Tributaria - Portal de Estadísticas de Recaudación y Tributos', url: 'https://sede.agenciatributaria.gob.es/' },
+      { name: 'Ley 38/2022 del Impuesto a Grandes Fortunas y Gravámenes Temporales (BOE)', url: 'https://www.boe.es/' }
+    ],
+    chronology: [
+      { date: 'Noviembre 2022', event: 'Publicación de la Ley 38/2022 de creación del impuesto a las grandes fortunas.' },
+      { date: 'Noviembre 2023', event: 'El Tribunal Constitucional avala la constitucionalidad del gravamen a las grandes fortunas.' }
+    ],
+    frequent_confusions: [
+      { confusion: 'El impuesto a las grandes fortunas grava a cualquier ahorrador con un piso en propiedad.', reality: 'Falso. El mínimo exento se sitúa en 3 millones de euros de patrimonio neto, con una exención adicional de hasta 700.000€ para la vivienda habitual.' }
+    ],
+    quick_replies: 'El sistema fiscal español combina la base estatal con competencias de gestión cedidas a las autonomías. El gravamen sobre grandes fortunas actúa como un tributo de nivelación para fortunas superiores a los 3 millones de euros de patrimonio neto.',
+    pending_questions: 'Reforma del Impuesto sobre Sociedades y armonización del impuesto de Sucesiones y Donaciones entre CCAA.'
+  },
+  'politica-y-leyes': {
+    what_is_happening: 'La intensa actividad legislativa mediante la vía del Real Decreto-ley en el Congreso abre debates sobre la calidad democrática, la separación de poderes y la tramitación de leyes de gran calado sin dictámenes de órganos consultivos.',
+    what_we_know: 'El Real Decreto-ley es una norma con rango de ley aprobada por el Gobierno bajo casos de "extraordinaria y urgente necesidad" (Art. 86 CE), que requiere posterior convalidación en el Congreso. Los Proyectos de Ley ordinarios exigen debate de enmiendas y consultas previas.',
+    what_we_do_not_know: 'El criterio final del Tribunal Constitucional sobre el abuso de la vía de urgencia si los recursos de la oposición prosperan en bloque.',
+    key_facts: [
+      'El Consejo de Estado y el CGPJ emiten informes consultivos no vinculantes en proyectos legislativos ordinarios.',
+      'Un Real Decreto-ley convalidado puede tramitarse posteriormente como proyecto de ley por el procedimiento de urgencia.',
+      'Las leyes orgánicas exigen la votación favorable de la mayoría absoluta del Congreso en una votación final sobre el conjunto del proyecto.'
+    ],
+    main_sources: [
+      { name: 'Congreso de los Diputados - Estado de la Tramitación de Leyes', url: 'https://www.congreso.es/' },
+      { name: 'Tribunal Constitucional - Doctrina y Sentencias sobre Decretos-leyes', url: 'https://www.tribunalconstitucional.es/' }
+    ],
+    chronology: [
+      { date: 'Diciembre 1978', event: 'La Constitución delimita el uso excepcional del Real Decreto-ley en el Art. 86.' },
+      { date: 'Año 2024', event: 'El Tribunal Constitucional reitera los límites a la incorporación de enmiendas ajenas a la materia de la ley.' }
+    ],
+    frequent_confusions: [
+      { confusion: 'El Presidente del Gobierno puede aprobar leyes definitivas sin pasar por el Congreso mediante Decretos.', reality: 'Falso. Todo Real Decreto-ley debe ser debatido y convalidado o derogado por el Congreso en un plazo máximo de 30 días.' }
+    ],
+    quick_replies: 'En España, el ejecutivo legisla por vía de urgencia mediante Decretos-leyes, pero requiere siempre el respaldo o convalidación parlamentaria del Congreso. Las leyes estructurales exigen tramitación ordinaria y mayorías de control parlamentario.',
+    pending_questions: 'Reforma del reglamento del Congreso para impedir el uso masivo de enmiendas de enmienda en leyes no relacionadas.'
+  },
+  'menores-extranjeros-no-acompanados': {
+    what_is_happening: 'La saturación de los centros de acogida de menores en Canarias y Ceuta y la falta de un mecanismo de reparto automático genera tensiones de reparto y asilo entre administraciones autonómicas y el Estado.',
+    what_we_know: 'La tutela de menores extranjeros no acompañados es competencia exclusiva de la Comunidad Autónoma receptora bajo el régimen general de protección infantil. La determinación de la edad se realiza mediante pruebas radiológicas bajo control de la Fiscalía de Menores si no existen documentos de identidad fehacientes.',
+    what_we_do_not_know: 'El coste exacto anual unificado de mantenimiento de los centros por menor, dado que cada CCAA gestiona y licita sus propios servicios de acogimiento de forma dispar.',
+    key_facts: [
+      'Los menores extranjeros tutelados no tienen derecho a pagas monetarias de 4.200 euros directos; la administración financia el coste operativo de las plazas.',
+      'El retorno de un menor exige informe positivo de los servicios de protección del menor y la localización del entorno familiar.',
+      'La Ley de Extranjería establece el procedimiento de documentación del menor a los 90 días de la tutela.'
+    ],
+    main_sources: [
+      { name: 'Fiscalía de Menores - Protocolo Marco de Menores Extranjeros No Acompañados', url: 'https://www.fiscal.es/' },
+      { name: 'Ministerio de Juventud e Infancia - Datos de Tutelas de Menores', url: 'https://www.juventudeinfancia.gob.es/' }
+    ],
+    chronology: [
+      { date: 'Julio 2024', event: 'El Congreso rechaza debatir la reforma obligatoria del reparto del Art. 35 de la Ley de Extranjería.' },
+      { date: 'Año 2023', event: 'Canarias declara la situación de emergencia migratoria infantil por sobreocupación de centros.' }
+    ],
+    frequent_confusions: [
+      { confusion: 'Los menores extranjeros reciben un sueldo directo de 600€ al mes para gastar libremente.', reality: 'Falso. Dependiendo de la Comunidad, solo se les concede una pequeña ayuda de bolsillo para transporte y aseo de entre 10 y 30 euros semanales, ligada a la escolarización.' }
+    ],
+    quick_replies: 'Los menores tutelados están a cargo de las comunidades. Las cifras de coste difundidas en redes corresponden a los contratos de gestión de los centros de acogimiento. Los menores no reciben pagas metálicas directas elevadas.',
+    pending_questions: 'Creación de una base de datos de registro biométrico unificado en España para evitar duplicidades de filiación entre CCAA.'
   }
 };
