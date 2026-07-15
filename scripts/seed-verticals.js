@@ -415,14 +415,13 @@ for (const a of articles) {
 
 // 3. Insertar Sources para cada artículo para justificar con el BOE, INE, etc.
 const insertSource = db.prepare(`
-  INSERT INTO sources (id, article_id, title, url, snippet, reliability, created_at)
-  VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+  INSERT INTO sources (id, article_id, title, url, source_type, authority_level, quote_or_summary, date_accessed)
+  VALUES (?, ?, ?, ?, 'Oficial', 'Alta', ?, datetime('now'))
   ON CONFLICT(id) DO UPDATE SET
     article_id = excluded.article_id,
     title = excluded.title,
     url = excluded.url,
-    snippet = excluded.snippet,
-    reliability = excluded.reliability
+    quote_or_summary = excluded.quote_or_summary
 `);
 
 const sources = [
@@ -476,7 +475,7 @@ const sources = [
 
 console.log('Insertando o actualizando sources...');
 for (const s of sources) {
-  insertSource.run(s.id, s.article_id, s.title, s.url, s.snippet, s.reliability);
+  insertSource.run(s.id, s.article_id, s.title, s.url, s.snippet);
 }
 
 // 4. Población de scraped_items para que el widget social cargue inmediatamente con datos consistentes
@@ -520,13 +519,11 @@ for (const a of articles) {
   // 5. Inserción o actualización en social_posts vinculada para el Widget Social
   const insertSocialPost = db.prepare(`
     INSERT INTO social_posts (
-      id, article_id, platform, url, author_name, author_handle, author_avatar, 
-      text, published_date, likes_count, retweets_count, views_count, raw_api_data
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?)
+      id, article_id, platform, format, content, status
+    ) VALUES (?, ?, ?, 'text', ?, 'publicado')
     ON CONFLICT(id) DO UPDATE SET
-      likes_count = excluded.likes_count,
-      retweets_count = excluded.retweets_count,
-      views_count = excluded.views_count
+      article_id = excluded.article_id,
+      content = excluded.content
   `);
 
   const socialId = `sp-${a.id}`;
@@ -534,15 +531,7 @@ for (const a of articles) {
     socialId,
     a.id,
     a.origin_platform,
-    a.origin_url,
-    'Alvise Pérez o Portavoz',
-    '@radar_newnews',
-    '/assets/avatars/radar.png',
-    a.claim,
-    Math.floor(Math.random() * 2000) + 250,
-    Math.floor(Math.random() * 500) + 100,
-    Math.floor(Math.random() * 30000) + 5000,
-    JSON.stringify({ location: 'Spain', detected_by: 'ScraperNewnews' })
+    a.claim
   );
 }
 

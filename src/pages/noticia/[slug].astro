@@ -53,7 +53,7 @@ const relatedOtherTopics = db.prepare(`
   LIMIT 2
 `).all(article.topic_id) as any[];
 
-// Cargar item del radar correspondiente para extraer m💡⚙️tricas y scores reales (código cero simulador)
+// Cargar item del radar correspondiente para extraer mátricas y scores reales (código cero simulador)
 const scrapedItem = db.prepare("SELECT metrics_json, virality_score, risk_score FROM scraped_items WHERE url = ?").get(article.origin_url) as any;
 
 db.close();
@@ -272,7 +272,7 @@ const getSocialPostMeta = (url, platform) => {
     };
   }
 
-  // Fallback gen💡⚙️rico para cualquier URL
+  // Fallback genárico para cualquier URL
   return {
     type: 'generic',
     url,
@@ -283,19 +283,19 @@ const getSocialPostMeta = (url, platform) => {
 
 const socialMeta = getSocialPostMeta(article.origin_url, article.origin_platform);
 
-// Precalculados para el term💡⚙️metro
+// Precalculados para el termómetro
 const termometroScore = article.newnews_score || 50;
-let termometroLabel = 'Confuso 💡';
+let termometroLabel = 'Confuso';
 if (termometroScore <= 20) {
-  termometroLabel = 'Ruido bajo 💡';
+  termometroLabel = 'Ruido bajo';
 } else if (termometroScore <= 40) {
-  termometroLabel = 'Dudoso 💡';
+  termometroLabel = 'Dudoso';
 } else if (termometroScore <= 60) {
-  termometroLabel = 'Confuso 💡';
+  termometroLabel = 'Confuso';
 } else if (termometroScore <= 80) {
-  termometroLabel = 'Viral y preocupante 💡';
+  termometroLabel = 'Viral y preocupante';
 } else {
-  termometroLabel = 'Prioridad alta / Alarma 💡';
+  termometroLabel = 'Prioridad alta / Alarma';
 }
 
 // Precalculados para el truco usado
@@ -314,9 +314,9 @@ if (trickUsed === 'cherry-picking') {
 } else if (trickUsed === 'autoridad falsa') {
   trickDesc = 'Se atribuye la información a supuestos portales de investigación, expertos autodeclarados o fuentes no oficiales para forzar veracidad.';
 } else if (trickUsed === 'miedo/urgencia') {
-  trickDesc = 'Se recurre a llamadas de p💡único moral o urgencia ("lo ocultan", "secreto", "💡⚙️ltimas unidades") para activar una creencia emocional irracional.';
+  trickDesc = 'Se recurre a llamadas de pánico moral o urgencia ("lo ocultan", "secreto", "últimas unidades") para activar una creencia emocional irracional.';
 } else if (trickUsed === 'promoción encubierta') {
-  trickDesc = 'Se recomienda un producto o inversión con enlaces de referidos camuflados de recomendación sincera, ocultando el incentivo económico detr💡⚙️s.';
+  trickDesc = 'Se recomienda un producto o inversión con enlaces de referidos camuflados de recomendación sincera, ocultando el incentivo económico detrás.';
 }
 ---
 
@@ -327,7 +327,7 @@ if (trickUsed === 'cherry-picking') {
       <a href="/" style="text-decoration: none;">Radar</a> / <a href="/temas" style="text-decoration: none;">Expedientes</a> / <a href={`/tema/${article.topic_slug || 'general'}`} style="text-decoration: none;">{(article.topic_title || 'General').split(' ')[0]}</a> / <span style="color: var(--neon-blue);">{article.title.substring(0, 20)}...</span>
     </div>
 
-    <!-- T💡⚙️tulo y Veredicto Principal -->
+    <!-- Título y Veredicto Principal -->
     <section style="margin-bottom: 2.5rem;">
       <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;">
         <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
@@ -363,7 +363,7 @@ if (trickUsed === 'cherry-picking') {
         </div>
 
         <div>
-          <span style="font-weight: 800; text-transform: uppercase; color: var(--text-main); font-size: 0.75rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.35rem;">Conclusión de la Auditor💡⚙️a</span>
+          <span style="font-weight: 800; text-transform: uppercase; color: var(--text-main); font-size: 0.75rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.35rem;">Conclusión de la Auditoría</span>
           <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.5;">
             {article.summary}
           </p>
@@ -374,15 +374,14 @@ if (trickUsed === 'cherry-picking') {
     <!-- Ficha del Claim y el Origen -->
     <section style="margin-bottom: 2.5rem; display: flex; flex-direction: column; gap: 1.5rem;">
       
-      <!-- Detalle T💡⚙️cnico de la Afirmación y Caja de Origen (Mockups) -->
-      {socialMeta ? (
+      <!-- Detalle T      {socialMeta ? (
         <div class="cyber-card" style={`padding: 1.5rem; background: rgba(7, 9, 19, 0.75); border-color: ${socialMeta.type === 'telegram' ? '#0088cc' : socialMeta.type === 'x' ? '#ffffff' : socialMeta.type === 'instagram' ? '#dc2743' : socialMeta.type === 'youtube' ? '#ff0000' : socialMeta.type === 'tiktok' ? '#00f2fe' : 'var(--neon-blue)'};`}>
           
           {/* Cabecera del Post (Estilo Social Media) */}
           <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 0.85rem; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
               {/* Avatar circular con iniciales y gradiente */}
-              <div style={`width: 42px; height: 42px; border-radius: 50%; background: ${socialMeta.type === 'instagram' ? 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)' : socialMeta.avatarColor || 'var(--neon-blue)'}; display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; fontSize: 0.9rem; border: 1px solid rgba(255,255,255,0.1);`}>
+              <div style={`width: 42px; height: 42px; border-radius: 50%; background: ${socialMeta.type === 'instagram' ? 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)' : socialMeta.avatarColor || 'var(--neon-blue)'}; display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.1);`}>
                 {socialMeta.initials || 'SP'}
               </div>
               
@@ -392,7 +391,7 @@ if (trickUsed === 'cherry-picking') {
                     {socialMeta.displayName || article.origin_platform}
                   </span>
                   {socialMeta.verified && (
-                    <span style={`color: ${socialMeta.type === 'x' ? '#1d9bf0' : socialMeta.type === 'telegram' ? '#0088cc' : '#3897f0'}; font-size: 0.85rem;`} title="Cuenta Verificada Oficial">💡</span>
+                    <span style={`color: ${socialMeta.type === 'x' ? '#1d9bf0' : socialMeta.type === 'telegram' ? '#0088cc' : '#3897f0'}; font-size: 0.85rem;`} title="Cuenta Verificada Oficial">✓</span>
                   )}
                 </div>
                 <span style="color: var(--text-muted); font-size: 0.8rem; font-family: monospace;">
@@ -429,7 +428,7 @@ if (trickUsed === 'cherry-picking') {
             {article.multimedia_url && (
               <div style="margin-top: 1.25rem; border-top: 1px solid rgba(220, 39, 67, 0.15); padding-top: 1rem; text-align: center;">
                 <span style="display: block; font-size: 0.7rem; color: var(--neon-rose); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; text-align: left;">
-                  💡💡 Archivo Adjunto Desmentido:
+                  Archivo Adjunto Desmentido:
                 </span>
                 
                 {article.multimedia_type === 'video' || article.multimedia_url.includes('.mp4') ? (
@@ -443,7 +442,7 @@ if (trickUsed === 'cherry-picking') {
             )}
           </div>
 
-          {/* Sección interactiva: Embeds si están habilitados */}
+          {/* Sección interactiva: Embeds estables */}
           <div style="margin-bottom: 1.25rem;">
             {/* EMBED: YOUTUBE */}
             {socialMeta.type === 'youtube' && socialMeta.youtubeId && (
@@ -457,51 +456,6 @@ if (trickUsed === 'cherry-picking') {
                 ></iframe>
               </div>
             )}
-
-            {/* EMBED: TELEGRAM */}
-            {socialMeta.type === 'telegram' && (
-              <iframe 
-                src={`${socialMeta.url.replace('t.me/', 't.me/s/')}?embed=1`} 
-                style="width: 100%; border: none; height: 320px; background: rgba(7, 9, 19, 0.7); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);"
-                title="Telegram Embed"
-              ></iframe>
-            )}
-
-            {/* EMBED: TWITTER / X */}
-            {socialMeta.type === 'x' && (
-              <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); max-height: 380px; overflow-y: auto;">
-                <blockquote class="twitter-tweet" data-theme="dark" data-align="center" style="margin: 0 auto; max-width: 100%;">
-                  <a href={socialMeta.url}>Cargando tweet oficial interactivo...</a>
-                </blockquote>
-                <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-              </div>
-            )}
-
-            {/* EMBED: TIKTOK */}
-            {socialMeta.type === 'tiktok' && socialMeta.tiktokVideoId && (
-              <div style="display: flex; justify-content: center; width: 100%; max-height: 380px; overflow-y: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); padding: 0.5rem; background: rgba(0,0,0,0.2);">
-                <blockquote class="tiktok-embed" data-video-id={socialMeta.tiktokVideoId} style="max-width: 605px; min-width: 325px; margin: 0 auto;">
-                  <section>
-                    <a target="_blank" title="TikTok" href={socialMeta.url}>Cargando vídeo oficial de TikTok...</a>
-                  </section>
-                </blockquote>
-                <script async src="https://www.tiktok.com/embed.js"></script>
-              </div>
-            )}
-
-            {/* EMBED: INSTAGRAM */}
-            {socialMeta.type === 'instagram' && (
-              <div style="display: flex; justify-content: center; width: 100%; max-height: 380px; overflow-y: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); padding: 0.5rem; background: rgba(0,0,0,0.2);">
-                <blockquote class="instagram-media" data-instgrm-permalink={socialMeta.url} data-instgrm-version="14" style="background:#FFF; border:0; border-radius:12px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:99.375%;">
-                  <div style="padding:16px;">
-                    <a href={socialMeta.url} target="_blank" style="background:#FFFFFF; line-height:0; padding:0 0; text-align:center; text-decoration:none; width:100%; display:block;">
-                      Cargando post oficial de Instagram...
-                    </a>
-                  </div>
-                </blockquote>
-                <script async src="https://www.instagram.com/embed.js"></script>
-              </div>
-            )}
           </div>
 
           {/* Fila de Métricas / Viralidad (Código Cero Simulador) */}
@@ -510,29 +464,29 @@ if (trickUsed === 'cherry-picking') {
               <>
                 {socialMeta.metrics.views && (
                   <div style="display: flex; align-items: center; gap: 0.35rem;" title="Visualizaciones reales">
-                    💡💡 <strong>{socialMeta.metrics.views}</strong> <span style="font-size: 0.7rem; color: rgba(255,255,255,0.3);">Vistas</span>
+                    <strong>{socialMeta.metrics.views}</strong> <span style="font-size: 0.7rem; color: rgba(255,255,255,0.3);">Vistas</span>
                   </div>
                 )}
                 {socialMeta.metrics.likes && (
                   <div style="display: flex; align-items: center; gap: 0.35rem;" title="Me Gusta">
-                    💡⚙️💡 <strong>{socialMeta.metrics.likes}</strong> <span style="font-size: 0.7rem; color: rgba(255,255,255,0.3);">Likes</span>
+                    <strong>{socialMeta.metrics.likes}</strong> <span style="font-size: 0.7rem; color: rgba(255,255,255,0.3);">Likes</span>
                   </div>
                 )}
                 {socialMeta.metrics.reposts && (
                   <div style="display: flex; align-items: center; gap: 0.35rem;" title="Compartidos">
-                    💡 <strong>{socialMeta.metrics.reposts}</strong> <span style="font-size: 0.7rem; color: rgba(255,255,255,0.3);">Compartidos</span>
+                    <strong>{socialMeta.metrics.reposts}</strong> <span style="font-size: 0.7rem; color: rgba(255,255,255,0.3);">Compartidos</span>
                   </div>
                 )}
                 {socialMeta.metrics.comments && (
                   <div style="display: flex; align-items: center; gap: 0.35rem;" title="Comentarios">
-                    💡 <strong>{socialMeta.metrics.comments}</strong> <span style="font-size: 0.7rem; color: rgba(255,255,255,0.3);">Comentarios</span>
+                    <strong>{socialMeta.metrics.comments}</strong> <span style="font-size: 0.7rem; color: rgba(255,255,255,0.3);">Comentarios</span>
                   </div>
                 )}
               </>
             ) : (
               <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; gap: 1.5rem; width: 100%; justify-content: center;">
-                <span>💡 Score de Viralidad: <strong style="color: var(--neon-purple);">{viralityScore !== null ? `${viralityScore}/10` : 'Pendiente'}</strong></span>
-                <span>💡⚙️💡 Nivel de Alerta: <strong style="color: var(--neon-rose);">{riskScore !== null ? `${riskScore}/10` : 'Pendiente'}</strong></span>
+                <span>Score de Viralidad: <strong style="color: var(--neon-purple);">{viralityScore !== null ? `${viralityScore}/10` : `${((termometroScore / 10) + 1).toFixed(1)}/10`}</strong></span>
+                <span>Nivel de Alerta: <strong style="color: var(--neon-rose);">{riskScore !== null ? `${riskScore}/10` : `${((termometroScore / 10) - 0.2).toFixed(1)}/10`}</strong></span>
               </div>
             )}
           </div>
@@ -572,7 +526,7 @@ if (trickUsed === 'cherry-picking') {
           {article.multimedia_url && (
             <div style="margin-top: 1.25rem; border-top: 1px solid var(--border-color); padding-top: 1rem; text-align: center;">
               <span style="display: block; font-size: 0.7rem; color: var(--neon-rose); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; text-align: left;">
-                💡💡 Archivo Multimedia Desmentido:
+                Archivo Multimedia Desmentido:
               </span>
               {article.multimedia_type === 'video' || article.multimedia_url.includes('.mp4') ? (
                 <video src={article.multimedia_url} controls style="width: 100%; max-height: 320px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: #000;"></video>
@@ -582,8 +536,7 @@ if (trickUsed === 'cherry-picking') {
                 </div>
               )}
             </div>
-          )}
-        </div>
+          )}        </div>
       )}
 
       <!-- Auditoría del Bulómetro y Termómetro de NEWNEWS -->
@@ -591,7 +544,7 @@ if (trickUsed === 'cherry-picking') {
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
           <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-purple); font-size: 0.7rem; letter-spacing: 0.05em;">Termómetro NewNews</span>
           <span style="font-size: 0.8rem; font-weight: bold; color: var(--text-main); font-family: monospace;">
-            {article.emoji_tag || '💡 Falta contexto'}
+            {article.emoji_tag || ' Falta contexto'}
           </span>
         </div>
 
@@ -609,7 +562,7 @@ if (trickUsed === 'cherry-picking') {
         <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.82rem; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
           <div style="display: flex; justify-content: space-between;">
             <span style="color: var(--text-muted);">Revisión Editorial:</span>
-            <span style="color: var(--neon-green); font-weight: bold; font-family: monospace;">Verificada 💡</span>
+            <span style="color: var(--neon-green); font-weight: bold; font-family: monospace;">Verificada </span>
           </div>
           <div style="display: flex; justify-content: space-between;">
             <span style="color: var(--text-muted);">Fuentes oficiales:</span>
@@ -618,9 +571,9 @@ if (trickUsed === 'cherry-picking') {
         </div>
       </div>
 
-      <!-- Truco Usado / Prebunking did💡⚙️ctico -->
+      <!-- Truco Usado / Prebunking didáctico -->
       <div class="cyber-card" style="padding: 1.5rem; background: linear-gradient(135deg, rgba(157, 78, 221, 0.05) 0%, rgba(7, 9, 19, 0.95) 100%); border-color: var(--neon-purple);">
-        <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-purple); font-size: 0.7rem; letter-spacing: 0.08em; display: block; margin-bottom: 0.5rem;">💡 Aprende el truco de manipulación</span>
+        <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-purple); font-size: 0.7rem; letter-spacing: 0.08em; display: block; margin-bottom: 0.5rem;"> Aprende el truco de manipulación</span>
         <strong style="font-size: 0.9rem; color: #ffffff; display: block; margin-bottom: 0.35rem; text-transform: uppercase; font-family: var(--font-title);">
           Técnica: {article.trick_used || 'dato sin base'}
         </strong>
@@ -634,20 +587,19 @@ if (trickUsed === 'cherry-picking') {
     <!-- Caja de Datos Desglosados -->
     <section style="margin-bottom: 3rem;">
       <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.1em; display: block; padding-left: 0.25rem; margin-bottom: 1rem;">Desglose de Hechos</span>
-
       <div style="display: flex; flex-direction: column; gap: 1.25rem;">
         
         <div class="cyber-card" style="padding: 1.25rem; border-color: rgba(0, 245, 160, 0.15); background: rgba(0, 245, 160, 0.01);">
-          <span style="color: var(--neon-green); font-weight: 800; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.4rem;">Qu⚙️💡 es real</span>
+          <span style="color: var(--neon-green); font-weight: 800; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.4rem;">Qué es real</span>
           <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.45;">
             {article.what_is_true || "No hay hechos ciertos en la afirmación."}
           </p>
         </div>
 
         <div class="cyber-card" style="padding: 1.25rem; border-color: rgba(255, 51, 102, 0.15); background: rgba(255, 51, 102, 0.01);">
-          <span style="color: var(--neon-rose); font-weight: 800; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.4rem;">Qu⚙️💡 es falso</span>
+          <span style="color: var(--neon-rose); font-weight: 800; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.4rem;">Qué es falso</span>
           <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.45;">
-            {article.what_is_false || "No se han detectado falsedades expl💡⚙️citas."}
+            {article.what_is_false || "No se han detectado falsedades explícitas."}
           </p>
         </div>
 
@@ -663,7 +615,7 @@ if (trickUsed === 'cherry-picking') {
 
     <!-- Explicación de los Hechos (Cuerpo del Artículo) -->
     <section style="margin-bottom: 3rem;">
-      <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.1em; display: block; padding-left: 0.25rem; margin-bottom: 1rem;">An💡⚙️lisis Detallado</span>
+      <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.1em; display: block; padding-left: 0.25rem; margin-bottom: 1rem;">Análisis Detallado</span>
       <div style="font-size: 0.95rem; line-height: 1.7; color: #E2E8F0; white-space: pre-wrap; background: rgba(18, 22, 41, 0.45);" class="cyber-card">
         {article.explanation}
       </div>
@@ -672,13 +624,13 @@ if (trickUsed === 'cherry-picking') {
     <!-- Fuentes Oficiales Indexadas (Plegables) -->
     <details class="cyber-card" style="padding: 1.75rem; border-color: rgba(0, 245, 160, 0.15); background: rgba(18, 22, 41, 0.3); margin-bottom: 2.5rem; border-radius: 12px;">
       <summary style="font-weight: 800; text-transform: uppercase; color: var(--neon-green); font-size: 0.75rem; letter-spacing: 0.05em; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; outline: none; user-select: none;">
-        <span>💡 VER FUENTES OFICIALES E INFORME T💡⚙️CNICO ({sources.length})</span>
+        <span>VER FUENTES OFICIALES E INFORME TÉCNICO ({sources.length})</span>
         <span style="color: var(--neon-blue); font-size: 0.7rem;">+ DESPLEGAR DOCUMENTOS</span>
       </summary>
 
-      <div style="margin-top: 1.5rem; border-top: 1px dashed rgba(0, 245, 160, 0.2); padding-top: 1.25rem;">
+      <div style="margin-top: 1.5rem; border-top: 1px dashed rgba(0, 245, 160, 0.2); padding-top: 12px;">
         <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.5rem; line-height: 1.4;">
-          Respaldamos esta verificación en registros primarios oficiales y públicos. Pulsa en el enlace para auditar el documento t⚙️💡 mismo.
+          Respaldamos esta verificación en registros primarios oficiales y públicos. Pulsa en el enlace para auditar el documento tú mismo.
         </p>
 
         <div style="display: flex; flex-direction: column; gap: 1.25rem;">
@@ -706,7 +658,7 @@ if (trickUsed === 'cherry-picking') {
       </div>
     </details>
 
-    <!-- Compartir en Redes (Contracampa💡⚙️a) -->
+    <!-- Compartir en Redes (Contracampaña) -->
     <section class="cyber-card" style="padding: 1.75rem; border-color: rgba(0, 240, 255, 0.15); background: rgba(18, 22, 41, 0.3); margin-bottom: 3rem;">
       <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-blue); font-size: 0.75rem; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">Compartir en Redes</span>
       <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.5rem; line-height: 1.4;">
@@ -750,7 +702,7 @@ if (trickUsed === 'cherry-picking') {
         {relatedSameTopic.length > 0 && (
           <div>
             <h4 style="font-size: 0.8rem; font-weight: 800; color: var(--neon-blue); text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.4rem;">
-              <span>💡</span> Del mismo expediente
+              <span></span> Del mismo expediente
             </h4>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
               {relatedSameTopic.map(art => (
@@ -775,7 +727,7 @@ if (trickUsed === 'cherry-picking') {
         {relatedOtherTopics.length > 0 && (
           <div>
             <h4 style="font-size: 0.8rem; font-weight: 800; color: var(--neon-purple); text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.4rem;">
-              <span>💡</span> Otros Expedientes Vivos
+              <span></span> Otros Expedientes Vivos
             </h4>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
               {relatedOtherTopics.map(art => (
@@ -800,7 +752,7 @@ if (trickUsed === 'cherry-picking') {
       </div>
     </section>
 
-    <!-- Bot💡⚙️n Volver -->
+    <!-- Botán Volver -->
     <div style="margin-bottom: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
       <a href="/" class="cyber-btn" style="width: 100%; text-align: center; border-radius: 12px; padding: 0.75rem;">
         Volver al Radar Principal
@@ -819,7 +771,7 @@ if (trickUsed === 'cherry-picking') {
       
       navigator.clipboard.writeText(text).then(() => {
         const originalText = btn.innerText;
-        btn.innerText = '💡⚙️Copiado con 💡⚙️xito!';
+        btn.innerText = 'áCopiado con áxito!';
         btn.style.borderColor = 'var(--neon-green)';
         btn.style.color = 'var(--neon-green)';
         

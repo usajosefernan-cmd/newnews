@@ -59,7 +59,7 @@ if (lowerCat.includes('vivienda')) {
 } else if (lowerCat.includes('inmigra') || lowerCat.includes('menas') || lowerCat.includes('migr')) {
   areaMapping = ['Inmigración'];
 } else if (lowerCat.includes('econ') || lowerCat.includes('impues') || lowerCat.includes('paro') || lowerCat.includes('empleo') || lowerCat.includes('fiscal')) {
-  areaMapping = ['Econom💡⚙️a', 'Fiscalidad', 'Pensiones'];
+  areaMapping = ['Economáa', 'Fiscalidad', 'Pensiones'];
 } else if (lowerCat.includes('justic') || lowerCat.includes('corrup') || lowerCat.includes('leyes') || lowerCat.includes('amnistia')) {
   areaMapping = ['Justicia'];
 }
@@ -78,43 +78,43 @@ if (areaMapping.length > 0) {
 
 db.close();
 
-// Glosario did💡⚙️ctico adaptado a jóvenes
+// Glosario didáctico adaptado a jóvenes
 const educationalGlosario = {
   'sociedad-y-migracion': [
     {
-      title: '💡⚙️💡 Okupación ilegal vs Allanamiento de Morada',
-      content: 'En España el allanamiento de morada (entrar en la casa donde vive alguien habitualmente, incluyendo segundas viviendas) es un delito grave y la policía desaloja de inmediato sin necesidad de orden judicial. La usurpación (ocupar un piso de banco o constructora vacío) s⚙️💡 requiere proceso judicial por no constituir morada.'
+      title: 'í Okupación ilegal vs Allanamiento de Morada',
+      content: 'En España el allanamiento de morada (entrar en la casa donde vive alguien habitualmente, incluyendo segundas viviendas) es un delito grave y la policía desaloja de inmediato sin necesidad de orden judicial. La usurpación (ocupar un piso de banco o constructora vacío) sí requiere proceso judicial por no constituir morada.'
     },
     {
-      title: '💡💡 El Ingreso Mínimo Vital para Extranjeros',
+      title: ' El Ingreso Mínimo Vital para Extranjeros',
       content: 'Los ciudadanos extranjeros en España no pueden acceder a ayudas directas o al IMV de forma irregular. La ley de la Seguridad Social exige acreditar residencia legal y continuada en el territorio nacional durante al menos un año previo a la solicitud.'
     }
   ],
   'economia-e-impuestos': [
     {
-      title: '💡 Cotización por Ingresos Reales (Aut💡⚙️nomos)',
-      content: 'Desde 2023 rige un sistema progresivo de 15 tramos donde los autónomos cotizan según sus ingresos netos reales declarados a Hacienda, permitiendo cuotas reducidas de 225💡 para ingresos bajos y tramos de hasta 530💡 para ingresos superiores a 6.000💡.'
+      title: ' Cotización por Ingresos Reales (Autánomos)',
+      content: 'Desde 2023 rige un sistema progresivo de 15 tramos donde los autónomos cotizan según sus ingresos netos reales declarados a Hacienda, permitiendo cuotas reducidas de 225 para ingresos bajos y tramos de hasta 530 para ingresos superiores a 6.000.'
     },
     {
-      title: '💡 Cuentas bancarias abandonadas tras 20 años',
-      content: 'Hacienda no confisca dep💡⚙️sitos de forma arbitraria. Los saldos en cuentas sin ning💡⚙️n movimiento ni reclamación durante 20 años consecutivos pasan al Tesoro P💡⚙️blico por ley, destin💡⚙️ndose 💡⚙️ntegramente a becas de estudio y personas con discapacidad.'
+      title: ' Cuentas bancarias abandonadas tras 20 años',
+      content: 'Hacienda no confisca depásitos de forma arbitraria. Los saldos en cuentas sin ningán movimiento ni reclamación durante 20 años consecutivos pasan al Tesoro público por ley, destinándose ántegramente a becas de estudio y personas con discapacidad.'
     }
   ],
   'justicia-y-politica': [
     {
-      title: '💡 Fase de Instrucción vs Sentencia Penal',
+      title: ' Fase de Instrucción vs Sentencia Penal',
       content: 'Estar investigado o imputado (fase de instrucción) significa que un juez recaba indicios o pruebas, bajo la presunción de inocencia. La culpabilidad o condena solo se establece mediante una sentencia judicial firme tras la celebración del juicio oral.'
     }
   ],
   'corrupcion-publica': [
     {
-      title: '💡 Malversación y Cohecho en el Código Penal',
-      content: 'La malversación castiga el desv💡⚙️o o uso il💡⚙️cito de caudales públicos por parte de funcionarios. El cohecho penaliza la entrega o aceptación de d💡⚙️divas o mordidas a cambio de favores o concesiones administrativas.'
+      title: ' Malversación y Cohecho en el Código Penal',
+      content: 'La malversación castiga el desváo o uso ilácito de caudales públicos por parte de funcionarios. El cohecho penaliza la entrega o aceptación de dádivas o mordidas a cambio de favores o concesiones administrativas.'
     }
   ],
   'historia-y-leyes': [
     {
-      title: '💡 El origen histórico del Instituto Nacional de Previsión',
+      title: ' El origen histórico del Instituto Nacional de Previsión',
       content: 'Fundado en 1908 bajo el reinado de Alfonso XIII, el INP fue el germen de los seguros sociales en España (retiro obrero, seguro de maternidad, etc.), unificados y renombrados posteriormente en 1963 como Seguridad Social.'
     }
   ]
@@ -122,7 +122,7 @@ const educationalGlosario = {
 
 const localGlosario = educationalGlosario[slug] || [
   {
-    title: '💡 Auditoría Independiente',
+    title: ' Auditoría Independiente',
     content: 'Revisión imparcial de datos extraídos directamente de fuentes oficiales del Estado (BOE, INE, ministerios) para contrastar los bulos y afirmaciones de redes.'
   }
 ];
@@ -148,7 +148,7 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
         <a href={`${cleanBase}/`} style="text-decoration: none; color: var(--text-muted);">NEWNEWS</a> / <a href={`${cleanBase}/temas`} style="text-decoration: none; color: var(--text-muted);">Verticales</a> / <span style="color: var(--neon-blue);">{categoryName}</span>
       </div>
       <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-        <span style="font-size: 2.2rem;">💡</span>
+        <span style="font-size: 2.2rem;"></span>
         <h1 style="font-size: 2.5rem; margin: 0; font-family: var(--font-title); font-weight: 850; letter-spacing: -0.02em;">
           Vertical: <span class="text-gradient-blue">{categoryName}</span>
         </h1>
@@ -158,12 +158,12 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
       </p>
     </div>
 
-    <!-- Men⚙️💡 de Pesta💡⚙️as Cyberpunk -->
+    <!-- Mení de Pestaáas Cyberpunk -->
     <div class="topic-tabs-nav">
-      <button class="tab-btn active" data-target="panel-desmentidos">💡 Desmentidos ({stats.total})</button>
-      <button class="tab-btn" data-target="panel-metricas">💡 Datos & Métricas</button>
-      <button class="tab-btn" data-target="panel-politica">💡 Medidas Políticas ({policyMeasures.length})</button>
-      <button class="tab-btn" data-target="panel-glosario">💡 Glosario y Leyes</button>
+      <button class="tab-btn active" data-target="panel-desmentidos"> Desmentidos ({stats.total})</button>
+      <button class="tab-btn" data-target="panel-metricas"> Datos & Métricas</button>
+      <button class="tab-btn" data-target="panel-politica"> Medidas Políticas ({policyMeasures.length})</button>
+      <button class="tab-btn" data-target="panel-glosario"> Glosario y Leyes</button>
     </div>
 
     <!-- PANEL 1: DESMENTIDOS -->
@@ -176,9 +176,9 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
         </div>
         <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
           <button class="filter-chip active" data-verdict="todos">Todos</button>
-          <button class="filter-chip" data-verdict="falso" style="border-color: var(--neon-rose); color: var(--neon-rose);">💡 Bulos</button>
-          <button class="filter-chip" data-verdict="contexto" style="border-color: var(--neon-amber); color: var(--neon-amber);">💡 Sesgados</button>
-          <button class="filter-chip" data-verdict="verdadero" style="border-color: var(--neon-green); color: var(--neon-green);">💡 Verificados</button>
+          <button class="filter-chip" data-verdict="falso" style="border-color: var(--neon-rose); color: var(--neon-rose);"> Bulos</button>
+          <button class="filter-chip" data-verdict="contexto" style="border-color: var(--neon-amber); color: var(--neon-amber);"> Sesgados</button>
+          <button class="filter-chip" data-verdict="verdadero" style="border-color: var(--neon-green); color: var(--neon-green);"> Verificados</button>
         </div>
       </div>
 
@@ -239,13 +239,13 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
 
         {articles.length === 0 && (
           <div class="cyber-card" style="padding: 3rem; text-align: center; border-color: rgba(255,255,255,0.05);">
-            <p style="color: var(--text-muted); font-size: 1rem; margin: 0;">No se han publicado desmentidos todav💡⚙️a bajo esta categoría.</p>
+            <p style="color: var(--text-muted); font-size: 1rem; margin: 0;">No se han publicado desmentidos todaváa bajo esta categoría.</p>
           </div>
         )}
       </div>
     </div>
 
-    <!-- PANEL 2: DATOS Y M💡⚙️TRICAS -->
+    <!-- PANEL 2: DATOS Y MáTRICAS -->
     <div id="panel-metricas" class="topic-tab-panel">
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
         <div class="cyber-card" style="padding: 1.5rem; background: rgba(7, 9, 19, 0.4); text-align: center; border-color: var(--neon-blue);">
@@ -296,11 +296,11 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
       </div>
     </div>
 
-    <!-- PANEL 3: AGENDA POL💡⚙️TICA -->
+    <!-- PANEL 3: AGENDA política -->
     <div id="panel-politica" class="topic-tab-panel">
       <div style="background: rgba(157, 78, 221, 0.05); border: 1px solid var(--border-color); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem;">
         <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.45; margin: 0;">
-          💡 <strong>Auditor💡⚙️a Electoral:</strong> Contrastamos las medidas y propuestas de los programas electorales de los principales partidos políticos asociadas a esta área con las leyes y el BOE actual para analizar su viabilidad t💡⚙️cnica.
+           <strong>Auditoráa Electoral:</strong> Contrastamos las medidas y propuestas de los programas electorales de los principales partidos políticos asociadas a esta área con las leyes y el BOE actual para analizar su viabilidad tácnica.
         </p>
       </div>
 
@@ -350,7 +350,7 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
 
         {policyMeasures.length === 0 && (
           <div class="cyber-card" style="padding: 3rem; text-align: center; grid-column: 1 / -1; border-color: rgba(255,255,255,0.05);">
-            <p style="color: var(--text-muted); font-size: 1rem; margin: 0;">No se han mapeado medidas políticas de programas todav💡⚙️a para esta categoría.</p>
+            <p style="color: var(--text-muted); font-size: 1rem; margin: 0;">No se han mapeado medidas políticas de programas todaváa para esta categoría.</p>
           </div>
         )}
       </div>
@@ -377,7 +377,7 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
 
 <script is:inline>
   document.addEventListener('DOMContentLoaded', () => {
-    // 1. Gestion de Pesta💡⚙️as
+    // 1. Gestion de Pestaáas
     const tabButtons = document.querySelectorAll('.topic-tabs-nav .tab-btn');
     const tabPanels = document.querySelectorAll('.topic-tab-panel');
 

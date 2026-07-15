@@ -45,7 +45,7 @@ export async function POST({ request }) {
         } catch (e) {}
       };
 
-      send({ status: 'info', message: `🚀 [INICIO] Iniciando ejecución manual del trabajo: ${job.toUpperCase()}` });
+      send({ status: 'info', message: ` [INICIO] Iniciando ejecución manual del trabajo: ${job.toUpperCase()}` });
       
       // Mostrar proveedor de IA / Clave
       const hasApiKey = !!(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
@@ -100,18 +100,18 @@ export async function POST({ request }) {
           if (code === 0) {
             send({ status: 'success', message: `🎉 [ÉXITO] El proceso ha finalizado correctamente (código de salida 0).` });
           } else {
-            send({ status: 'error', message: `❌ [FALLO] El proceso terminó con el código de salida ${code}.` });
+            send({ status: 'error', message: ` [FALLO] El proceso terminó con el código de salida ${code}.` });
           }
           safeClose();
         });
 
         child.on('error', (err) => {
-          send({ status: 'error', message: `❌ [ERROR EJECUCIÓN] No se pudo lanzar el subproceso: ${err.message}` });
+          send({ status: 'error', message: ` [ERROR EJECUCIÓN] No se pudo lanzar el subproceso: ${err.message}` });
           safeClose();
         });
 
       } catch (err) {
-        send({ status: 'error', message: `❌ [ERROR FATAL] ${err.message}` });
+        send({ status: 'error', message: ` [ERROR FATAL] ${err.message}` });
         safeClose();
       }
     },

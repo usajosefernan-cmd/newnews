@@ -220,18 +220,18 @@ if (Astro.request.method === 'POST') {
         try {
           urlCheckResult = await analyzeUrl(url);
           if (urlCheckResult.isAccessible) {
-            message = `✅ URL verificada: ${urlCheckResult.platform} — "${(urlCheckResult.title || '').substring(0, 80)}"...`;
+            message = ` URL verificada: ${urlCheckResult.platform} — "${(urlCheckResult.title || '').substring(0, 80)}"...`;
             messageType = 'success';
           } else {
-            message = `⚠️ URL no accesible: ${urlCheckResult.error || 'Sin respuesta'}`;
+            message = ` URL no accesible: ${urlCheckResult.error || 'Sin respuesta'}`;
             messageType = 'error';
           }
         } catch (err) {
-          message = `❌ Error analizando URL: ${err.message}`;
+          message = ` Error analizando URL: ${err.message}`;
           messageType = 'error';
         }
       } else {
-        message = '❌ Introduce una URL válida para analizar.';
+        message = ' Introduce una URL válida para analizar.';
         messageType = 'error';
       }
     }
@@ -257,7 +257,7 @@ if (Astro.request.method === 'POST') {
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 10.0, 8.0, 'pendiente', datetime('now'))
         `).run(id, platform, url, `${title}\n\n${description}`, author, metricsJson, title || description.substring(0, 200), topicTitle);
 
-        message = `✅ URL registrada con éxito. Se procesará asíncronamente en segundo plano por el motor de Hermes.`;
+        message = ` URL registrada con éxito. Se procesará asíncronamente en segundo plano por el motor de Hermes.`;
         messageType = 'success';
         urlCheckResult = null;
       }
@@ -405,7 +405,7 @@ if (Astro.request.method === 'POST') {
             }
           }
         } catch (e: any) {
-          message = `❌ Error al reprocesar fase: ${e.message}`;
+          message = ` Error al reprocesar fase: ${e.message}`;
           messageType = 'error';
         }
       }
@@ -598,7 +598,7 @@ if (Astro.request.method === 'POST') {
     db.close();
   } catch (err) {
     console.error('Error procesando acción de administración:', err);
-    message = `❌ Error: ${err.message}`;
+    message = ` Error: ${err.message}`;
     messageType = 'error';
   }
 }
@@ -702,7 +702,7 @@ const getVerdictClass = (verdict) => {
     <!-- CABECERA PREMIUM NEÓN -->
     <header class="admin-header">
       <div class="header-main">
-        <h1>⚡ Portal <span class="text-gradient-blue">Control Center</span></h1>
+        <h1> Portal <span class="text-gradient-blue">Control Center</span></h1>
         <p>Consola de verificación, editor de desmentidos y control del radar inteligente de IA.</p>
       </div>
       
@@ -741,16 +741,16 @@ const getVerdictClass = (verdict) => {
 
     <!-- MENÚ DE NAVEGACIÓN SPA INSTANTÁNEO -->
     <nav class="admin-tabs-nav">
-      <button class="admin-tab-btn active" data-target="pane-dashboard">📊 Dashboard</button>
-      <button class="admin-tab-btn" data-target="pane-aprobacion">📥 Cola Moderación ({draftsWithDetails.length})</button>
+      <button class="admin-tab-btn active" data-target="pane-dashboard"> Dashboard</button>
+      <button class="admin-tab-btn" data-target="pane-aprobacion"> Cola Moderación ({draftsWithDetails.length})</button>
       <button class="admin-tab-btn" data-target="pane-user-submissions">📩 Triage Usuarios ({userSubmissions.filter(s => s.status === 'recibido').length})</button>
-      <button class="admin-tab-btn" data-target="pane-motor">⚙️ Motor NEWNEWS</button>
+      <button class="admin-tab-btn" data-target="pane-motor"> Motor NEWNEWS</button>
       <button class="admin-tab-btn" data-target="pane-redactor">✍️ Plantilla Redactor</button>
       <button class="admin-tab-btn" data-target="pane-publicados">📰 Publicados ({publishedWithDetails.length})</button>
       <button class="admin-tab-btn" data-target="pane-temas">📁 Expedientes</button>
-      <button class="admin-tab-btn" data-target="pane-politica">🏛️ Auditoría Política</button>
-      <button class="admin-tab-btn" data-target="pane-radar">📡 Radar & Scrapers</button>
-      <button class="admin-tab-btn" data-target="pane-verificaciones">🔍 Logs de Búsqueda ({verificationLogs.length})</button>
+      <button class="admin-tab-btn" data-target="pane-politica"> Auditoría Política</button>
+      <button class="admin-tab-btn" data-target="pane-radar"> Radar & Scrapers</button>
+      <button class="admin-tab-btn" data-target="pane-verificaciones"> Logs de Búsqueda ({verificationLogs.length})</button>
     </nav>
 
     <!-- CONTENEDORES DE PANELES DE PESTAÑA -->
@@ -873,7 +873,7 @@ const getVerdictClass = (verdict) => {
                       </div>
                     </div>
 
-                    <button type="submit" class="cyber-btn accent" style="width: 100%;">💾 Guardar Cambios</button>
+                    <button type="submit" class="cyber-btn accent" style="width: 100%;"> Guardar Cambios</button>
                   </form>
                 </details>
 
@@ -992,7 +992,7 @@ const getVerdictClass = (verdict) => {
                     </div>
                   </div>
 
-                  <button type="submit" class="cyber-btn" style="border-color: var(--neon-purple); color: var(--neon-purple); width: 100%;">💾 Guardar Cambios</button>
+                  <button type="submit" class="cyber-btn" style="border-color: var(--neon-purple); color: var(--neon-purple); width: 100%;"> Guardar Cambios</button>
                 </form>
               </details>
             </div>
@@ -1002,11 +1002,11 @@ const getVerdictClass = (verdict) => {
 
       <!-- PESTAÑA 6: AUDITORÍA POLÍTICA -->
       <div id="pane-politica" class="admin-tab-panel">
-        <h2 class="section-title">🏛️ Auditoría Política: Partidos, Propuestas y Bienes</h2>
+        <h2 class="section-title"> Auditoría Política: Partidos, Propuestas y Bienes</h2>
         
         <!-- Partidos -->
         <div class="cyber-card" style="padding: 1.5rem; margin-bottom: 2rem;">
-          <h3 class="card-title">🏛️ Partidos Registrados ({allParties.length})</h3>
+          <h3 class="card-title"> Partidos Registrados ({allParties.length})</h3>
           
           <details class="accordion-edit" style="margin-bottom: 1rem;">
             <summary>+ Añadir Partido Político</summary>
@@ -1054,7 +1054,7 @@ const getVerdictClass = (verdict) => {
 
         <!-- Propuestas y Medidas -->
         <div class="cyber-card" style="padding: 1.5rem; margin-bottom: 2rem;">
-          <h3 class="card-title">📋 Medidas de Programas Electorales ({allMeasures.length})</h3>
+          <h3 class="card-title"> Medidas de Programas Electorales ({allMeasures.length})</h3>
           
           <details class="accordion-edit" style="margin-bottom: 1rem;">
             <summary>+ Registrar Nueva Propuesta</summary>
@@ -1117,7 +1117,7 @@ const getVerdictClass = (verdict) => {
 
         <!-- Promesas -->
         <div class="cyber-card" style="padding: 1.5rem; margin-bottom: 2rem;">
-          <h3 class="card-title">📈 Seguimiento de Promesas Electorales ({allPromises.length})</h3>
+          <h3 class="card-title"> Seguimiento de Promesas Electorales ({allPromises.length})</h3>
           <details class="accordion-edit" style="margin-bottom: 1rem;">
             <summary>+ Registrar Seguimiento de Promesa</summary>
             <form method="POST" class="edit-form" style="margin-top: 1rem;">
@@ -1210,7 +1210,7 @@ const getVerdictClass = (verdict) => {
 
       <!-- PESTAÑA 7: RADAR & SCRAPERS -->
       <div id="pane-radar" class="admin-tab-panel">
-        <h2 class="section-title">📡 Radar & Scrapers de Monitoreo</h2>
+        <h2 class="section-title"> Radar & Scrapers de Monitoreo</h2>
         
         <div class="radar-split">
           
@@ -1219,19 +1219,19 @@ const getVerdictClass = (verdict) => {
             
             <!-- Comprobador en vivo -->
             <div class="cyber-card" style="padding: 1.5rem; border-color: var(--neon-blue);">
-              <h3 class="card-title">🔍 Comprobador de URL en Vivo</h3>
+              <h3 class="card-title"> Comprobador de URL en Vivo</h3>
               <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
                 Pega la URL de una red (TikTok, X, Telegram). El sistema simulará el acceso y extraerá datos del post.
               </p>
               <form method="POST" class="edit-form">
                 <input type="hidden" name="action" value="check_url" />
                 <input type="url" name="check_url" required placeholder="https://youtube.com/... o t.me/canal/123" class="edit-input" style="margin-bottom: 0.75rem;" />
-                <button type="submit" class="cyber-btn" style="border-color: var(--neon-blue); color: var(--neon-blue); width: 100%;">⚡ Verificar URL en Vivo</button>
+                <button type="submit" class="cyber-btn" style="border-color: var(--neon-blue); color: var(--neon-blue); width: 100%;"> Verificar URL en Vivo</button>
               </form>
 
               {urlCheckResult && urlCheckResult.isAccessible && (
                 <div class="url-result-box">
-                  <span class="result-title">✅ Datos de URL Extraídos</span>
+                  <span class="result-title"> Datos de URL Extraídos</span>
                   <div style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.5rem;">
                     <div>Plataforma: <strong>{urlCheckResult.platform}</strong></div>
                     <div>Autor: <strong>{urlCheckResult.author}</strong></div>
@@ -1257,7 +1257,7 @@ const getVerdictClass = (verdict) => {
 
             <!-- Cola de radar items -->
             <div class="cyber-card" style="padding: 1.5rem;">
-              <h3 class="card-title">📡 Cola de Intercepción ({pendingRadarItems.length})</h3>
+              <h3 class="card-title"> Cola de Intercepción ({pendingRadarItems.length})</h3>
               <div class="scroller-list" style="max-height: 450px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.85rem;">
                 {pendingRadarItems.map(item => (
                   <div class="scroller-item" style="background: rgba(255, 255, 255, 0.015); padding: 0.75rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.04); display: flex; flex-direction: column; gap: 0.5rem; text-align: left;">
@@ -1298,7 +1298,7 @@ const getVerdictClass = (verdict) => {
             
             <!-- Fuentes Registradas -->
             <div class="cyber-card" style="padding: 1.5rem;">
-              <h3 class="card-title">📡 Fuentes de Monitorización</h3>
+              <h3 class="card-title"> Fuentes de Monitorización</h3>
               
               <!-- Registrar nueva fuente -->
               <details class="accordion-edit" style="margin-bottom: 1rem;">
@@ -1349,7 +1349,7 @@ const getVerdictClass = (verdict) => {
 
             <!-- Glosario de Palabras Clave y Reglas de Negocio -->
             <div class="cyber-card" style="padding: 1.5rem; background: rgba(0, 240, 255, 0.01); border-color: rgba(0, 240, 255, 0.15);">
-              <h3 class="card-title">📖 Reglas de Negocio y Clasificación</h3>
+              <h3 class="card-title"> Reglas de Negocio y Clasificación</h3>
               
               <div class="rule-block">
                 <strong>🕒 Temporalidad Estricta:</strong>
@@ -1360,7 +1360,7 @@ const getVerdictClass = (verdict) => {
               </div>
 
               <div class="rule-block" style="margin-top: 1rem;">
-                <strong>🔍 Keywords del Scraper (España):</strong>
+                <strong> Keywords del Scraper (España):</strong>
                 <div class="keywords-bag">
                   <span>ley</span><span>impuesto</span><span>gobierno</span><span>bulo</span><span>okupa</span>
                   <span>migrante</span><span>ayuda</span><span>pensión</span><span>boe</span><span>hacienda</span>
@@ -1375,7 +1375,7 @@ const getVerdictClass = (verdict) => {
 
       <!-- PESTAÑA 8: LOGS DE BÚSQUEDA DE USUARIOS -->
       <div id="pane-verificaciones" class="admin-tab-panel">
-        <h2 class="section-title">🔍 Registro de Verificaciones del Buscador Manual</h2>
+        <h2 class="section-title"> Registro de Verificaciones del Buscador Manual</h2>
         <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 2rem;">
           Historial completo de auditorías y búsquedas en caliente iniciadas por los usuarios desde la portada. Muestra exactamente el flujo de ejecución de la IA y el Scraper.
         </p>
@@ -1978,7 +1978,7 @@ const getVerdictClass = (verdict) => {
         btn.innerText = '¡Compilado! ✓';
         btn.disabled = false;
         setTimeout(() => {
-          btn.innerText = '🚀 Compilar SSG (Astro Build)';
+          btn.innerText = ' Compilar SSG (Astro Build)';
           box.style.display = 'none';
         }, 3000);
       }, 2500);

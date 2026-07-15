@@ -7,7 +7,7 @@ interface Props {
 const { draftsWithDetails, activeTopics, getVerdictClass } = Astro.props;
 ---
 
-<h2 class="section-title" style="margin-top: 0; margin-bottom: 1.25rem; font-size: 1.35rem; color: #fff;">📥 Cola de Moderación: Borradores redactados por IA</h2>
+<h2 class="section-title" style="margin-top: 0; margin-bottom: 1.25rem; font-size: 1.35rem; color: #fff;"> Cola de Moderación: Borradores redactados por IA</h2>
 <div class="cards-list" style="display: flex; flex-direction: column; gap: 1.5rem;">
   {draftsWithDetails.map(art => (
     <div class={`cyber-card ${getVerdictClass(art.verdict)}`} style="padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 12px; background: rgba(18, 22, 41, 0.25);">
@@ -82,7 +82,7 @@ const { draftsWithDetails, activeTopics, getVerdictClass } = Astro.props;
                 <option value="🔥 Caliente" selected={art.emoji_tag === '🔥 Caliente'}>🔥 Caliente</option>
                 <option value="🧊 Falta contexto" selected={art.emoji_tag === '🧊 Falta contexto'}>🧊 Falta contexto</option>
                 <option value="🧪 Necesita pruebas" selected={art.emoji_tag === '🧪 Necesita pruebas'}>🧪 Necesita pruebas</option>
-                <option value="⚖️ Marco legal" selected={art.emoji_tag === '⚖️ Marco legal'}>⚖️ Marco legal</option>
+                <option value=" Marco legal" selected={art.emoji_tag === ' Marco legal'}> Marco legal</option>
                 <option value="💸 Promoción oculta" selected={art.emoji_tag === '💸 Promoción oculta'}>💸 Promoción oculta</option>
               </select>
             </div>
@@ -122,7 +122,7 @@ const { draftsWithDetails, activeTopics, getVerdictClass } = Astro.props;
           </div>
 
           <div class="form-actions" style="margin-top: 0.5rem;">
-            <button type="submit" class="cyber-btn accent" style="width: 100%; padding: 0.7rem; font-weight: bold; text-transform: uppercase;">💾 Guardar y Publicar en Web</button>
+            <button type="submit" class="cyber-btn accent" style="width: 100%; padding: 0.7rem; font-weight: bold; text-transform: uppercase;"> Guardar y Publicar en Web</button>
           </div>
         </form>
       </details>

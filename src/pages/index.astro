@@ -144,7 +144,7 @@ function formatOriginalDate(dateStr) {
       <div class="cyber-card" style="padding: 1rem 1.25rem; background: linear-gradient(180deg, rgba(18, 22, 41, 0.45) 0%, rgba(7, 9, 19, 0.8) 100%); border-color: rgba(0, 240, 255, 0.25);">
         <form action={`${cleanBase}/radar`} method="GET" style="display: flex; gap: 0.75rem; align-items: center; width: 100%;">
           <div style="position: relative; flex: 1;">
-            <span style="position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); font-size: 1.1rem; pointer-events: none;">📡</span>
+            <span style="position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); font-size: 1.1rem; pointer-events: none;"></span>
             <input 
               type="text" 
               name="text" 
@@ -315,7 +315,7 @@ function formatOriginalDate(dateStr) {
         <>
           {/* ═══ ESTADO VACÍO — Sin artículos ═══ */}
           <section class="empty-state">
-            <div class="empty-state-icon">📡</div>
+            <div class="empty-state-icon"></div>
             <h2>El Radar está Limpio</h2>
             <p>
               No hay verificaciones publicadas en este momento. 
@@ -351,11 +351,11 @@ function formatOriginalDate(dateStr) {
                   </div>
                 ))}
                 
-                <!-- ⚡ TEASER DEL BUZÓN DE INTERCEPCIÓN -->
+                <!--  TEASER DEL BUZÓN DE INTERCEPCIÓN -->
                 <section class="cyber-card" style="padding: 1.75rem; background: linear-gradient(185deg, rgba(7, 9, 19, 0.95) 0%, rgba(18, 22, 41, 0.8) 100%); border-color: var(--neon-blue); margin-top: 1rem; text-align: left; position: relative; overflow: hidden; transition: all 0.3s ease;">
-                  <div style="position: absolute; top: -20px; right: -20px; font-size: 5rem; opacity: 0.05; pointer-events: none;">📡</div>
+                  <div style="position: absolute; top: -20px; right: -20px; font-size: 5rem; opacity: 0.05; pointer-events: none;"></div>
                   <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-                    <span style="font-size: 1.5rem;">📡</span>
+                    <span style="font-size: 1.5rem;"></span>
                     <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--neon-blue); margin: 0; letter-spacing: -0.01em;">Buzón de Intercepción</h3>
                   </div>
                   <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.45; margin-bottom: 1.25rem; max-width: 95%;">
@@ -371,10 +371,10 @@ function formatOriginalDate(dateStr) {
         </>
       )}
 
-      <!-- ⚖️ COMPROMISO DEONTOLÓGICO Y CÓDIGO DE PERIODISMO -->
+      <!--  COMPROMISO DEONTOLÓGICO Y CÓDIGO DE PERIODISMO -->
       <section class="cyber-card" style="padding: 1.65rem; background: linear-gradient(180deg, rgba(7, 9, 19, 0.95) 0%, rgba(18, 22, 41, 0.8) 100%); border-color: var(--neon-blue); margin-top: 1rem;">
         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; border-bottom: 1px solid rgba(0, 240, 255, 0.15); padding-bottom: 0.5rem;">
-          <span style="font-size: 1.4rem;">⚖️</span>
+          <span style="font-size: 1.4rem;"></span>
           <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--neon-blue); margin: 0; letter-spacing: -0.01em; font-family: var(--font-title);">Código Deontológico NEWNEWS</h3>
         </div>
         <p style="color: var(--text-muted); font-size: 0.8rem; line-height: 1.45; margin-bottom: 1.25rem;">

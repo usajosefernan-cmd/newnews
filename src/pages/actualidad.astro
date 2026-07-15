@@ -15,7 +15,7 @@ const articles = db.prepare(`
   ORDER BY a.published_at DESC, a.created_at DESC
 `).all() as any[];
 
-// Extraer categorías 💡únicas para los filtros
+// Extraer categorías únicas para los filtros
 const categories = [...new Set(articles.map(art => art.category))].filter(Boolean);
 
 db.close();
@@ -62,12 +62,12 @@ const base = import.meta.env.BASE_URL;
 const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
 ---
 
-<Layout title="Feed de Actualidad" description="Informes cronol💡⚙️gicos de contrastación y verificación de bulos en España.">
+<Layout title="Feed de Actualidad" description="Informes cronolágicos de contrastación y verificación de bulos en España.">
   <div class="container" style="padding-top: 1.5rem; padding-bottom: 5rem; max-width: 680px;">
     
     <div style="margin-bottom: 2rem;">
       <h1 class="text-gradient-rose" style="font-size: 2.2rem; font-weight: 850; font-family: var(--font-title); letter-spacing: -0.04em; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-        <span style="font-size: 1.8rem;">💡</span> Feed de Actualidad
+        <span style="font-size: 1.8rem;"></span> Feed de Actualidad
       </h1>
       <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0; line-height: 1.4;">
         Todos los bulos y claims analizados por el cortafuegos, ordenados de forma cronológica.
@@ -91,7 +91,7 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
       ))}
     </div>
 
-    <!-- Listado de Artículos (Cronol💡⚙️gico) -->
+    <!-- Listado de Artículos (Cronolágico) -->
     <div style="display: flex; flex-direction: column; gap: 1.5rem;">
       {articles.map(art => (
         <article class={`cyber-card ${getVerdictClass(art.verdict)}`} style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; transition: transform 0.2s ease, box-shadow 0.2s ease;">
@@ -140,7 +140,7 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
               <span style="color: var(--text-muted);">Expediente general</span>
             )}
             <span style="color: var(--text-muted); font-size: 0.7rem;">
-              V💡⚙️a: <strong style="color: var(--text-main);">{art.origin_platform}</strong>
+              Váa: <strong style="color: var(--text-main);">{art.origin_platform}</strong>
               {art.origin_date && (
                 <span> &bull; Post: <strong style="color: var(--text-main);">{formatOriginalDate(art.origin_date)}</strong></span>
               )}
@@ -154,7 +154,7 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
 
       {articles.length === 0 && (
         <div class="cyber-card" style="padding: 3rem; text-align: center; border-color: rgba(255,255,255,0.05);">
-          <p style="color: var(--text-muted); font-size: 1rem; margin: 0;">No se han publicado desmentidos todav💡⚙️a en el portal.</p>
+          <p style="color: var(--text-muted); font-size: 1rem; margin: 0;">No se han publicado desmentidos todaváa en el portal.</p>
         </div>
       )}
     </div>

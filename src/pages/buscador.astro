@@ -100,7 +100,7 @@ if (verify && query.trim().length > 0) {
       if (scrapedData.isAccessible) {
         log(`Raspado exitoso. Plataforma: ${scrapedData.platform}. Título extraído: "${scrapedData.title.substring(0, 50)}..."`);
       } else {
-        log(`⚠️ Advertencia de acceso al raspador: ${scrapedData.error || 'La plataforma bloquea acceso directo. Usando fallback.'}`);
+        log(` Advertencia de acceso al raspador: ${scrapedData.error || 'La plataforma bloquea acceso directo. Usando fallback.'}`);
       }
     } else {
       log(`Detectado texto plano. Procediendo a realizar búsqueda semántica e investigación directa por IA...`);
@@ -177,7 +177,7 @@ if (verify && query.trim().length > 0) {
     log(`Guardado completado exitosamente. ID de auditoría: ${verifId}`);
     
   } catch (err: any) {
-    log(`❌ Error crítico en el motor de verificación: ${err.message}`);
+    log(` Error crítico en el motor de verificación: ${err.message}`);
     
     // Intentar registrar el fallo en BD para auditoría
     try {
@@ -208,7 +208,7 @@ const getVerdictClass = (verdict) => {
     
     <div style="margin-bottom: 2.5rem; text-align: center;">
       <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">
-        🔍 Buscador de <span class="text-gradient-blue">Claims</span>
+         Buscador de <span class="text-gradient-blue">Claims</span>
       </h1>
       <p style="color: var(--text-muted);">
         Introduce la frase sospechosa, post viral o tema del que dudas y buscaremos en nuestro archivo de auditorías con fuentes.
@@ -304,7 +304,7 @@ const getVerdictClass = (verdict) => {
 
                       {scrapedData && scrapedData.views !== undefined && scrapedData.views > 0 && (
                         <div style="margin-bottom: 1.25rem; font-size: 0.9rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem; background: rgba(0, 240, 255, 0.05); border: 1px solid rgba(0, 240, 255, 0.15); padding: 0.5rem 0.75rem; border-radius: 6px;">
-                          <span>📊 Alcance de la Plataforma:</span>
+                          <span> Alcance de la Plataforma:</span>
                           <strong style="color: var(--neon-blue);">{scrapedData.views.toLocaleString('es-ES')} visualizaciones</strong>
                         </div>
                       )}
@@ -348,7 +348,7 @@ const getVerdictClass = (verdict) => {
                     </div>
                   ) : (
                     <div class="cyber-card rose" style="padding: 2rem; text-align: center; border-color: var(--neon-rose);">
-                      <span style="font-size: 2.5rem;">⚠️</span>
+                      <span style="font-size: 2.5rem;"></span>
                       <h3 style="color: var(--neon-rose); margin-top: 0.75rem;">Fallo en la Verificación Instantánea</h3>
                       <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 500px; margin: 0.5rem auto 0 auto;">
                         No se pudo realizar el desmentido automatizado. Asegúrate de que la clave API de Gemini está configurada correctamente en el archivo de configuración (.env).
@@ -358,7 +358,7 @@ const getVerdictClass = (verdict) => {
                 </div>
               ) : (
                 <div class="cyber-card rose" style="padding: 2.25rem; background: rgba(255, 0, 127, 0.02); text-align: center; display: flex; flex-direction: column; gap: 1.25rem; align-items: center;">
-                  <span style="font-size: 2.5rem;">⚠️</span>
+                  <span style="font-size: 2.5rem;"></span>
                   <h3 style="color: var(--neon-rose); font-family: var(--font-title); font-size: 1.4rem; font-weight: 850;">Bulo no Registrado</h3>
                   <p style="color: var(--text-muted); max-width: 520px; font-size: 0.95rem; line-height: 1.5; margin: 0;">
                     No disponemos de ningún desmentido específico para esa afirmación en nuestra base de datos local de expedientes y artículos ya redactados.
@@ -366,7 +366,7 @@ const getVerdictClass = (verdict) => {
                   
                   <div style="display: flex; gap: 1rem; width: 100%; max-width: 520px; justify-content: center; margin-top: 0.5rem;">
                     <a href={`/buscador?q=${encodeURIComponent(query)}&verify=true`} class="cyber-btn accent" style="flex-grow: 1; text-align: center; text-decoration: none; box-shadow: 2px 2px 0px 0px var(--text-main); font-weight: 800;">
-                      ⚡ Iniciar Verificación por IA y Scraper (En Vivo)
+                       Iniciar Verificación por IA y Scraper (En Vivo)
                     </a>
                   </div>
                   

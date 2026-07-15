@@ -109,7 +109,7 @@ function getStatusLabel(status: string) {
 
             {sub.reason && (
               <span style="font-size: 0.7rem; color: var(--text-muted); display: block; background: rgba(255,255,255,0.02); padding: 0.4rem; border-radius: 4px; border-left: 2px solid var(--border-color);">
-                🔍 Diagnóstico: {sub.reason}
+                 Diagnóstico: {sub.reason}
               </span>
             )}
           </div>
@@ -196,14 +196,14 @@ function getStatusLabel(status: string) {
           feedback.style.backgroundColor = 'rgba(255, 51, 102, 0.05)';
           feedback.style.border = '1px solid var(--neon-rose)';
           feedback.style.color = 'var(--neon-rose)';
-          feedback.innerHTML = `❌ Error: ${result.error}`;
+          feedback.innerHTML = ` Error: ${result.error}`;
         }
       } catch (err: any) {
         feedback.style.display = 'block';
         feedback.style.backgroundColor = 'rgba(255, 51, 102, 0.05)';
         feedback.style.border = '1px solid var(--neon-rose)';
         feedback.style.color = 'var(--neon-rose)';
-        feedback.innerHTML = `❌ Error de red: ${err.message}`;
+        feedback.innerHTML = ` Error de red: ${err.message}`;
       }
     });
   }

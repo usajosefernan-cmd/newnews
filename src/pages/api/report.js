@@ -49,7 +49,7 @@ export async function POST({ request }) {
       };
 
       try {
-        send({ status: 'info', message: '📡 [ANALIZANDO LINK] Conectando con la plataforma en origen...' });
+        send({ status: 'info', message: '[ANALIZANDO LINK] Conectando con la plataforma en origen...' });
 
         // 1. Analizar URL utilizando el módulo real de scraping de NEWNEWS
         let platform = 'Web Report';
@@ -74,10 +74,10 @@ export async function POST({ request }) {
 
           send({ 
             status: 'info', 
-            message: `📦 [METADATOS] Enlace interceptado de ${platform}. Título: "${title.substring(0, 55)}..." (${views.toLocaleString('es-ES')} reproducciones en origen)` 
+            message: `[METADATOS] Enlace interceptado de ${platform}. Título: "${title.substring(0, 55)}..." (${views.toLocaleString('es-ES')} reproducciones en origen)` 
           });
         } catch (e) {
-          send({ status: 'warn', message: `⚠️ [ADVERTENCIA] No se pudieron extraer metadatos automáticamente. Se requiere revisión manual de estructura.` });
+          send({ status: 'warn', message: `[ADVERTENCIA] No se pudieron extraer metadatos automáticamente. Se requiere revisión manual de estructura.` });
         }
 
         // 1.5 Buscar si ya existe una verificación duplicada en la base de datos de la VPS
@@ -111,7 +111,7 @@ export async function POST({ request }) {
         if (existingVerification) {
           send({ 
             status: 'success', 
-            message: `🔍 [VERIFICACIÓN EXISTENTE] ¡Ya tenemos una verificación completa para este tema! Puedes consultarla directamente en la web aquí: https://143-47-35-167.sslip.io/pro/newnews/noticia/${existingVerification.slug}` 
+            message: ` [VERIFICACIÓN EXISTENTE] ¡Ya tenemos una verificación completa para este tema! Puedes consultarla directamente en la web aquí: https://143-47-35-167.sslip.io/pro/newnews/noticia/${existingVerification.slug}` 
           });
           safeClose();
           return;
@@ -215,11 +215,11 @@ Debes responder estrictamente en formato JSON con la siguiente estructura:
         }
 
         // Mostrar desglose detallado de índices en la consola
-        send({ status: 'info', message: '📊 [ÍNDICES DE RELEVANCIA COMPUTADOS]' });
-        send({ status: 'info', message: `  ├─ 📈 Viralidad: ${viralityScore.toFixed(1)}/10 (Basado en ${views.toLocaleString('es-ES')} reproducciones en origen. Escala logarítmica. Umbral de urgencia: 7.0)` });
-        send({ status: 'info', message: `  ├─ ⚖️ Impacto Social: ${iis.toFixed(1)}/10 (Temática: ${thematicTag}. Valora la repercusión directa en las leyes, derechos y bienestar de la ciudadanía)` });
-        send({ status: 'info', message: `  ├─ ⚠️ Riesgo de Desinformación: ${ird.toFixed(1)}/10 (Evaluando sesgo comercial/referidos, lenguaje emocional o clickbait y falta de datos primarios)` });
-        send({ status: 'info', message: `  └─ 🔬 Conclusión: ${reason}` });
+        send({ status: 'info', message: '[ÍNDICES DE RELEVANCIA COMPUTADOS]' });
+        send({ status: 'info', message: `  ├─ Viralidad: ${viralityScore.toFixed(1)}/10 (Basado en ${views.toLocaleString('es-ES')} reproducciones en origen. Escala logarítmica. Umbral de urgencia: 7.0)` });
+        send({ status: 'info', message: `  ├─ Impacto Social: ${iis.toFixed(1)}/10 (Temática: ${thematicTag}. Valora la repercusión directa en las leyes, derechos y bienestar de la ciudadanía)` });
+        send({ status: 'info', message: `  ├─ Riesgo de Desinformación: ${ird.toFixed(1)}/10 (Evaluando sesgo comercial/referidos, lenguaje emocional o clickbait y falta de datos primarios)` });
+        send({ status: 'info', message: `  └─ Conclusión: ${reason}` });
 
         // 3. Registrar en base de datos SQLite de la VPS (nuestro Supabase interno)
         const db = new DatabaseSync(dbPath);
@@ -235,24 +235,24 @@ Debes responder estrictamente en formato JSON con la siguiente estructura:
         `).run(id, platform, url, databaseText, JSON.stringify({ declared_views: views, auto_reason: reason, imageUrl: originalImageUrl }), cleanClaim, viralityScore, ird);
 
         db.close();
-        send({ status: 'info', message: '💾 [BASE DE DATOS] Registro catalogado en la VPS con éxito.' });
+        send({ status: 'info', message: '[BASE DE DATOS] Registro catalogado en la VPS con éxito.' });
 
         // 4. Decidir si califica para auditoría inmediata
         if (isViral) {
           send({ 
             status: 'success', 
-            message: '🚀 [COLA DE PRIORIDAD] Impacto viral crítico validado. El reporte ha sido enviado al motor automático de Hermes en el VPS para su análisis con IA y publicación asíncrona.' 
+            message: '[COLA DE PRIORIDAD] Impacto viral crítico validado. El reporte ha sido enviado al motor automático de Hermes en el VPS para su análisis con IA y publicación asíncrona.' 
           });
         } else {
           send({ 
             status: 'success', 
-            message: 'ℹ️ [COLA SECUNDARIA] Relevancia local detectada. Guardado en la cola del radar. Se auditará y contrastará en el próximo ciclo automático de Hermes.' 
+            message: '[COLA SECUNDARIA] Relevancia local detectada. Guardado en la cola del radar. Se auditará y contrastará en el próximo ciclo automático de Hermes.' 
           });
         }
 
         safeClose();
       } catch (err) {
-        send({ status: 'error', message: `❌ [ERROR FATAL] ${err.message}` });
+        send({ status: 'error', message: `[ERROR FATAL] ${err.message}` });
         safeClose();
       }
     },
@@ -265,7 +265,8 @@ Debes responder estrictamente en formato JSON con la siguiente estructura:
     headers: {
       'Content-Type': 'application/x-ndjson',
       'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive'
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no'
     }
   });
 }
