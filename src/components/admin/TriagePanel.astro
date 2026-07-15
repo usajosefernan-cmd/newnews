@@ -71,7 +71,7 @@ function getStatusLabel(status: string) {
           <!-- Aprobación -->
           <details style="flex: 1; min-width: 250px;" class="accordion-edit">
             <summary style="cursor: pointer; color: var(--neon-green); font-weight: bold; font-size: 0.8rem;">✓ Aprobar para Investigación</summary>
-            <form method="POST" class="edit-form" style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+            <form method="POST" action="?tab=user-submissions" class="edit-form" style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
               <input type="hidden" name="action" value="approve_submission" />
               <input type="hidden" name="submission_id" value={sub.id} />
               <div class="form-group">
@@ -90,7 +90,7 @@ function getStatusLabel(status: string) {
           <!-- Descarte -->
           <details style="flex: 1; min-width: 250px;" class="accordion-edit">
             <summary style="cursor: pointer; color: var(--neon-rose); font-weight: bold; font-size: 0.8rem;">✗ Descartar por Baja Relevancia</summary>
-            <form method="POST" class="edit-form" style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+            <form method="POST" action="?tab=user-submissions" class="edit-form" style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
               <input type="hidden" name="action" value="discard_submission" />
               <input type="hidden" name="submission_id" value={sub.id} />
               <div class="form-group">

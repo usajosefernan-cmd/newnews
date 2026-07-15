@@ -4,7 +4,7 @@ import Layout from '../layouts/Layout.astro';
 import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 import { analyzeUrl } from '../../scripts/check-url.js';
-import { execSync } from 'node:child_process';
+import { execSync, exec } from 'node:child_process';
 import DashboardPanel from '../components/admin/DashboardPanel.astro';
 import AprobacionPanel from '../components/admin/AprobacionPanel.astro';
 import TriagePanel from '../components/admin/TriagePanel.astro';
@@ -342,11 +342,14 @@ if (Astro.request.method === 'POST') {
         message = `✓ Envío de usuario aprobado e insertado en la cola del radar.`;
         messageType = 'success';
 
-        // Lanzar pipeline de IA en segundo plano
-        try {
-          execSync('node scripts/ai-pipeline.js', { encoding: 'utf-8', env: process.env });
-          execSync('node scripts/sync.js', { encoding: 'utf-8', env: process.env });
-        } catch (e) {}
+        // Lanzar pipeline de IA en segundo plano de forma asíncrona no bloqueante
+        exec('node scripts/ai-pipeline.js && node scripts/sync.js', (err) => {
+          if (err) {
+            console.error('Error ejecutando pipeline de IA asíncrono:', err.message);
+          } else {
+            console.log('Pipeline de IA y Sincronización completados con éxito.');
+          }
+        });
       }
     }
     else if (action === 'discard_submission') {
