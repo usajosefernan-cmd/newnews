@@ -186,16 +186,8 @@ if (Astro.request.method === 'POST') {
           VALUES (?, ?, ?, ?, 'Administrador', '{}', ?, 'General', 10.0, 8.0, 'pendiente', datetime('now'))
         `).run(id, platform, url, claim, claim);
 
-        try {
-          execSync('node scripts/ai-pipeline.js', { encoding: 'utf-8', env: process.env });
-          execSync('node scripts/sync.js', { encoding: 'utf-8', env: process.env });
-          execSync('npm run build', { encoding: 'utf-8', env: process.env });
-          message = `✓ Reclamación procesada: desmentido por IA redactado e hilo publicado directamente en la web.`;
-          messageType = 'success';
-        } catch (e: any) {
-          message = `⚠️ Reclamación insertada, pero falló la compilación inmediata: ${e.message}`;
-          messageType = 'error';
-        }
+        message = `✓ Reclamación registrada. Se procesará asíncronamente en segundo plano por el motor de Hermes.`;
+        messageType = 'success';
       }
     }
     else if (action === 'add_radar_source') {
@@ -265,16 +257,8 @@ if (Astro.request.method === 'POST') {
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 10.0, 8.0, 'pendiente', datetime('now'))
         `).run(id, platform, url, `${title}\n\n${description}`, author, metricsJson, title || description.substring(0, 200), topicTitle);
 
-        try {
-          execSync('node scripts/ai-pipeline.js', { encoding: 'utf-8', env: process.env });
-          execSync('node scripts/sync.js', { encoding: 'utf-8', env: process.env });
-          execSync('npm run build', { encoding: 'utf-8', env: process.env });
-          message = `✅ URL procesada: desmentido por IA redactado e hilo publicado directamente en la web.`;
-          messageType = 'success';
-        } catch (e: any) {
-          message = `⚠️ URL insertada, pero falló la compilación inmediata: ${e.message}`;
-          messageType = 'error';
-        }
+        message = `✅ URL registrada con éxito. Se procesará asíncronamente en segundo plano por el motor de Hermes.`;
+        messageType = 'success';
         urlCheckResult = null;
       }
     }
@@ -347,6 +331,28 @@ if (Astro.request.method === 'POST') {
       db.prepare("UPDATE user_submissions SET status = 'descartado_por_baja_relevancia', reason = ? WHERE id = ?").run(reason, submissionId);
       message = `✓ Envío descartado por baja relevancia.`;
       messageType = 'error';
+    }
+    else if (action === 'process_radar_item') {
+      const itemId = data.get('item_id')?.toString() || '';
+      if (itemId) {
+        db.prepare("UPDATE scraped_items SET status = 'pendiente' WHERE id = ?").run(itemId);
+        message = `✓ Procesamiento de IA iniciado para este claim. Los borradores estarán listos en unos instantes.`;
+        messageType = 'success';
+        
+        exec('node scripts/ai-pipeline.js && node scripts/sync.js', (err) => {
+          if (err) {
+            console.error('Error procesando item de radar con IA:', err.message);
+          }
+        });
+      }
+    }
+    else if (action === 'discard_radar_item') {
+      const itemId = data.get('item_id')?.toString() || '';
+      if (itemId) {
+        db.prepare("UPDATE scraped_items SET status = 'ruido' WHERE id = ?").run(itemId);
+        message = `✓ Item del radar descartado correctamente.`;
+        messageType = 'success';
+      }
     }
     else if (action === 'reprocess_phase') {
       const articleId = data.get('article_id')?.toString() || '';
@@ -752,7 +758,7 @@ const getVerdictClass = (verdict) => {
 
       <!-- PESTAÑA 1: DASHBOARD & CONSOLA -->
       <div id="pane-dashboard" class="admin-tab-panel active">
-        <DashboardPanel pendingCount={pendingRadarItems.length} />
+        <DashboardPanel pendingCount={pendingRadarItems.length} pendingRadarItems={pendingRadarItems} />
       </div>
 
       <!-- PESTAÑA 2: COLA DE MODERACIÓN (BORRADORES DE LA IA) -->
@@ -1252,19 +1258,36 @@ const getVerdictClass = (verdict) => {
             <!-- Cola de radar items -->
             <div class="cyber-card" style="padding: 1.5rem;">
               <h3 class="card-title">📡 Cola de Intercepción ({pendingRadarItems.length})</h3>
-              <div class="scroller-list" style="max-height: 350px;">
+              <div class="scroller-list" style="max-height: 450px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.85rem;">
                 {pendingRadarItems.map(item => (
-                  <div class="scroller-item">
-                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">
+                  <div class="scroller-item" style="background: rgba(255, 255, 255, 0.015); padding: 0.75rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.04); display: flex; flex-direction: column; gap: 0.5rem; text-align: left;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted);">
                       <span>{item.platform} ({item.author_public_name})</span>
-                      <span style="color: var(--neon-rose);">Vir: {item.virality_score}/10</span>
+                      <span style="color: var(--neon-rose); font-weight: bold;">Viralidad: {item.virality_score}/10</span>
                     </div>
-                    <p style="font-size: 0.8rem; line-height: 1.3; margin: 0 0 0.5rem 0;">"{item.detected_claim || item.text.substring(0, 80)}..."</p>
-                    <a href={item.url} target="_blank" style="font-size: 0.7rem; color: var(--neon-blue); text-decoration: none;">Ver fuente original 🔗</a>
+                    <p style="font-size: 0.8rem; line-height: 1.35; color: #fff; margin: 0;">"{item.detected_claim || item.text.substring(0, 90)}..."</p>
+                    
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; border-top: 1px solid rgba(255,255,255,0.03); padding-top: 0.5rem; margin-top: 0.2rem;">
+                      <a href={item.url} target="_blank" style="font-size: 0.7rem; color: var(--neon-blue); text-decoration: none;">Ver origen 🔗</a>
+                      
+                      <div style="display: flex; gap: 0.35rem;">
+                        <form method="POST" style="margin: 0;">
+                          <input type="hidden" name="action" value="process_radar_item" />
+                          <input type="hidden" name="item_id" value={item.id} />
+                          <button type="submit" class="cyber-btn accent" style="padding: 0.2rem 0.5rem; font-size: 0.65rem; border-radius: 4px; cursor: pointer;">🤖 IA</button>
+                        </form>
+                        
+                        <form method="POST" style="margin: 0;">
+                          <input type="hidden" name="action" value="discard_radar_item" />
+                          <input type="hidden" name="item_id" value={item.id} />
+                          <button type="submit" class="cyber-btn" style="padding: 0.2rem 0.5rem; font-size: 0.65rem; border-radius: 4px; border-color: var(--neon-rose); color: var(--neon-rose); cursor: pointer;">🗑️</button>
+                        </form>
+                      </div>
+                    </div>
                   </div>
                 ))}
                 {pendingRadarItems.length === 0 && (
-                  <p class="empty-state">No hay items en la cola esperando revisión.</p>
+                  <p class="empty-state" style="font-size: 0.8rem; color: var(--text-muted); font-style: italic; text-align: center;">No hay items en la cola esperando revisión.</p>
                 )}
               </div>
             </div>

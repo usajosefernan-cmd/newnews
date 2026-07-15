@@ -26,11 +26,26 @@ export async function POST({ request }) {
     });
   }
 
+  let isClosed = false;
+
   // Crear canal de stream
   const stream = new ReadableStream({
     async start(controller) {
       const send = (dataObj) => {
-        controller.enqueue(new TextEncoder().encode(JSON.stringify(dataObj) + '\n'));
+        if (isClosed) return;
+        try {
+          controller.enqueue(new TextEncoder().encode(JSON.stringify(dataObj) + '\n'));
+        } catch (e) {
+          isClosed = true;
+        }
+      };
+
+      const safeClose = () => {
+        if (isClosed) return;
+        isClosed = true;
+        try {
+          controller.close();
+        } catch (e) {}
       };
 
       try {
@@ -98,7 +113,7 @@ export async function POST({ request }) {
             status: 'success', 
             message: `🔍 [VERIFICACIÓN EXISTENTE] ¡Ya tenemos una verificación completa para este tema! Puedes consultarla directamente en la web aquí: https://143-47-35-167.sslip.io/pro/newnews/noticia/${existingVerification.slug}` 
           });
-          controller.close();
+          safeClose();
           return;
         }
 
@@ -224,45 +239,25 @@ Debes responder estrictamente en formato JSON con la siguiente estructura:
 
         // 4. Decidir si califica para auditoría inmediata
         if (isViral) {
-          send({ status: 'success', message: '🚀 [CORTAFUEGOS SUPERADO] ¡Impacto viral crítico validado! Disparando motor de auditoría en caliente...' });
-          
-          try {
-            send({ status: 'info', message: '🤖 [PROCESO] Redactando verificación con bases de datos jurídicas del BOE e INE...' });
-            execSync('node scripts/ai-pipeline.js', { env: process.env });
-            send({ status: 'info', message: '✅ [PROCESO] Desmentido redactado y guardado.' });
-
-            send({ status: 'info', message: '🔄 [PROCESO] Sincronizando datos de expedientes...' });
-            execSync('node scripts/sync.js', { env: process.env });
-            send({ status: 'info', message: '✅ [PROCESO] Base de datos sincronizada.' });
-
-            send({ status: 'info', message: '⚡ [PROCESO] Compilando portal web estático (Astro Build)...' });
-            execSync('npm run build', { env: process.env });
-            send({ status: 'info', message: '✅ [PROCESO] Reconstrucción de la web completada.' });
-
-            if (process.platform !== 'win32') {
-              send({ status: 'info', message: '🔄 [PROCESO] Recargando servidor web PM2...' });
-              execSync('pm2 reload newnews --update-env', { env: process.env });
-            }
-            
-            send({ 
-              status: 'success', 
-              message: '🎉 [ÉXITO] ¡Publicación completada en caliente! La información y el desmentido ya están listos en la portada y expedientes.' 
-            });
-          } catch (execErr) {
-            send({ status: 'error', message: `❌ [ERROR EJECUCIÓN] Falló el motor de compilación: ${execErr.message}` });
-          }
+          send({ 
+            status: 'success', 
+            message: '🚀 [COLA DE PRIORIDAD] Impacto viral crítico validado. El reporte ha sido enviado al motor automático de Hermes en el VPS para su análisis con IA y publicación asíncrona.' 
+          });
         } else {
           send({ 
             status: 'success', 
-            message: 'ℹ️ [COLA AUTOMÁTICA] Relevancia local detectada. No requiere procesamiento inmediato de prioridad crítica. Se procesará en el siguiente ciclo automático de 20 minutos.' 
+            message: 'ℹ️ [COLA SECUNDARIA] Relevancia local detectada. Guardado en la cola del radar. Se auditará y contrastará en el próximo ciclo automático de Hermes.' 
           });
         }
 
-        controller.close();
+        safeClose();
       } catch (err) {
         send({ status: 'error', message: `❌ [ERROR FATAL] ${err.message}` });
-        controller.close();
+        safeClose();
       }
+    },
+    cancel(reason) {
+      isClosed = true;
     }
   });
 

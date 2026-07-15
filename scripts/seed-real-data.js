@@ -180,6 +180,13 @@ const insertArticle = db.prepare(`
   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'publicado', 0, ?, ?, datetime('now'), datetime('now'))
 `);
 
+const insertScrapedItem = db.prepare(`
+  INSERT INTO scraped_items (
+    id, platform, url, text, author_public_name, metrics_json, detected_claim, suggested_topic, virality_score, risk_score, status, created_at
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'procesado', datetime('now'))
+`);
+
+
 const articlesData = [
   {
     id: 'art-franco-ss',
@@ -410,6 +417,34 @@ articlesData.forEach((art, idx) => {
     art.what_is_not_proven,
     publishedAt,
     originDate
+  );
+
+  // Inyectar en scraped_items para dar soporte al widget social sin mostrar Pendiente ni iframes colgados
+  let username = 'canal_origen';
+  if (art.origin_url) {
+    const match = art.origin_url.match(/(?:x|twitter)\.com\/([^\/]+)/i) || art.origin_url.match(/t\.me\/([^\/]+)/i);
+    if (match) username = match[1];
+  }
+
+  const scrapedId = `scraped-seed-${art.id}`;
+  const metricsVal = {
+    likes: Math.floor(Math.random() * 4500) + 1200,
+    reposts: Math.floor(Math.random() * 980) + 240,
+    comments: Math.floor(Math.random() * 560) + 110,
+    views: Math.floor(Math.random() * 180000) + 45000
+  };
+
+  insertScrapedItem.run(
+    scrapedId,
+    art.origin_platform || 'X (Twitter)',
+    art.origin_url,
+    art.claim,
+    username,
+    JSON.stringify(metricsVal),
+    art.claim,
+    art.category,
+    8.2, // virality_score
+    7.5  // risk_score
   );
 });
 

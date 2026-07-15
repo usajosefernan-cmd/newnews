@@ -118,7 +118,7 @@ const getDeterministicGradient = (username) => {
     'linear-gradient(135deg, #0088cc 0%, #005580 100%)', // Azul Telegram
     'linear-gradient(135deg, #7b2cbf 0%, #3c096c 100%)', // Morado cyberpunk
     'linear-gradient(135deg, #e63946 0%, #1d3557 100%)', // Rojo coral
-    'linear-gradient(135deg, #2a9d8f 0%, #264653 100%)', // Verde petr💡⚙️leo
+    'linear-gradient(135deg, #2a9d8f 0%, #264653 100%)', // Verde petróleo
     'linear-gradient(135deg, #f5a623 0%, #d0021b 100%)', // Naranja/Fuego
     'linear-gradient(135deg, #1d9bf0 0%, #0a66c2 100%)', // Azul social
     'linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%)' // Sunset
@@ -132,7 +132,7 @@ const getDeterministicGradient = (username) => {
 
 const formatDisplayName = (username) => {
   const u = username.toLowerCase();
-  if (u === 'alviseperez') return 'Alvise P💡⚙️rez';
+  if (u === 'alviseperez') return 'Alvise Pérez';
   if (u === 'alvsjng') return 'Alvisjng';
   if (u === 'vox_es') return 'VOX España';
   if (u === 'ppopular') return 'Partido Popular';
@@ -300,17 +300,17 @@ if (termometroScore <= 20) {
 
 // Precalculados para el truco usado
 const trickUsed = (article.trick_used || '').toLowerCase();
-let trickDesc = 'Se utilizan afirmaciones gen💡⚙️ricas descontextualizadas del marco legal oficial del BOE o del INE para generar desinformación.';
+let trickDesc = 'Se utilizan afirmaciones genéricas descontextualizadas del marco legal oficial del BOE o del INE para generar desinformación.';
 if (trickUsed === 'cherry-picking') {
   trickDesc = 'Se seleccionan únicamente datos parciales o favorables al sesgo para omitir el contexto general completo que desmiente la afirmación.';
 } else if (trickUsed === 'falso dilema') {
-  trickDesc = 'Se presenta la situación como si solo existieran dos opciones extremas excluyentes, ocultando la existencia de matices intermedios o terceras v💡⚙️as jurídicas.';
+  trickDesc = 'Se presenta la situación como si solo existieran dos opciones extremas excluyentes, ocultando la existencia de matices intermedios o terceras vías jurídicas.';
 } else if (trickUsed === 'culpa colectiva') {
   trickDesc = 'Se atribuye a todo un grupo social (por origen, nacionalidad o religión) la responsabilidad directa o indirecta por el acto delictivo de un individuo aislado.';
 } else if (trickUsed === 'dato sin base') {
-  trickDesc = 'Se lanzan porcentajes alarmantes o cifras absolutas elevadas sin contextualizar la base demogr💡⚙️fica, el denominador o el marco de comparación estad💡⚙️stica real.';
-} else if (trickUsed === 'v💡⚙️deo recortado') {
-  trickDesc = 'Se extrae un fragmento de audio o v💡⚙️deo de pocos segundos para descontextualizar las declaraciones completas o la fecha real del suceso.';
+  trickDesc = 'Se lanzan porcentajes alarmantes o cifras absolutas elevadas sin contextualizar la base demográfica, el denominador o el marco de comparación estadística real.';
+} else if (trickUsed === 'vídeo recortado') {
+  trickDesc = 'Se extrae un fragmento de audio o vídeo de pocos segundos para descontextualizar las declaraciones completas o la fecha real del suceso.';
 } else if (trickUsed === 'autoridad falsa') {
   trickDesc = 'Se atribuye la información a supuestos portales de investigación, expertos autodeclarados o fuentes no oficiales para forzar veracidad.';
 } else if (trickUsed === 'miedo/urgencia') {
@@ -414,7 +414,7 @@ if (trickUsed === 'cherry-picking') {
           {/* Contenido / Claim Original (Resaltado con advertencia de Bulo) */}
           <div style="background: rgba(220, 39, 67, 0.03); border: 1px solid rgba(220, 39, 67, 0.2); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; position: relative; margin-top: 0.5rem;">
             <span style="position: absolute; top: -0.5rem; left: 1rem; background: #070913; padding: 0 0.5rem; font-size: 0.65rem; color: var(--neon-rose); font-weight: 800; letter-spacing: 0.05em; border: 1px solid rgba(220, 39, 67, 0.2); border-radius: 4px;">
-              💡⚙️💡 AFIRMACI💡⚙️N VIRAL DETECTADA
+              AFIRMACIÓN VIRAL DETECTADA
             </span>
             <p style="font-style: italic; color: #ffffff; font-size: 1.05rem; line-height: 1.45; font-weight: 600; margin: 0.5rem 0 0.5rem 0;">
               "{article.claim}"
@@ -482,7 +482,7 @@ if (trickUsed === 'cherry-picking') {
               <div style="display: flex; justify-content: center; width: 100%; max-height: 380px; overflow-y: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); padding: 0.5rem; background: rgba(0,0,0,0.2);">
                 <blockquote class="tiktok-embed" data-video-id={socialMeta.tiktokVideoId} style="max-width: 605px; min-width: 325px; margin: 0 auto;">
                   <section>
-                    <a target="_blank" title="TikTok" href={socialMeta.url}>Cargando v💡⚙️deo oficial de TikTok...</a>
+                    <a target="_blank" title="TikTok" href={socialMeta.url}>Cargando vídeo oficial de TikTok...</a>
                   </section>
                 </blockquote>
                 <script async src="https://www.tiktok.com/embed.js"></script>
@@ -586,16 +586,16 @@ if (trickUsed === 'cherry-picking') {
         </div>
       )}
 
-      <!-- Auditor💡⚙️a del Bul💡⚙️metro y Term💡⚙️metro de NEWNEWS -->
+      <!-- Auditoría del Bulómetro y Termómetro de NEWNEWS -->
       <div class="cyber-card" style="padding: 1.5rem; background: rgba(18, 22, 41, 0.25); display: flex; flex-direction: column; gap: 1.25rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-          <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-purple); font-size: 0.7rem; letter-spacing: 0.05em;">Term💡⚙️metro NewNews</span>
+          <span style="font-weight: 800; text-transform: uppercase; color: var(--neon-purple); font-size: 0.7rem; letter-spacing: 0.05em;">Termómetro NewNews</span>
           <span style="font-size: 0.8rem; font-weight: bold; color: var(--text-main); font-family: monospace;">
             {article.emoji_tag || '💡 Falta contexto'}
           </span>
         </div>
 
-        <!-- Barra de progreso / Term💡⚙️metro -->
+        <!-- Barra de progreso / Termómetro -->
         <div>
           <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.35rem; font-family: monospace;">
             <span>Nivel: <strong>{termometroLabel}</strong></span>

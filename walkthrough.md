@@ -58,7 +58,17 @@ Hemos solucionado de forma definitiva los problemas de inconsistencia de índice
 * **Problema:** Al compilar mediante `npx astro build --outDir dist_temp`, Astro y el adaptador de Node creaban el bundle de servidor en una carpeta anidada `dist_temp/dist/server/` en lugar de `dist_temp/server/`. El script de swap de Hermes renombraba `dist_temp` directamente a `dist`, dejando una carpeta redundante `dist/dist/server` y manteniendo archivos antiguos y rotos en `dist/server`. PM2 fallaba al intentar importar `renderers.mjs` arrojando un error fatal de inicio del servidor.
 * **Solución:** Modificamos los scripts [sync.js](file:///c:/Users/yo/Desktop/WORKSPACE/projects/newnews/scripts/sync.js) y [hermes-cron.js](file:///c:/Users/yo/Desktop/WORKSPACE/projects/newnews/scripts/hermes-cron.js) para detectar dinámicamente si existe la carpeta anidada de build (`dist_temp/dist`). En caso afirmativo, el swap atómico renombra esa subcarpeta directamente a `dist`. Esto asegura que `client/` y `server/` se ubiquen directamente en la raíz de `dist/`, eliminando los fallos de imports en PM2.
 
-### 4. Prueba de Compilación y Despliegue en VPS
-* **Verificación Local y Remota:** El comando `npm run build` compiló sin advertencias de tipos de datos o imports tanto en local como en la VPS.
-* **Sincronización:** Confirmamos la limpieza y consistencia del repositorio Git en la VPS mediante un reset duro (`git reset --hard origin/master`) una vez subidos los commits a GitHub.
+### 4. Panel de Control de Administración Interactivo para el Radar
+* Se ha resuelto la discrepancia entre la **Cola de Moderación** (que contiene los borradores listos de artículos redactados por la IA en espera de revisión periodística) y la **Cola de Claims del Radar** (que contiene las publicaciones capturadas en bruto por los scrapers a la espera de procesarse).
+* Se inyectó un panel interactivo premium de **Afirmaciones Virales** directamente en la portada del **Dashboard** de administración:
+  * [DashboardPanel.astro](file:///c:/Users/yo/Desktop/WORKSPACE/projects/newnews/src/components/admin/DashboardPanel.astro)
+  * [admin.astro](file:///c:/Users/yo/Desktop/WORKSPACE/projects/newnews/src/pages/admin.astro)
+* A partir de ahora, el administrador puede **aprobar/procesar con IA** o **descartar** directamente con un solo click los elementos capturados en bruto por el radar desde la pantalla inicial, activando Hermes en segundo plano para generar los borradores.
+
+---
+
+## Verificación
+
+* **Localhost:** El servidor de desarrollo responde de forma instantánea al enviar posts, realizar búsquedas semánticas y moderar claims del radar. La CPU y memoria del sistema se mantienen en niveles mínimos normales.
+* **VPS de Producción:** La compilación de Astro Build completó al 100% sin ninguna ruta conflictiva duplicada de Syncthing. El panel de control se ha actualizado correctamente en caliente, y ya es totalmente interactivo. Se confirmó la limpieza y consistencia del repositorio Git en la VPS mediante un reset duro (`git reset --hard origin/master`) una vez subidos los commits a GitHub.
 * **Estado de Producción:** El servidor remoto se recargó bajo PM2 (`newnews`), se comprobó la escucha en el puerto interno `4322` (`127.0.0.1:4322`) y se verificó que la respuesta de Nginx HTTPS en `https://143-47-35-167.sslip.io/pro/newnews/` es un código de éxito `HTTP/2 200 OK`.

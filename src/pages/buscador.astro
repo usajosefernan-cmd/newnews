@@ -54,15 +54,6 @@ if (Astro.request.method === 'POST') {
       
       db.close();
       submitted = true;
-
-      // Procesamiento inmediato del pipeline
-      try {
-        execSync('node scripts/ai-pipeline.js', { encoding: 'utf-8', env: process.env });
-        execSync('node scripts/sync.js', { encoding: 'utf-8', env: process.env });
-        execSync('npm run build', { encoding: 'utf-8', env: process.env });
-      } catch (pipelineErr) {
-        console.error('Error procesando reporte en caliente:', pipelineErr);
-      }
     }
   } catch (err) {
     console.error('Error insertando reporte de usuario:', err);

@@ -22,11 +22,27 @@ export async function POST({ request }) {
     });
   }
 
+  let child = null;
+  let isClosed = false;
+
   // Crear canal de stream para enviar stdout/stderr en tiempo real
   const stream = new ReadableStream({
     async start(controller) {
       const send = (dataObj) => {
-        controller.enqueue(new TextEncoder().encode(JSON.stringify(dataObj) + '\n'));
+        if (isClosed) return;
+        try {
+          controller.enqueue(new TextEncoder().encode(JSON.stringify(dataObj) + '\n'));
+        } catch (e) {
+          isClosed = true;
+        }
+      };
+
+      const safeClose = () => {
+        if (isClosed) return;
+        isClosed = true;
+        try {
+          controller.close();
+        } catch (e) {}
       };
 
       send({ status: 'info', message: `🚀 [INICIO] Iniciando ejecución manual del trabajo: ${job.toUpperCase()}` });
@@ -57,9 +73,10 @@ export async function POST({ request }) {
       send({ status: 'info', message: `💻 [COMANDO] Ejecutando: ${cmd} ${args.join(' ')}` });
 
       try {
-        const child = spawn(cmd, args, { env: process.env, shell: true });
+        child = spawn(cmd, args, { env: process.env, shell: true });
 
         child.stdout.on('data', (data) => {
+          if (isClosed) return;
           const lines = data.toString().split('\n');
           for (const line of lines) {
             if (line.trim()) {
@@ -69,6 +86,7 @@ export async function POST({ request }) {
         });
 
         child.stderr.on('data', (data) => {
+          if (isClosed) return;
           const lines = data.toString().split('\n');
           for (const line of lines) {
             if (line.trim()) {
@@ -78,22 +96,31 @@ export async function POST({ request }) {
         });
 
         child.on('close', (code) => {
+          send({ status: 'info', message: `[PROCESO] Finalizado con código: ${code}` });
           if (code === 0) {
             send({ status: 'success', message: `🎉 [ÉXITO] El proceso ha finalizado correctamente (código de salida 0).` });
           } else {
             send({ status: 'error', message: `❌ [FALLO] El proceso terminó con el código de salida ${code}.` });
           }
-          controller.close();
+          safeClose();
         });
 
         child.on('error', (err) => {
           send({ status: 'error', message: `❌ [ERROR EJECUCIÓN] No se pudo lanzar el subproceso: ${err.message}` });
-          controller.close();
+          safeClose();
         });
 
       } catch (err) {
         send({ status: 'error', message: `❌ [ERROR FATAL] ${err.message}` });
-        controller.close();
+        safeClose();
+      }
+    },
+    cancel(reason) {
+      isClosed = true;
+      if (child && !child.killed) {
+        try {
+          child.kill();
+        } catch (e) {}
       }
     }
   });

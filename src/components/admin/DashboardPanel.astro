@@ -1,8 +1,9 @@
 ---
 interface Props {
   pendingCount: number;
+  pendingRadarItems: any[];
 }
-const { pendingCount } = Astro.props;
+const { pendingCount, pendingRadarItems } = Astro.props;
 ---
 
 <div class="dashboard-grid" style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 1.5rem; align-items: start; margin-bottom: 2rem;">
@@ -42,6 +43,56 @@ const { pendingCount } = Astro.props;
   </div>
 </div>
 
+<!-- Cola de Afirmaciones del Radar directas en Portada -->
+{pendingRadarItems && pendingRadarItems.length > 0 && (
+  <div class="cyber-card" style="padding: 1.5rem; margin-bottom: 1.5rem; border-color: var(--neon-rose);">
+    <h3 class="card-title" style="margin-top: 0; margin-bottom: 0.5rem; font-size: 1.1rem; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+      📡 Afirmaciones Virales en la Cola del Radar ({pendingRadarItems.length})
+      <span style="background: var(--neon-rose); color: #fff; font-size: 0.6rem; font-weight: 800; padding: 0.15rem 0.4rem; border-radius: 4px; box-shadow: 0 0 6px var(--neon-rose); animation: pulse 2s infinite; text-transform: uppercase; letter-spacing: 0.05em;">
+        Pendiente IA
+      </span>
+    </h3>
+    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+      Enlaces y publicaciones virales detectadas esperando procesamiento por IA. Utiliza los controles rápidos para investigarlas o descartarlas de la cola.
+    </p>
+    
+    <div style="display: grid; grid-template-columns: 1fr; gap: 0.85rem; max-height: 400px; overflow-y: auto; padding-right: 0.25rem;">
+      {pendingRadarItems.map(item => (
+        <div style="background: rgba(255, 255, 255, 0.01); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.04); display: flex; flex-direction: column; gap: 0.65rem; text-align: left;">
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted);">
+            <span>Plataforma: <strong>{item.platform}</strong> ({item.author_public_name})</span>
+            <span style="color: var(--neon-rose); font-weight: 800;">Viralidad: {item.virality_score}/10</span>
+          </div>
+          
+          <p style="font-size: 0.9rem; line-height: 1.45; color: #fff; margin: 0; font-style: italic;">
+            "{item.detected_claim || item.text.substring(0, 150)}..."
+          </p>
+          
+          <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.04); padding-top: 0.75rem; margin-top: 0.25rem;">
+            <a href={item.url} target="_blank" style="font-size: 0.8rem; color: var(--neon-blue); text-decoration: none; font-weight: 700;">
+              Ver post original 🔗
+            </a>
+            
+            <div style="display: flex; gap: 0.5rem;">
+              <form method="POST" style="margin: 0;">
+                <input type="hidden" name="action" value="process_radar_item" />
+                <input type="hidden" name="item_id" value={item.id} />
+                <button type="submit" class="cyber-btn accent" style="padding: 0.35rem 0.85rem; font-size: 0.75rem; border-radius: 6px; font-weight: bold; cursor: pointer;">🤖 Procesar con IA</button>
+              </form>
+              
+              <form method="POST" style="margin: 0;">
+                <input type="hidden" name="action" value="discard_radar_item" />
+                <input type="hidden" name="item_id" value={item.id} />
+                <button type="submit" class="cyber-btn" style="padding: 0.35rem 0.85rem; font-size: 0.75rem; border-radius: 6px; border-color: var(--neon-rose); color: var(--neon-rose); cursor: pointer;">🗑️ Descartar</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
 <!-- Terminal Cyberpunk de Output en Vivo -->
 <div class="terminal-cyberpunk" id="admin-terminal" style="display: block; margin-top: 1.5rem; border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; background: #070913;">
   <div class="terminal-header" style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 1rem; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border-color);">
@@ -57,3 +108,4 @@ const { pendingCount } = Astro.props;
     <div style="color: var(--text-muted);">> Selecciona un proceso arriba para ver sus logs de ejecución en vivo...</div>
   </div>
 </div>
+
