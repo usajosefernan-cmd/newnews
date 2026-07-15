@@ -25,7 +25,13 @@ function runCommandAsync(command) {
   });
 }
 
+let isSyncing = false;
+
 async function checkAndSync() {
+  if (isSyncing) {
+    console.log('[Daemon] Pipeline de IA ya se está ejecutando. Saltando intervalo para evitar colapsar la CPU...');
+    return;
+  }
   if (!fs.existsSync(dbPath)) {
     return;
   }
@@ -46,6 +52,7 @@ async function checkAndSync() {
       console.log(`\n⚡ [Daemon Alert] ¡Se detectaron ${count} reportes pendientes en SQLite!`);
       console.log('🤖 Lanzando procesamiento automático de IA (ai-pipeline.js)...');
       
+      isSyncing = true;
       // 1. Ejecutar el Pipeline de IA para procesar el claim
       try {
         const { stdout } = await runCommandAsync('node scripts/ai-pipeline.js');
@@ -53,6 +60,8 @@ async function checkAndSync() {
         console.log('✅ Pipeline de IA completado. Los datos se han guardado en SQLite y se verán reflejados en caliente al refrescar.');
       } catch (err) {
         console.error('❌ Error ejecutando el pipeline de sincronización reactiva:', err.message);
+      } finally {
+        isSyncing = false;
       }
     }
   } catch (err) {
@@ -62,6 +71,7 @@ async function checkAndSync() {
     console.error('[Daemon Error]:', err.message);
   }
 }
+
 
 // Iniciar bucle de vigilancia continua
 setInterval(checkAndSync, CHECK_INTERVAL_MS);

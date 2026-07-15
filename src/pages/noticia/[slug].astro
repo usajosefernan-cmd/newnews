@@ -159,7 +159,7 @@ const getSocialPostMeta = (url, platform) => {
   if (!url) return null;
   const lowerPlat = platform.toLowerCase();
   
-  // Usar la fecha original de publicacion (origin_date) si est⚙️💡 disponible, si no published_at
+  // Usar la fecha original de publicacion (origin_date) si está disponible, si no published_at
   const dateObj = article.origin_date ? new Date(article.origin_date) : new Date(article.published_at);
   const dateStr = dateObj.toLocaleString('es-ES', {
     day: '2-digit',
@@ -810,7 +810,7 @@ if (trickUsed === 'cherry-picking') {
   </div>
 </Layout>
 
-<!-- Script interactivo de copiado rápido al portapapeles con feedback visual en el bot💡⚙️n -->
+<!-- Script interactivo de copiado rápido al portapapeles con feedback visual en el botón -->
 <script is:inline>
   document.querySelectorAll('.copy-btn').forEach(btn => {
     btn.addEventListener('click', () => {

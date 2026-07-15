@@ -168,6 +168,23 @@ function cleanText(text) {
   cleaned = cleaned.replace(/vac💡⚙️o/gi, 'vacío');
   cleaned = cleaned.replace(/1⚙️💡 residencia/g, '1ª residencia');
   cleaned = cleaned.replace(/2⚙️💡 residencia/g, '2ª residencia');
+  cleaned = cleaned.replace(/💡⚙️De d💡⚙️nde/g, '¿De dónde');
+  cleaned = cleaned.replace(/💡⚙De d💡⚙nde/g, '¿De dónde');
+  cleaned = cleaned.replace(/S💡⚙️,/g, 'Sí,');
+  cleaned = cleaned.replace(/S💡⚙️/g, 'Sí');
+  cleaned = cleaned.replace(/S💡⚙/g, 'Sí');
+  cleaned = cleaned.replace(/cat💡⚙️logo/g, 'catálogo');
+  cleaned = cleaned.replace(/cat💡⚙logo/g, 'catálogo');
+  cleaned = cleaned.replace(/bot💡⚙️n/g, 'botón');
+  cleaned = cleaned.replace(/bot💡⚙n/g, 'botón');
+  cleaned = cleaned.replace(/pesta💡⚙️as/g, 'pestañas');
+  cleaned = cleaned.replace(/pesta💡⚙as/g, 'pestañas');
+  cleaned = cleaned.replace(/💡⚙️Qu⚙️💡/g, '¿Qué');
+  cleaned = cleaned.replace(/💡⚙️Qu⚙️/g, '¿Qué');
+  cleaned = cleaned.replace(/💡⚙Qu⚙/g, '¿Qué');
+  cleaned = cleaned.replace(/est⚙️💡/g, 'está');
+  cleaned = cleaned.replace(/est⚙💡/g, 'está');
+
   cleaned = cleaned.replace(/1⚙️💡 o 2⚙️💡/g, '1ª o 2ª');
   cleaned = cleaned.replace(/m⚙️💡dico/g, 'médico');
   cleaned = cleaned.replace(/m⚙️💡dica/g, 'médica');
