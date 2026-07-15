@@ -1,429 +1,389 @@
 export const topicDidacticData = {
   'vivienda-y-okupacion': {
-    what_is_happening: 'El debate social sobre la okupación de viviendas, los precios de los alquileres y la nueva Ley de Vivienda (Ley 12/2023) polariza la opinión pública. Mientras proliferan discursos de alarma sobre allanamientos constantes, los datos del INE y el marco legal diferencian claramente el asalto a moradas habitadas de la usurpación de pisos vacíos de fondos o bancos.',
-    what_we_know: 'Sabemos que la Constitución protege la inviolabilidad del domicilio (Art. 18.2 CE) de forma absoluta. Las segundas residencias gozan de la misma protección. La ocupación de una vivienda habitada es allanamiento de morada (Art. 202 CP) y la policía desaloja inmediatamente de oficio. La usurpación (Art. 245 CP) se aplica a inmuebles abandonados sin uso de vivienda y requiere orden judicial.',
-    what_we_do_not_know: 'No está cuantificado con exactitud el impacto a largo plazo de la declaración de zonas tensionadas para topar precios del alquiler en el stock global de viviendas ofertadas, ya que las competencias son autonómicas y muchas Comunidades Autónomas rechazan aplicar los índices oficiales.',
+    what_is_happening: 'El debate social sobre la okupaci??n de viviendas, los precios de los alquileres y la nueva Ley de Vivienda (Ley 12/2023) polariza la opini??n p??blica. Mientras proliferan discursos de alarma sobre allanamientos constantes, los datos del INE y el marco legal diferencian claramente el asalto a moradas habitadas de la usurpaci??n de pisos vac??os de fondos o bancos.',
+    what_we_know: 'Sabemos que la Constituci??n protege la inviolabilidad del domicilio (Art. 18.2 CE) de forma absoluta. Las segundas residencias gozan de la misma protecci??n. La ocupaci??n de una vivienda habitada es allanamiento de morada (Art. 202 CP) y la polic??a desaloja inmediatamente de oficio. La usurpaci??n (Art. 245 CP) se aplica a inmuebles abandonados sin uso de vivienda y requiere orden judicial.',
+    what_we_do_not_know: 'No est?? cuantificado con exactitud el impacto a largo plazo de la declaraci??n de zonas tensionadas para topar precios del alquiler en el stock de viviendas ofertadas, ya que las competencias son auton??micas y muchas Comunidades Aut??nomas rechazan aplicar los ??ndices oficiales.',
     key_facts: [
       'El 98.5% de los desahucios o desalojos policiales corresponden a impagos de rentas de alquiler o hipotecas, no a okupaciones ilegales por desconocidos.',
-      'La Instrucción 6/2020 de Interior faculta el desalojo policial inmediato en allanamientos sin límite de tiempo (el mito de las 48 horas no existe en la ley).',
-      'Las segundas residencias (pisos de vacaciones) están protegidas como morada del titular.'
+      'La Instrucci??n 6/2020 de Interior faculta el desalojo policial inmediato en allanamientos sin l??mite de tiempo (el mito de las 48 horas no existe en la ley).',
+      'Las segundas residencias (pisos de vacaciones) est??n protegidas como morada del titular.'
     ],
     main_sources: [
-      { name: 'Índice del Alquiler - Ministerio de Vivienda y Agenda Urbana', url: 'https://serpavi.mivau.gob.es/' },
-      { name: 'Estadísticas del CGPJ sobre Lanzamientos y Ejecuciones Hipotecarias', url: 'https://www.poderjudicial.es/cgpj/es/Temas/Estadisticas-Judiciales/' },
-      { name: 'Sede Electrónica del Catastro de España', url: 'https://www.sedecatastro.gob.es/' },
-      { name: 'INE - Estadísticas de Transmisiones de Derechos de Propiedad', url: 'https://www.ine.es/dyngs/INEbase/es/operacion.htm?c=Estadistica_C&cid=1254736171690' }
+      { name: '??ndice del Alquiler - Ministerio de Vivienda y Agenda Urbana', url: 'https://serpavi.mivau.gob.es/' },
+      { name: 'Estad??sticas del CGPJ sobre Lanzamientos y Ejecuciones Hipotecarias', url: 'https://www.poderjudicial.es/' }
     ],
     chronology: [
       { date: 'Mayo 2023', event: 'Entrada en vigor de la Ley de Vivienda estatal (Ley 12/2023).' },
-      { date: 'Septiembre 2020', event: 'Fiscalía General emite la Instrucción 1/2020 para agilizar desalojos cautelares en usurpaciones.' }
+      { date: 'Septiembre 2020', event: 'Fiscal??a General emite la Instrucci??n 1/2020 para agilizar desalojos cautelares en usurpaciones.' }
     ],
     frequent_confusions: [
-      { confusion: 'Si te vas a comprar el pan, pueden okupar tu piso y no podrás echarles.', reality: 'Falso. Eso constituye allanamiento de morada. El desalojo policial es inmediato y se detiene a los usurpadores de forma directa.' }
+      { confusion: 'Si te vas a comprar el pan, pueden okupar tu piso y no podr??s echarles.', reality: 'Falso. Eso constituye allanamiento de morada. El desalojo policial es inmediato y se detiene a los usurpadores de forma directa.' },
+      { confusion: 'No se puede echar a los okupas de una segunda residencia vacacional sin orden judicial.', reality: 'Falso. La Fiscal??a General del Estado y el Tribunal Supremo equiparan la segunda residencia a la morada habitual, amparada por la inviolabilidad del domicilio. El desalojo es inmediato.' },
+      { confusion: 'La Ley de Vivienda ampara y legaliza a las mafias de la okupaci??n.', reality: 'Falso. La ley introduce tr??mites adicionales y plazos de conciliaci??n ??nicamente para procesos de desahucio civil por impago de alquiler a inquilinos vulnerables, no ampara delitos de ocupaci??n ilegal ni allanamientos.' }
     ],
-    quick_replies: 'En España, la okupación de tu casa (primera o segunda residencia) es un allanamiento de morada. La policía actúa de inmediato sin necesidad de orden judicial. Las demoras judiciales solo ocurren en la usurpación de pisos vacíos propiedad de bancos o fondos buitre.',
-    pending_questions: 'Regulación homogénea del alquiler de temporada y habitacionales, que actualmente eluden los límites de la Ley de Vivienda mediante contratos de corta duración.'
+    quick_replies: 'La okupaci??n de una morada en Espa??a (sea primera o segunda residencia) constituye allanamiento de morada y la polic??a act??a de forma directa e inmediata. Los procesos lentos corresponden ??nicamente a demandas civiles por impago de alquiler (inquiokupaci??n) o usurpaci??n de inmuebles vac??os de bancos.',
+    pending_questions: 'Regulaci??n del alquiler tur??stico y de temporada que elude los topes de precios de la Ley de Vivienda.'
   },
   'inmigracion-y-convivencia': {
-    what_is_happening: 'La llegada de inmigrantes a través de las rutas atlántica y mediterránea, y la saturación de los recursos de acogida en Canarias y Ceuta, genera un intenso debate. Los discursos de odio difunden bulos sobre supuestas pagas directas de 4.200€ al mes a menores extranjeros no acompañados (MENAS) y sobre su supuesta relación causal con la delincuencia general.',
-    what_we_know: 'Los menores extranjeros no acompañados están tutelados legalmente por las Comunidades Autónomas (Art. 172 Código Civil) bajo el principio del interés superior del menor. No reciben una ayuda directa de 4.200€; esa cantidad corresponde al coste de mantenimiento del centro de acogida por plaza (cuidado, personal, educación). Para acceder al IMV o ayudas contributivas se exige residencia legal (más de 1 año).',
-    what_we_do_not_know: 'El número real de menores que logran una integración laboral estable una vez cumplen la mayoría de edad debido a la falta de un registro nacional unificado de seguimiento posterior.',
+    what_is_happening: 'La llegada de inmigrantes a trav??s de las rutas atl??ntica y mediterr??nea, y la saturaci??n de los recursos de acogida en Canarias y Ceuta, genera un intenso debate. Los discursos de odio difunden bulos sobre supuestas pagas directas de 4.200??? al mes a menores extranjeros no acompa??ados (MENAS) y sobre su supuesta relaci??n causal con la delincuencia general.',
+    what_we_know: 'Los menores extranjeros no acompa??ados est??n tutelados legalmente por las Comunidades Aut??nomas (Art. 172 C??digo Civil) bajo el principio del inter??s superior del menor. No reciben una ayuda directa de 4.200???; esa cantidad corresponde al coste de mantenimiento del centro de acogida por plaza (cuidado, personal, educaci??n). Para acceder al IMV o ayudas contributivas se exige residencia legal (m??s de 1 a??o).',
+    what_we_do_not_know: 'El n??mero real de menores que logran una integraci??n laboral estable una vez cumplen la mayor??a de edad debido a la falta de un registro nacional unificado de seguimiento posterior.',
     key_facts: [
-      'Los afiliados extranjeros representan el 13.4% del total de cotizantes a la Seguridad Social en España, sosteniendo el ratio de pensiones.',
-      'Para recibir ayudas no contributivas del SEPE o el IMV se requiere residencia legal en España, los sin papeles no pueden acceder a ellas.',
-      'El reparto de menores entre CCAA sigue atascado por falta de consenso para modificar el Art. 35 de la Ley de Extranjería.'
+      'Los afiliados extranjeros representan el 13.4% del total de cotizantes a la Seguridad Social en Espa??a, sosteniendo el ratio de pensiones.',
+      'Para recibir ayudas no contributivas del SEPE o el IMV se requiere residencia legal en Espa??a, los sin papeles no pueden acceder a ellas.',
+      'El reparto de menores entre CCAA sigue atascado por falta de consenso para modificar el Art. 35 de la Ley de Extranjer??a.'
     ],
     main_sources: [
-      { name: 'Portal de Inclusión y Migraciones - Estadísticas de la Secretaría de Estado', url: 'https://inclusion.seg-social.es/web/migraciones/estadisticas' },
-      { name: 'Memorias de la Fiscalía General del Estado (Sección Menores)', url: 'https://www.fiscal.es/memorias-de-la-fiscalia' },
-      { name: 'TGSS - Estadísticas de Afiliación de Trabajadores Extranjeros', url: 'https://www.seg-social.es/wps/portal/wss/internet/EstadisticasPresupuestosEstudios/' },
-      { name: 'Ministerio del Interior - Balances Trimestrales de Criminalidad en España', url: 'https://www.interior.gob.es/opencms/es/archivos-y-documentacion/balances-e-informes/balances-de-criminalidad/' }
+      { name: 'Portal de Inclusi??n y Migraciones - Estad??sticas de la Secretar??a de Estado', url: 'https://inclusion.seg-social.es/' },
+      { name: 'Memorias de la Fiscal??a General del Estado (Secci??n Menores)', url: 'https://www.fiscal.es/' }
     ],
     chronology: [
-      { date: 'Julio 2024', event: 'Rechazo parlamentario a la toma en consideración de la reforma urgente del Art. 35 de la Ley de Extranjería.' },
-      { date: 'Año 2024', event: 'Las afiliaciones de extranjeros baten récord histórico superando los 2.8 millones de cotizantes activos.' }
+      { date: 'Julio 2024', event: 'Rechazo parlamentario a la toma en consideraci??n de la reforma urgente del Art. 35 de la Ley de Extranjer??a.' },
+      { date: 'A??o 2024', event: 'Las afiliaciones de extranjeros baten r??cord hist??rico superando los 2.8 millones de cotizantes activos.' }
     ],
     frequent_confusions: [
-      { confusion: 'Los MENAS reciben pagas de 4.200 euros en metálico al mes del gobierno.', reality: 'Falso. Es el coste medio de gestión de la plaza de acogida (salarios de educadores, instalaciones, comida). El menor no recibe dinero en metálico.' }
+      { confusion: 'Los inmigrantes irregulares reciben una paga directa de 600 euros al mes del gobierno por llegar.', reality: 'Falso. Ning??n inmigrante irregular tiene acceso a sueldos, subsidios por desempleo o al Ingreso M??nimo Vital (IMV), el cual exige residencia legal previa de al menos un a??o ininterrumpido.' },
+      { confusion: 'El coste de mantener un menor tutelado (MENA) se les ingresa a ellos en efectivo en una tarjeta.', reality: 'Falso. Los 4.200??? mensuales estimados de coste por menor corresponden al gasto operativo de la plaza (mantenimiento del inmueble, sueldos de educadores, psic??logos, seguridad y alimentaci??n). El menor solo percibe de dinero de bolsillo entre 10 y 30 euros semanales seg??n la CCAA.' },
+      { confusion: 'La delincuencia en Espa??a ha aumentado exponencialmente debido en exclusiva a las oleadas migratorias.', reality: 'Falso. Los balances del Ministerio del Interior muestran una tasa de criminalidad estable. Las estad??sticas de condenados del INE ratifican que m??s del 70% de los delitos del pa??s son cometidos por ciudadanos de nacionalidad espa??ola.' }
     ],
-    quick_replies: 'Los menores inmigrantes no reciben ninguna paga de 4.200€ al mes. Ese importe es el coste operativo público de mantener abiertos los centros de tutela y pagar a los profesionales. Los inmigrantes en situación irregular no tienen derecho al IMV ni a subsidios de desempleo.',
-    pending_questions: 'Financiación estructural indefinida de la acogida de menores una vez transcurrido el primer año de tutela estatal obligatoria.'
+    quick_replies: 'Ning??n inmigrante recibe subsidios del Estado por el simple hecho de entrar a Espa??a. Las ayudas sociales est??n vinculadas al nivel de renta y vulnerabilidad de las familias bajo residencia legal estricta.',
+    pending_questions: 'Estabilidad presupuestaria para la acogida temporal a largo plazo por las CCAA receptoras.'
   },
   'economia-espanola': {
-    what_is_happening: 'España lidera el crecimiento económico de la eurozona con alzas del PIB por encima del 2.5%, pero el debate gira en torno al incremento del coste de la vida (inflación acumulada) y al volumen de la deuda pública (107% del PIB). Los discursos políticos confrontan el "éxito macroeconómico" con la "realidad del bolsillo ciudadano".',
-    what_we_know: 'El PIB español se calcula según el Sistema Europeo de Cuentas (SEC-2010) por el INE. La deuda del Estado se reporta al Banco de España siguiendo los criterios del Protocolo de Déficit Excesivo del Tratado de Maastricht. La inflación interanual se ha moderado al entorno del 2% tras alcanzar picos del 10.8% en 2022.',
-    what_we_do_not_know: 'La evolución de la tasa de ahorro de las familias y la capacidad de amortización de hipotecas en caso de que los tipos de interés se mantengan altos por periodos prolongados.',
+    what_is_happening: 'Espa??a lidera el crecimiento econ??mico de la eurozona con alzas del PIB por encima del 2.5%, pero el debate gira en torno al incremento del coste de la vida (inflaci??n acumulada) y al volumen de la deuda p??blica (107% del PIB). Los discursos pol??ticos confrontan el "??xito macroecon??mico" con la "realidad del bolsillo ciudadano".',
+    what_we_know: 'El PIB espa??ol se calcula seg??n el Sistema Europeo de Cuentas (SEC-2010) por el INE. La deuda del Estado se reporta al Banco de Espa??a siguiendo los criterios del Protocolo de D??ficit Excesivo del Tratado de Maastricht. La inflaci??n interanual se ha moderado al entorno del 2% tras alcanzar picos del 10.8% en 2022.',
+    what_we_do_not_know: 'La evoluci??n de la tasa de ahorro de las familias y la capacidad de amortizaci??n de hipotecas en caso de que los tipos de inter??s se mantengan altos por periodos prolongados.',
     key_facts: [
-      'El sector servicios y el turismo aportan más del 67% del valor añadido bruto al PIB nacional.',
-      'La deuda de las administraciones públicas se mantiene en niveles altos (107% del PIB) pero con una senda decreciente en ratio por el crecimiento del PIB.',
-      'Las reglas fiscales de la UE limitan el déficit al 3% y obligan a planes de ajuste fiscal estructural.'
+      'El sector servicios y el turismo aportan m??s del 67% del valor a??adido bruto al PIB nacional.',
+      'La deuda de las administraciones p??blicas se mantiene en niveles altos (107% del PIB) pero con una senda decreciente en ratio por el crecimiento del PIB.',
+      'Las reglas fiscales de la UE limitan el d??ficit al 3% y obligan a planes de ajuste fiscal estructural.'
     ],
     main_sources: [
-      { name: 'INE - Índices de Precios de Consumo (IPC) y Crecimiento del PIB', url: 'https://www.ine.es/dyngs/INEbase/es/categoria.htm?c=Estadistica_C&cid=1254735576799' },
-      { name: 'Banco de España - Estadísticas de Deuda de las Administraciones Públicas (PDE)', url: 'https://www.bde.es/bde/es/secciones/informes/analisis-economico-e-investigacion/deuda-publica/' },
-      { name: 'IGAE - Portal de Ejecución Presupuestaria del Estado y CCAA', url: 'https://www.igae.pap.hacienda.gob.es/' }
+      { name: 'INE - ??ndices de Precios de Consumo (IPC) y Crecimiento del PIB', url: 'https://www.ine.es/' },
+      { name: 'Banco de Espa??a - Estad??sticas de Deuda de las Administraciones P??blicas (PDE)', url: 'https://www.bde.es/' }
     ],
     chronology: [
-      { date: 'Junio 2024', event: 'La Comisión Europea reactiva formalmente las reglas de disciplina fiscal del Tratado de Maastricht.' },
-      { date: 'Julio 2022', event: 'España registra su inflación máxima en 37 años con un 10.8% interanual.' }
+      { date: 'Junio 2024', event: 'La Comisi??n Europea reactiva formalmente las reglas de disciplina fiscal del Tratado de Maastricht.' },
+      { date: 'Julio 2022', event: 'Espa??a registra su inflaci??n m??xima en 37 a??os con un 10.8% interanual.' }
     ],
     frequent_confusions: [
-      { confusion: 'España está en quiebra técnica porque la deuda supera el 100% de la economía.', reality: 'Falso. Muchos países avanzados operan por encima del 100% de deuda. La solvencia la determina la capacidad de refinanciación en los mercados y el crecimiento del PIB.' }
+      { confusion: 'Espa??a est?? en quiebra t??cnica porque la deuda supera el 100% de la econom??a.', reality: 'Falso. Muchos pa??ses avanzados operan por encima del 100% de deuda. La solvencia la determina la capacidad de refinanciaci??n en los mercados y el crecimiento del PIB.' },
+      { confusion: 'La econom??a espa??ola va mal porque el consumo de los hogares ha ca??do a cero.', reality: 'Falso. El consumo privado mantiene un crecimiento positivo sostenido apuntalado por el r??cord de empleo (21.3 millones de afiliados), aunque la inflaci??n acumulada reduce el margen de ahorro.' },
+      { confusion: 'El PIB de Espa??a crece artificialmente por el aumento masivo del empleo p??blico.', reality: 'Falso. M??s del 85% del crecimiento del empleo neto de los ??ltimos dos a??os corresponde al sector privado, liderado por la inform??tica, los servicios t??cnicos y la hosteler??a.' }
     ],
-    quick_replies: 'El PIB de España crece por encima del 2.5% superando a la eurozona por el dinamismo laboral y turístico. Sin embargo, la inflación acumulada de los últimos dos años reduce la sensación de riqueza en los hogares de rentas medias y bajas.',
-    pending_questions: 'Reforma del modelo de financiación autonómica bloqueado desde 2014, que condiciona el gasto en servicios esenciales de las Comunidades.'
+    quick_replies: 'La macroeconom??a espa??ola crece a buen ritmo liderando la eurozona, impulsada por el sector servicios, las exportaciones y la creaci??n de empleo. Sin embargo, las rentas bajas sufren la p??rdida de poder adquisitivo acumulado por la crisis de precios.',
+    pending_questions: 'Reducci??n estructural de la deuda p??blica una vez se aplique la senda de consolidaci??n fiscal europea.'
   },
   'franquismo-y-memoria-historica': {
-    what_is_happening: 'La aplicación de la Ley de Memoria Democrática (Ley 20/2022) suscita una fuerte controversia en comunidades autónomas gobernadas por coaliciones que impulsan "Leyes de Concordia". El debate gira sobre el reconocimiento histórico, el coste de las exhumaciones y la retirada de simbología dictatorial.',
-    what_we_know: 'La Ley 20/2022 asume como responsabilidad del Estado la búsqueda e identificación de las víctimas de la Guerra Civil y la Dictadura (estimadas en 114.000 desaparecidos en fosas comunes). El TC mantiene paralizada la Ley de Concordia de Aragón tras recurso del Gobierno central por presunta invasión de competencias exclusivas sobre derechos humanos fundamentales.',
-    what_we_do_not_know: 'El censo total definitivo de fosas comunes pendientes de excavación, dado que muchas se ubican en terrenos privados de difícil acceso legal.',
+    what_is_happening: 'La aplicaci??n de la Ley de Memoria Democr??tica (Ley 20/2022) suscita una fuerte controversia en comunidades aut??nomas gobernadas por coaliciones que impulsan "Leyes de Concordia". El debate gira sobre el reconocimiento hist??rico, el coste de las exhumaciones y la retirada de simbolog??a dictatorial.',
+    what_we_know: 'La Ley 20/2022 asume como responsabilidad del Estado la b??squeda e identificaci??n de las v??ctimas de la Guerra Civil y la Dictadura (estimadas en 114.000 desaparecidos en fosas comunes). El TC mantiene paralizada la Ley de Concordia de Arag??n tras recurso del Gobierno central por presunta invasi??n de competencias exclusivas sobre derechos humanos fundamentales.',
+    what_we_do_not_know: 'El censo total definitivo de fosas comunes pendientes de excavaci??n, dado que muchas se ubican en terrenos privados de dif??cil acceso legal.',
     key_facts: [
-      'España es el segundo país con más desaparecidos sin identificar del mundo, solo superado por Camboya.',
-      'El Instituto Nacional de Previsión (origen de la Seguridad Social) se creó en 1908 por Maura, no por el Franquismo.',
-      'Las sentencias de los tribunales de represión franquistas (Tribunal de Orden Público) están declaradas formalmente nulas e ilegales.'
+      'Espa??a es el segundo pa??s con m??s desaparecidos sin identificar del mundo, solo superado por Camboya.',
+      'El Instituto Nacional de Previsi??n (origen de la Seguridad Social) se cre?? en 1908 por Maura, no por el Franquismo.',
+      'Las sentencias de los tribunales de represi??n franquistas (Tribunal de Orden P??blico) est??n declaradas formalmente nulas e ilegales.'
     ],
     main_sources: [
-      { name: 'Mapa de Fosas de España - Buscador y Localización Oficial de Víctimas', url: 'https://mapadefosas.mpr.gob.es/' },
-      { name: 'PARES - Portal de Archivos Españoles del Ministerio de Cultura', url: 'http://pares.culturaydeporte.gob.es/' },
-      { name: 'Secretaría de Estado de Memoria Democrática - Estadísticas y ADN', url: 'https://www.mpr.gob.es/memoriademocratica/' }
+      { name: 'Mapa de Fosas de Espa??a - Buscador y Localizaci??n Oficial de V??ctimas', url: 'https://mapadefosas.mpr.gob.es/' },
+      { name: 'Secretar??a de Estado de Memoria Democr??tica - Estad??sticas y ADN', url: 'https://www.mpr.gob.es/' }
     ],
     chronology: [
-      { date: 'Octubre 2022', event: 'Entrada en vigor de la Ley de Memoria Democrática.' },
-      { date: 'Mayo 2024', event: 'El Tribunal Constitucional suspende cautelarmente la derogación de la memoria en Aragón.' }
+      { date: 'Octubre 2022', event: 'Entrada en vigor de la Ley de Memoria Democr??tica.' },
+      { date: 'Mayo 2024', event: 'El Tribunal Constitucional suspende cautelarmente la de la memoria en Arag??n.' }
     ],
     frequent_confusions: [
-      { confusion: 'Franco creó el sistema de pensiones y las pagas extraordinarias en España.', reality: 'Falso. Las bases se remontan al Retiro Obrero de 1919 (Alfonso XIII). La dictadura unificó las mutuas en un sistema de reparto único en 1963.' }
+      { confusion: 'Franco cre?? el sistema de pensiones y las pagas extraordinarias en Espa??a.', reality: 'Falso. Las bases se remontan al Retiro Obrero de 1919 (Alfonso XIII). La dictadura unific?? las mutuas en un sistema de reparto ??nico en 1963.' },
+      { confusion: 'La Ley de Memoria Democr??tica busca reabrir heridas y dividir a los espa??oles.', reality: 'Falso. El texto de la ley y las recomendaciones de la ONU (Consejo de Derechos Humanos) buscan el derecho a la verdad, la reparaci??n de las v??ctimas y la localizaci??n de desaparecidos sepultados de forma ilegal.' },
+      { confusion: 'Las exhumaciones de las fosas comunes cuestan miles de millones de dinero p??blico injustificado.', reality: 'Falso. El presupuesto de Memoria Democr??tica se sit??a en torno a los 14 millones de euros anuales, destinados principalmente a las pruebas gen??ticas de identificaci??n de restos y a subvenciones de arqueolog??a forense.' }
     ],
-    quick_replies: 'La búsqueda de desaparecidos en fosas comunes es una obligación legal y de derechos humanos amparada por la ONU. Atribuir la Seguridad Social a la dictadura es falso: el Instituto Nacional de Previsión fue creado en 1908 bajo el reinado de Alfonso XIII.',
-    pending_questions: 'Exhumación definitiva y dignificación de las criptas del Valle de Cuelgamuros (antes de los Caídos) ante las dificultades técnicas del terreno.'
-  },
-  'corrupcion-y-promesas-politicas': {
-    what_is_happening: 'Los contratos de emergencia de material sanitario firmados en los peores meses de la pandemia han derivado en múltiples instrucciones judiciales (Caso Koldo, Caso mascarillas de ayuntamientos). Se audita el desvío de fondos públicos mediante cobro de comisiones ilegales por parte de asesores e intermediarios.',
-    what_we_know: 'La Ley de Contratos del Sector Público (LCSP, Art. 120) faculta a la administración para contratar sin licitación ni concurrencia ante situaciones catastróficas. El caso Koldo investiga el cohecho y el desvío de fondos de contratos adjudicados por valor de 53 millones de euros. La fiscalía europea asume las causas que contengan fondos de la UE (fondos FEDER).',
-    what_we_do_not_know: 'El volumen exacto del dinero cobrado en mordidas que fue enviado a cuentas en el extranjero o en paraísos fiscales pendientes de comisiones de investigación judiciales.',
-    key_facts: [
-      'Los contratos de emergencia permiten adjudicaciones directas sin concurso pero exigen fiscalización posterior obligatoria.',
-      'El Tribunal de Cuentas fiscaliza de forma externa la regularidad del gasto de emergencia de los ministerios.',
-      'La auditoría interna de Transportes de 2024 confirmó fallos graves de control en las compras de mascarillas.'
-    ],
-    main_sources: [
-      { name: 'Plataforma de Contratación del Sector Público (PLACSP)', url: 'https://contrataciondelestado.es/' },
-      { name: 'Base de Datos Nacional de Subvenciones (BDNS)', url: 'https://www.pap.hacienda.gob.es/bdnstrans/GE/es/inicio' },
-      { name: 'Portal de la Transparencia de la Administración General del Estado', url: 'https://transparencia.gob.es/' },
-      { name: 'Oficina de Conflictos de Intereses (OCI) - Registro de Altos Cargos', url: 'https://www.mpr.gob.es/servicios/oci/' }
-    ],
-    chronology: [
-      { date: 'Agosto 2024', event: 'El Ministerio de Transportes publica la auditoría interna confirmando duplicidad y falta de control.' },
-      { date: 'Marzo 2020', event: 'Decreto de Estado de Alarma que habilita la tramitación de emergencia generalizada.' }
-    ],
-    frequent_confusions: [
-      { confusion: 'Todos los contratos sin concurso de la pandemia son ilegales.', reality: 'Falso. La tramitación de emergencia (sin concurso) está amparada legalmente por el Art. 120 de la LCSP. Lo ilegal es el desvío de fondos o el cobro de comisiones prohibidas.' }
-    ],
-    quick_replies: 'La Ley de Contratos autoriza compras directas en catástrofes para salvar vidas. Lo que investigan los tribunales son las comisiones ilegales en metálico que intermediarios cobraron hinchando los precios públicos a costa de los presupuestos del Estado.',
-    pending_questions: 'Reforma de la LCSP para acotar la duración temporal de la tramitación de emergencia una vez superada la fase crítica de una crisis.'
-  },
-  'sanidad-publica': {
-    what_is_happening: 'El deterioro percibido en la atención primaria, las demoras para cita con especialistas y las saturaciones en urgencias abren el debate sanitario. Los bulos intentan culpar al Gobierno central de la gestión diaria de las listas de espera, obviando el reparto competencial de la Constitución.',
-    what_we_know: 'El traspaso de las competencias sanitarias del antiguo INSALUD a las Comunidades Autónomas concluyó de forma definitiva en el año 2002. Cada CCAA gestiona sus hospitales, personal y listas de espera. El Ministerio de Sanidad solo tiene competencias de coordinación general, legislación básica de medicamentos y sanidad exterior.',
-    what_we_do_not_know: 'El número exacto de derivaciones reales de la sanidad pública a clínicas concertadas privadas que se realizan anualmente debido a la falta de transparencia en los datos de ciertos gobiernos autonómicos.',
-    key_facts: [
-      'Las listas de espera quirúrgica alcanzan un récord de más de 849.000 pacientes esperando una intervención.',
-      'El tiempo medio para ser operado en la red pública española supera los 128 días.',
-      'El gasto en conciertos con entidades privadas representa una media del 8% al 12% del presupuesto sanitario de las CCAA.'
-    ],
-    main_sources: [
-      { name: 'SISLE - Sistema de Información de Listas de Espera del Sistema Nacional de Salud', url: 'https://www.sanidad.gob.es/estadisticas/sisle.htm' },
-      { name: 'Portal de Informes y Estadísticas de Sanidad del Ministerio de Sanidad', url: 'https://www.sanidad.gob.es/estadEstudios/sanidadDatos/' },
-      { name: 'Estadística de Establecimientos Sanitarios con Régimen de Internado (INE)', url: 'https://www.ine.es/dyngs/INEbase/es/operacion.htm?c=Estadistica_C&cid=1254736176776' }
-    ],
-    chronology: [
-      { date: 'Diciembre 2023', event: 'Las listas de espera del SNS baten su récord histórico absoluto de saturación con 849.535 pacientes.' },
-      { date: 'Enero 2002', event: 'Culmina el proceso de transferencias de sanidad a las últimas 10 Comunidades Autónomas de régimen común.' }
-    ],
-    frequent_confusions: [
-      { confusion: 'El Ministro de Sanidad de España es el responsable de las listas de espera de mi hospital.', reality: 'Falso. Las competencias asistenciales pertenecen a la Consejería de Sanidad de tu Comunidad Autónoma. El Ministerio central no gestiona hospitales.' }
-    ],
-    quick_replies: 'En España, las competencias de sanidad están descentralizadas desde 2002. El Ministerio central coordina y legisla sobre fármacos, pero el estado de los centros sanitarios, el personal y las demoras para operarse dependen de tu gobierno autonómico.',
-    pending_questions: 'Creación de un registro estatal de listas de espera unificado en tiempo real con penalizaciones a CCAA que maquillen datos.'
-  },
-  'justicia-imputado-condenado': {
-    what_is_happening: 'La apertura de diligencias previas a raíz de querellas de asociaciones que actúan como acusación popular abre intensos debates sobre "lawfare" y presunción de inocencia. Se mezclan conceptos legales con sentencias condenatorias en el relato de los medios y las redes sociales.',
-    what_we_know: 'La Ley de Enjuiciamiento Criminal (LECrim) regula el proceso penal. Estar investigado no implica una declaración de culpabilidad, sino que el juez de instrucción ve indicios para llamarte a declarar con abogado defensor. La Constitución (Art. 24.2 CE) consagra la presunción de inocencia: solo se es culpable tras sentencia judicial firme.',
-    what_we_do_not_know: 'El recorrido judicial definitivo de querellas basadas en recortes de prensa que están en fase de instrucción inicial pendientes de informes periciales oficiales.',
-    key_facts: [
-      'La reforma del artículo 324 de la LECrim eliminó en 2015 la palabra "imputado" sustituyéndola por "investigado" para evitar estigmas penales prematuros.',
-      'La acusación popular (Art. 125 CE) permite personarse en causas penales sin ser víctima directa del delito.',
-      'Un juez de instrucción no juzga, solo investiga para decidir si archiva o abre juicio oral.'
-    ],
-    main_sources: [
-      { name: 'CENDOJ - Buscador de Sentencias del Consejo General del Poder Judicial', url: 'https://www.poderjudicial.es/cgpj/es/Temas/Jurisprudencia/' },
-      { name: 'CGPJ - Memorias Anuales e Informes sobre el Estado de la Justicia', url: 'https://www.poderjudicial.es/cgpj/es/Actividad-del-CGPJ/Memorias/' },
-      { name: 'Fiscalía General del Estado - Circulares e Instrucciones de la FGE', url: 'https://www.fiscal.es/circulares-e-instrucciones' }
-    ],
-    chronology: [
-      { date: 'Octubre 2015', event: 'Entrada en vigor del cambio terminológico de imputado a investigado en el Código Procesal.' },
-      { date: 'Año 1978', event: 'La Constitución consagra la acusación popular en el sistema penal español.' }
-    ],
-    frequent_confusions: [
-      { confusion: 'Si un juez imputa o investiga a alguien, es porque ya ha demostrado que cometió el delito.', reality: 'Falso. La investigación es para recabar pruebas. En muchos casos, tras la declaración y los informes de la UCO, la causa se archiva sin llegar a juicio.' }
-    ],
-    quick_replies: 'Estar investigado (antiguo imputado) es un estado procesal de garantías, no una condena. Significa que se te investiga y declaras con abogado. En España, solo se pierde la presunción de inocencia mediante una sentencia firme tras celebrarse un juicio oral.',
-    pending_questions: 'Reforma de la fianza para acusaciones populares para evitar querellas temerarias o con fines exclusivamente políticos.'
-  },
-  'consumo-viral-productos-milagro': {
-    what_is_happening: 'El auge de redes sociales (TikTok, Instagram) facilita la difusión de publicidad encubierta de suplementos, cosméticos y dietas "milabras" promovidas por influencers sin control médico, eludiendo la normativa de la AEMPS y el Ministerio de Consumo.',
-    what_we_know: 'El Real Decreto 1907/1996 prohíbe taxativamente la publicidad de productos con pretendida finalidad sanitaria que no estén autorizados. La Ley de Comunicación Audiovisual obliga a los creadores de contenido a advertir explícitamente cuando una recomendación es patrocinada (#Publi).',
-    what_we_do_not_know: 'El número real de cuentas de influencers que operan desde paraísos fiscales o fuera de la UE para eludir la jurisdicción y las multas de la CNMC española.',
-    key_facts: [
-      'Un producto alimenticio o suplemento no puede atribuirse propiedades preventivas o terapéuticas de enfermedades.',
-      'La CNMC y el Ministerio de Consumo vigilan y multan el incumplimiento del etiquetado comercial en redes.',
-      'La AEMPS emite alertas semanales de retirada de complementos que contienen fármacos no declarados.'
-    ],
-    main_sources: [
-      { name: 'Buscador de Alertas de Medicamentos y Cosméticos de la AEMPS', url: 'https://www.aemps.gob.es/acciones-informativas/alertas/' },
-      { name: 'Registro de Prestadores Audiovisuales (Influencers) de la CNMC', url: 'https://www.cnmc.es/ambitos-de-actuacion/audiovisual/registro-de-prestadores-de-comunicacion' },
-      { name: 'AESAN - Red de Alertas Alimentarias de España (SCIRI)', url: 'https://www.aesan.gob.es/AECOSAN/web/seguridad_alimentaria/detalle/sciri.htm' }
-    ],
-    chronology: [
-      { date: 'Julio 2022', event: 'Publicación de la nueva Ley General de Comunicación Audiovisual regulando a los influencers.' },
-      { date: 'Mayo 2024', event: 'Consumo abre expedientes sancionadores masivos a grandes cuentas por publicidad encubierta.' }
-    ],
-    frequent_confusions: [
-      { confusion: 'Si un suplemento se vende en herbolarios o Amazon, significa que está testado clínicamente para curar.', reality: 'Falso. Los complementos alimenticios no pasan los ensayos clínicos exigidos a los medicamentos. Solo se registra su seguridad alimentaria básica, no su eficacia médica.' }
-    ],
-    quick_replies: 'Los influencers no pueden recomendar productos milagro con propiedades curativas falsas. Por ley, si cobran o reciben muestras gratis deben poner claramente #Publi o #Patrocinado. Contrasta siempre en el buscador de alertas oficiales de la AEMPS.',
-    pending_questions: 'Aprobación del Real Decreto regulador del Estatuto del Influencer para acotar las multas según el volumen de seguidores.'
-  },
-  'ciberestafas-y-dinero-facil': {
-    what_is_happening: 'El cibercrimen representa ya más del 20% de los delitos registrados en España. Las estafas de suplantación bancaria (phishing, smishing) y las falsas plataformas de inversión en criptomonedas captan ahorros de ciudadanos atrayéndoles con promesas de rentabilidad rápida.',
-    what_we_know: 'Bajo el Real Decreto-ley 19/2018 de servicios de pago (PSD2), el banco del cliente debe reembolsar el importe de las operaciones no autorizadas (phishing) de inmediato. El banco solo puede negarse si demuestra que el cliente cometió una negligencia grave (como facilitar voluntariamente contraseñas y códigos SMS).',
-    what_we_do_not_know: 'El porcentaje exacto de criptoactivos sustraídos que se consiguen recuperar debido a que las transacciones en blockchain se desvían de forma instantánea a carteras frías anónimas.',
-    key_facts: [
-      'Los ciberdelitos han aumentado más de un 300% en los últimos cinco años en las estadísticas de la Secretaría de Estado de Seguridad.',
-      'Las transferencias voluntarias de dinero (Bizum) no gozan de la misma protección de devolución obligatoria que el phishing de tarjetas.',
-      'La CNMV publica una lista negra de "chiringuitos financieros" sin licencia para operar.'
-    ],
-    main_sources: [
-      { name: 'Advertencias de la CNMV sobre Chiringuitos Financieros y Falsos Asesores', url: 'https://www.cnmv.es/portal/Inversores/Advertencias-CNMV-Chiringuitos.aspx' },
-      { name: 'INCIBE - Oficina de Seguridad del Internauta (OSI) - Alertas y Ayuda', url: 'https://www.incibe.es/ciudadania/alertas' },
-      { name: 'Registro Oficial de Entidades del Banco de España (Supervisión)', url: 'https://www.bde.es/bde/es/secciones/servicios/registro-de-entities/' }
-    ],
-    chronology: [
-      { date: 'Noviembre 2018', event: 'Entrada en vigor del RDL 19/2018 adaptando la directiva de pagos europea PSD2.' },
-      { date: 'Año 2024', event: 'Las denuncias por ciberestafas superan las 400.000 anuales en los registros del Ministerio del Interior.' }
-    ],
-    frequent_confusions: [
-      { confusion: 'Si facilito los códigos que me mandó el banco por SMS en una web falsa de Correos, el banco me lo devuelve seguro.', reality: 'Depende. Los tribunales condenan cada vez más a los bancos a devolverlo si el SMS no era claro, pero si se demuestra negligencia del cliente, el banco puede eludir el reembolso.' }
-    ],
-    quick_replies: 'En caso de phishing (robo de claves de tarjeta), el banco debe devolverte el dinero robado de oficio por la ley PSD2, salvo que pruebe que cometiste una negligencia grave. Bizum o transferencias que tú autorices voluntariamente no tienen devolución automática.',
-    pending_questions: 'Implementación del protocolo de verificación de beneficiario en transferencias bancarias nacionales para evitar desvíos erróneos.'
+    quick_replies: 'La b??squeda de desaparecidos en fosas comunes es una obligaci??n humanitaria internacional. Atribuir la Seguridad Social a la dictadura es falso: el Retiro Obrero fue decretado obligatorio en 1919.',
+    pending_questions: 'Exhumaciones y dignificaci??n de las criptas del Valle de Cuelgamuros por dificultades geol??gicas.'
   },
   'cataluna-y-convivencia-territorial': {
-    what_is_happening: 'La aprobación y publicación de la Ley Orgánica de Amnistía (LO 1/2024) y la propuesta de una financiación singular ("concierto económico") para Cataluña dominan el debate territorial en España, confrontando visiones sobre la solidaridad entre Comunidades y el encaje constitucional.',
-    what_we_know: 'La LO 1/2024 amnistía la responsabilidad penal del procés. La Sala Penal del Tribunal Supremo determinó que no aplica al delito de malversación si existió un beneficio patrimonial personal (ahorro de gastos propios). La creación de una Hacienda catalana singular requiere la reforma de la LOFCA y del Estatuto en las Cortes.',
-    what_we_do_not_know: 'La compatibilidad final de la amnistía con el Derecho de la Unión Europea bajo el criterio del TJUE.',
+    what_is_happening: 'El debate territorial catal??n ha entrado en una nueva fase con la aprobaci??n de la Ley de Amnist??a (LO 1/2024) y la propuesta de una financiaci??n singular para Catalu??a.',
+    what_we_know: 'La Ley de Amnist??a extingue la responsabilidad penal y contable por los actos vinculados al proceso independentista entre 2011 y 2023. La financiaci??n auton??mica ordinaria se rige por la LOFCA, mientras que el Pa??s Vasco y Navarra operan bajo el sistema de Concierto Foral amparado constitucionalmente.',
+    what_we_do_not_know: 'La aplicaci??n concreta de la amnist??a al delito de malversaci??n, que sigue sujeta a la interpretaci??n judicial y prejudiciales ante la justicia de la Uni??n Europea.',
     key_facts: [
-      'La amnistía es una ley orgánica aprobada por mayoría absoluta en el Congreso de los Diputados.',
-      'El Concierto Foral del País Vasco y Navarra está garantizado de forma excepcional por la Disposición Adicional Primera de la Constitución.',
-      'El modelo de financiación común se regula en la LOFCA y exige nivelación de servicios públicos básicos.'
+      'La amnist??a extingue la responsabilidad penal de forma retroactiva, no anula el orden constitucional ni la soberan??a del Estado.',
+      'El modelo de financiaci??n auton??mica com??n est?? caducado y pendiente de renovaci??n desde el a??o 2014.',
+      'El Concierto Econ??mico Vasco recauda el 100% de los tributos y aporta al Estado una cuant??a anual (el Cupo) por servicios no transferidos.'
     ],
     main_sources: [
-      { name: 'Tribunal Constitucional de España - Buscador de Jurisprudencia y Recursos', url: 'https://www.tribunalconstitucional.es/es/resoluciones/Paginas/Buscador-Jurisprudencia.aspx' },
-      { name: 'Ministerio de Hacienda - Balanzas Fiscales y Cuentas Territoriales', url: 'https://www.hacienda.gob.es/es-ES/Areas%20Tematicas/Financiacion-Autonomica-Local/' },
-      { name: 'Centro de Investigaciones Sociológicas (CIS) - Barómetros de Opinión', url: 'https://www.cis.es/cis/opencms/ES/1_encuestas/barometros/' }
+      { name: 'Bolet??n Oficial del Estado - Ley Org??nica 1/2024 de Amnist??a', url: 'https://www.boe.es/' },
+      { name: 'Ministerio de Hacienda - Balances y Liquidaci??n de Financiaci??n Auton??mica', url: 'https://www.hacienda.gob.es/' }
     ],
     chronology: [
-      { date: 'Junio 2024', event: 'Publicación en el BOE y entrada en vigor de la Ley Orgánica de Amnistía.' },
-      { date: 'Julio 2024', event: 'El Supremo plantea una cuestión de inconstitucionalidad ante el TC por presunta vulneración de la igualdad.' }
+      { date: 'Junio 2024', event: 'Publicaci??n en el BOE y entrada en vigor de la Ley de Amnist??a.' },
+      { date: 'Agosto 2024', event: 'Acuerdo pol??tico para explorar un modelo de financiaci??n singular y hacienda propia para Catalu??a.' }
     ],
     frequent_confusions: [
-      { confusion: 'La Amnistía perdona de forma directa a Puigdemont de todos sus delitos actuales.', reality: 'Falso. El Tribunal Supremo dictaminó que la malversación de fondos del referéndum no entra en el ámbito de la ley, manteniendo vigentes sus órdenes de detención.' }
+      { confusion: 'La amnist??a es inconstitucional porque la Constituci??n proh??be expresamente los indultos generales.', reality: 'Falso/En debate. La Constituci??n proh??be los indultos generales (Art. 62.i), pero la amnist??a es una norma con rango de ley org??nica aprobada por el Parlamento que extingue el delito, no un indulto dictado por el Gobierno. El TC debe dirimir su constitucionalidad.' },
+      { confusion: 'Catalu??a recibe una sobredotaci??n fiscal sistem??tica a costa de empobrecer a Madrid.', reality: 'Falso. Seg??n los balances de balanza fiscal, la Comunidad de Madrid es la mayor aportadora neta al sistema com??n de solidaridad debido al efecto sede de grandes corporaciones y altos salarios, seguida por Catalu??a y Baleares.' },
+      { confusion: 'El concierto catal??n propuesto romper?? la caja ??nica de la Seguridad Social.', reality: 'Falso. Las pensiones y prestaciones de la Seguridad Social se gestionan en una caja ??nica centralizada de car??cter estatal, la cual no est?? sujeta al debate de la hacienda propia para tributos ordinarios (IRPF, IVA).' }
     ],
-    quick_replies: 'La Ley de Amnistía perdona desórdenes y desobediencias, pero el Tribunal Supremo ha excluido la malversación por considerar que los encausados se ahorraron el coste del referéndum. La financiación singular de Cataluña requiere modificar la ley estatal LOFCA.',
-    pending_questions: 'Pronunciamiento del Tribunal Constitucional sobre los recursos interpuestos por múltiples Comunidades Autónomas contra la ley de Amnistía.'
+    quick_replies: 'La Ley de Amnist??a extingue cargos penales ligados al proc??s de forma definitiva. El debate de financiaci??n busca dotar a Catalu??a de gesti??n tributaria propia sin afectar los fondos comunes estatales de pensiones.',
+    pending_questions: 'Encuadre constitucional de una hacienda singular catalana fuera del r??gimen de la LOFCA.'
+  },
+  'memoria-de-eta-y-terrorismo': {
+    what_is_happening: 'El debate sobre las v??ctimas del terrorismo en Espa??a, el acercamiento de presos de la extinta banda ETA al Pa??s Vasco y la reducci??n de sus condenas por la convalidaci??n de penas cumplidas en el extranjero polariza la agenda nacional.',
+    what_we_know: 'ETA anunci?? el cese definitivo de su actividad armada en octubre de 2011 y se disolvi?? en 2018. Las v??ctimas de terrorismo est??n amparadas por la Ley 29/2011, que contempla pensiones, indemnizaciones de hasta 250.000??? y exenciones fiscales. La transferencia de la gesti??n de las prisiones al Gobierno Vasco se complet?? en 2021.',
+    what_we_do_not_know: 'El esclarecimiento final de m??s de 300 cr??menes cometidos por la banda terrorista cuya autor??a material sigue sin sentencia judicial en firme.',
+    key_facts: [
+      'ETA asesin?? a 853 personas a lo largo de su historia de violencia armada en Espa??a.',
+      'El acercamiento de los presos a prisiones vascas es un criterio penitenciario general una vez disuelta la organizaci??n criminal.',
+      'Las transferencias de prisiones no alteran las condenas impuestas por la Audiencia Nacional, que siguen bajo supervisi??n judicial estatal.'
+    ],
+    main_sources: [
+      { name: 'Centro para la Memoria de las V??ctimas del Terrorismo', url: 'https://www.memorialvictimas.org/' },
+      { name: 'Ley 29/2011 de Reconocimiento y Protecci??n Integral a las V??ctimas del Terrorismo (BOE)', url: 'https://www.boe.es/' }
+    ],
+    chronology: [
+      { date: 'Octubre 2011', event: 'ETA anuncia el cese definitivo de su actividad armada.' },
+      { date: 'Mayo 2018', event: 'Disoluci??n formal y definitiva de la organizaci??n terrorista ETA.' }
+    ],
+    frequent_confusions: [
+      { confusion: 'El gobierno actual ha amnistiado o indultado de forma directa a presos de ETA.', reality: 'Falso. Ning??n preso de ETA ha sido amnistiado ni indultado. Los beneficios penitenciarios (tercer grado) o el acercamiento de prisiones son decididos bajo la legislaci??n penitenciaria com??n y fiscalizados por la Audiencia Nacional.' },
+      { confusion: 'La reforma de 2024 rebaja las penas de prisi??n de los etarras de forma discrecional.', reality: 'Falso. Es la transposici??n obligatoria de la Directiva Europea 2008/675/JAI sobre acumulaci??n de condenas en la UE: se computa el tiempo que un preso ya cumpli?? en c??rceles de otro pa??s miembro (Francia) para evitar la doble penalizaci??n del mismo delito.' },
+      { confusion: 'Las v??ctimas del terrorismo en Espa??a no reciben ayuda econ??mica del Estado.', reality: 'Falso. Espa??a tiene una de las legislaciones m??s garantistas del mundo (Ley 29/2011): otorga indemnizaciones de oficio y pensiones extraordinarias compatibles con cualquier otra prestaci??n p??blica.' }
+    ],
+    quick_replies: 'ETA est?? disuelta desde 2018 y no comete atentados. Los presos cumplen sus condenas en c??rceles vascas bajo el r??gimen general. La reforma de acumulaci??n de condenas europeas aplica una directiva obligatoria de la UE de rango superior.',
+    pending_questions: 'Esclarecimiento de los cr??menes de ETA sin autor conocido y la deslegitimaci??n social del terrorismo.'
+  },
+  'salarios-smi-y-coste-laboral': {
+    what_is_happening: 'La evoluci??n del Salario M??nimo Interprofesional (SMI), las subidas salariales colectivas para paliar el coste de la vida y el diferencial del salario medio en Espa??a frente a la media europea centran el debate laboral y empresarial.',
+    what_we_know: 'El Salario M??nimo Interprofesional (SMI) en Espa??a ha subido m??s de un 50% desde 2018 hasta situarse en 1.134??? mensuales en 14 pagas. El coste laboral medio por trabajador lo mide el INE trimestralmente e incluye el salario bruto m??s las cotizaciones empresariales a la Seguridad Social.',
+    what_we_do_not_know: 'El efecto definitivo de las subidas del SMI en el empleo de sectores agrarios con escasa productividad o de microempresas en regiones con salarios medios bajos.',
+    key_facts: [
+      'El salario medio bruto mensual en Espa??a ronda los 2.128 euros, situ??ndose un 20% por debajo de la media europea.',
+      'El IRPF exime de retenci??n a rentas inferiores a 15.876 euros anuales desde 2024 para adaptarlo al SMI.',
+      'Las cotizaciones sociales a cargo de la empresa representan aproximadamente el 30% del salario bruto del trabajador.'
+    ],
+    main_sources: [
+      { name: 'INE - Encuesta Trimestral de Coste Laboral (ETCL)', url: 'https://www.ine.es/' },
+      { name: 'Real Decreto 145/2024 por el que se fija el Salario M??nimo Interprofesional (BOE)', url: 'https://www.boe.es/' }
+    ],
+    chronology: [
+      { date: 'Febrero 2024', event: 'Aprobaci??n de la subida del SMI para 2024 fijado en 1.134 euros mensuales en 14 pagas.' },
+      { date: 'A??o 2023', event: 'El salario medio en Espa??a registra la mayor subida de la d??cada con un incremento del 5.4%.' }
+    ],
+    frequent_confusions: [
+      { confusion: 'Subir el Salario M??nimo (SMI) destruye empleo masivamente de forma demostrada.', reality: 'Falso. Las estad??sticas oficiales de cotizantes (TGSS) y la EPA muestran que el n??mero de afiliados a la Seguridad Social ha superado los 21 millones a la par de las subidas del SMI, con efectos residuales limitados en sectores puntuales de baja productividad.' },
+      { confusion: 'El salario neto que recibe el trabajador es el coste total que paga la empresa por contratarle.', reality: 'Falso. El coste de contrataci??n incluye el salario bruto (sobre el que se descuentan el IRPF e impuestos del empleado) m??s un coste de cotizaci??n empresarial del 30-33% abonado directamente a la Seguridad Social.' },
+      { confusion: 'El salario m??nimo en Espa??a se sit??a en la banda alta de los salarios m??nimos de la UE.', reality: 'Verdadero. Medido en paridad de poder de compra, el SMI espa??ol se sit??a en el grupo de cabeza de los pa??ses de la UE, aunque el salario medio general sigue por debajo de las econom??as centrales (Alemania, Francia).' }
+    ],
+    quick_replies: 'El SMI en Espa??a ha subido sustancialmente hasta los 1.134??? al mes sin frenar la afiliaci??n general a la Seguridad Social. Los salarios medios siguen por debajo de la media de la UE pero muestran una tendencia al alza.',
+    pending_questions: 'Brecha salarial y productividad del tejido de pymes de menos de 10 trabajadores.'
   },
   'caso-begona-gomez': {
-    what_is_happening: 'La instrucción penal abierta sobre Begoña Gómez por presuntos delitos de tráfico de influencias y corrupción en los negocios suscita un debate sobre el lawfare y el papel de las acusaciones populares sin perjuicio directo.',
-    what_we_know: 'El juez instructor abrió diligencias previas a raíz de una querella de Manos Limpias sustentada en recortes de prensa. La Fiscalía solicitó el archivo inicial, pero la Audiencia Provincial respaldó continuar la instrucción de forma acotada. El primer informe preliminar de la UCO no halló indicios delictivos vinculantes directos.',
-    what_we_do_not_know: 'El resultado final de los recursos penales de apelación contra las providencias del magistrado instructor y la citación a testigos pendientes.',
+    what_is_happening: 'La investigaci??n judicial a Bego??a G??mez por presuntos delitos de tr??fico de influencias y corrupci??n en los negocios genera una tormenta pol??tica en torno al papel de las acusaciones populares y los l??mites del ejercicio profesional de los familiares de los altos cargos.',
+    what_we_know: 'El delito de tr??fico de influencias (Art. 429 CP) exige prevalimiento efectivo de una relaci??n de jerarqu??a o familiar para forzar una resoluci??n favorable. La causa se inici?? por denuncia de Manos Limpias sustentada en recortes de prensa. La Fiscal??a y la Audiencia Provincial delimitaron la causa excluyendo el bloque de los contratos de Red.es tras asumir su control la Fiscal??a Europea.',
+    what_we_do_not_know: 'El resultado final de los recursos de apelaci??n interpuestos ante el Tribunal Supremo sobre la actuaci??n del juez instructor y la constitucionalidad de admitir querellas sin indicios materiales directos.',
     key_facts: [
-      'Las acusaciones populares se personaron sin fianza inicial, alegando interés general.',
-      'El delito de tráfico de influencias (Art. 429 CP) requiere demostrar una influencia personal indebida sobre funcionario para obtener beneficio económico.',
-      'Estar en fase de instrucción o diligencias previas no constituye una acusación penal firme de culpabilidad.'
+      'La firma de cartas de inter??s de adhesi??n a licitaciones p??blicas es un cauce habitual para consorcios universitarios y UTEs.',
+      'La UCO no hall?? pruebas de trato de favor en la licitaci??n del expediente de Red.es adjudicado al empresario Barrab??s.',
+      'La investigaci??n judicial est?? sujeta al secreto de las actuaciones decretado en sus fases iniciales.'
     ],
     main_sources: [
-      { name: 'CENDOJ - Autos de la Audiencia Provincial de Madrid (Sección 3ª)', url: 'https://www.poderjudicial.es/' },
-      { name: 'Código Penal de España - Artículo 429 sobre Tráfico de Influencias', url: 'https://www.boe.es/buscar/act.php?id=BOE-A-1995-25444' }
+      { name: 'C??digo Penal de Espa??a - Art??culo 429 sobre Tr??fico de Influencias', url: 'https://www.boe.es/' },
+      { name: 'Auto de la Audiencia Provincial de Madrid delimitando la causa de instrucci??n', url: 'https://www.poderjudicial.es/' }
     ],
     chronology: [
-      { date: 'Abril 2024', event: 'El Juzgado de Instrucción nº 41 de Madrid incoa diligencias previas.' },
-      { date: 'Mayo 2024', event: 'Se hace público el primer informe de la UCO de la Guardia Civil.' }
+      { date: 'Abril 2024', event: 'El Juzgado de Instrucci??n n??mero 41 de Madrid abre diligencias previas.' },
+      { date: 'Junio 2024', event: 'La Fiscal??a Europea reclama la competencia sobre la parte principal del sumario vinculada a fondos de la UE.' }
     ],
     frequent_confusions: [
-      { confusion: 'Begoña Gómez ya está procesada y a las puertas del juicio oral.', reality: 'Falso. Se encuentra en fase de diligencias previas (investigación). El juez aún debe decidir si archiva o si abre auto de procesamiento.' }
+      { confusion: 'La UCO concluy?? en su informe que Bego??a G??mez cometi?? cohecho y malversaci??n.', reality: 'Falso. El informe preliminar de la UCO (Unidad Central Operativa de la Guardia Civil) indic?? que no se detectaron indicios de trato de favor ni desv??os financieros sospechosos en las licitaciones p??blicas de Red.es investigadas.' },
+      { confusion: 'Firmar una carta de apoyo en una licitaci??n p??blica constituye autom??ticamente un delito.', reality: 'Falso. La firma de cartas de recomendaci??n o inter??s no es delictiva per se; solo constituye tr??fico de influencias si se acredita que se ejerci?? una presi??n indebida en favor del adjudicatario aprovechando el cargo de un tercero.' },
+      { confusion: 'Bego??a G??mez recibi?? una subvenci??n de 56.000??? del Ministerio de Trabajo en 2024.', reality: 'Falso. Se trat?? de una ayuda del BOE para una empresaria de Cantabria que comparte el mismo nombre y primer apellido. La base nacional de subvenciones confirm?? el error de homonimia.' }
     ],
-    quick_replies: 'El caso se encuentra en fase de instrucción (diligencias previas). La Audiencia Provincial de Madrid autorizó al juez instructor a seguir investigando de forma acotada, mientras que los informes iniciales de la UCO no confirmaron indicios delictivos.',
-    pending_questions: 'Resolución de los recursos ante la Fiscalía Europea si se constata el uso de fondos comunitarios (Red.es).'
+    quick_replies: 'La causa judicial contra Bego??a G??mez investiga si medi?? trato de favor en contratos p??blicos. Los informes de la Guardia Civil no detectaron irregularidades en la adjudicaci??n de las licitaciones de Red.es.',
+    pending_questions: 'Delimitaci??n definitiva de la causa judicial tras la inhibici??n de los contratos de la UE a la Fiscal??a Europea.'
   },
   'investigacion-judicial-david-sanchez': {
-    what_is_happening: 'El juzgado de Badajoz investiga a David Sánchez (hermano del presidente) por presuntos delitos contra la Hacienda Pública, tráfico de influencias y prevaricación tras denuncias relativas a su contrato con la Diputación y su residencia fiscal en Portugal.',
-    what_we_know: 'Se investiga la regularidad laboral de su puesto de alta dirección en la Diputación de Badajoz y la veracidad de su residencia fiscal portuguesa, que le eximiría de abonar el IRPF en España. El juzgado solicitó a la UCO incautar correos electrónicos oficiales en la Diputación.',
-    what_we_do_not_know: 'Si las actas y registros de su actividad laboral física acreditan una presencia habitual compatible con su cargo o si existió teletrabajo no autorizado.',
+    what_is_happening: 'La investigaci??n penal a David S??nchez (hermano del Presidente del Gobierno) por presunta malversaci??n, prevaricaci??n y fraude fiscal en su puesto en la Diputaci??n de Badajoz centra las cr??ticas por la tributaci??n en el extranjero de trabajadores fronterizos.',
+    what_we_know: 'David S??nchez ostenta el puesto de Coordinador de Conservatorios en la Diputaci??n de Badajoz mediante contrato laboral de alta direcci??n. Declar?? su residencia fiscal en Portugal (Elvas). El Juzgado de Instrucci??n de Badajoz abri?? diligencias y orden?? a la UCO recabar correos oficiales y registros del cumplimiento de su jornada laboral.',
+    what_we_do_not_know: 'Si las inspecciones de la Agencia Tributaria detectar??n que el n??cleo de su actividad econ??mica o su estancia efectiva super?? los l??mites de la residencia transfronteriza.',
     key_facts: [
-      'David Sánchez reside en Elvas (Portugal), a pocos kilómetros de Badajoz.',
-      'El Convenio de doble imposición España-Portugal exige acreditar residencia efectiva de más de 183 días.',
-      'La UAT de la Agencia Tributaria emitió informes preliminares sobre su situación fiscal.'
+      'La Diputaci??n de Badajoz autoriz?? la realizaci??n de tareas mediante teletrabajo no presencial bajo el convenio de la instituci??n.',
+      'Los puestos directivos de alta direcci??n est??n exentos de oposiciones ordinarias pero sujetos a acreditaci??n de perfil profesional.',
+      'La residencia fiscal en Portugal permite acogerse al r??gimen especial de residentes no habituales con tipos de IRPF reducidos.'
     ],
     main_sources: [
-      { name: 'Juzgado de Instrucción nº 3 de Badajoz - Autos Oficiales de la Causa', url: 'https://www.poderjudicial.es/' },
-      { name: 'Agencia Tributaria - Convenios de Doble Imposición España-Portugal', url: 'https://sede.agenciatributaria.gob.es/' }
+      { name: 'Diputaci??n de Badajoz - Portal de Transparencia y Relaci??n de Puestos de Trabajo', url: 'https://www.dip-badajoz.es/' },
+      { name: 'Convenio entre Espa??a y Portugal para Evitar la Doble Imposici??n (BOE)', url: 'https://www.boe.es/' }
     ],
     chronology: [
-      { date: 'Junio 2024', event: 'Incoación de diligencias de investigación y entrada de la UCO en la Diputación de Badajoz.' },
-      { date: 'Julio 2024', event: 'El juzgado solicita los informes de vida laboral a la Seguridad Social.' }
+      { date: 'Junio 2024', event: 'El Juzgado de Instrucci??n n?? 3 de Badajoz abre diligencias de investigaci??n penal.' },
+      { date: 'Julio 2024', event: 'Agentes de la UCO registran la Diputaci??n de Badajoz para volcar correos y actas laborales.' }
     ],
     frequent_confusions: [
-      { confusion: 'El hermano de Pedro Sánchez ha sido condenado por evadir impuestos en Portugal.', reality: 'Falso. El caso está en fase de instrucción inicial. No hay acusación formal de la Fiscalía ni condena judicial.' }
+      { confusion: 'El hermano del presidente fue nombrado funcionario de carrera sin aprobar ninguna oposici??n p??blica.', reality: 'Falso. Ocupa un puesto de personal de alta direcci??n regulado laboralmente (RD 1382/1985), no es funcionario de carrera con plaza en propiedad, lo que permite su libre designaci??n y cese.' },
+      { confusion: 'Su patrimonio de 2 millones de euros en cuentas es imposible de justificar con su sueldo p??blico.', reality: 'Falso. Seg??n los bienes declarados, la mayor parte de su patrimonio proviene de una herencia familiar leg??tima y de sus ingresos profesionales previos en el extranjero como director de orquesta.' },
+      { confusion: 'Residir en Portugal trabajando en Espa??a es un delito fiscal grave en todos los casos.', reality: 'Falso. Es una pr??ctica legal regulada transfronteriza siempre que se cumplan las reglas f??sicas de residencia efectiva de m??s de 183 d??as anuales en territorio portugu??s y el pago de tributos comunes.' }
     ],
-    quick_replies: 'La investigación judicial instruye si la plaza de David Sánchez en la Diputación de Badajoz cumple la normativa de altos cargos y si su tributación en Portugal es conforme a los convenios bilaterales para evitar dobles imposiciones.',
-    pending_questions: 'Informe pericial definitivo de los técnicos de Hacienda sobre los flujos patrimoniales de sus cuentas bancarias.'
+    quick_replies: 'La investigaci??n penal a David S??nchez dirime el cumplimiento real de sus funciones y la legalidad de su r??gimen de residencia fiscal transfronteriza en Portugal. Su patrimonio procede en gran parte de herencias declaradas.',
+    pending_questions: 'Verificaci??n del registro de fichajes f??sicos e informes de actividades presentados por el directivo.'
   },
   'inflacion-y-coste-de-vida': {
-    what_is_happening: 'El coste de la vida y el aumento de los precios de la cesta de la compra centran las quejas de los ciudadanos. Se debate si las medidas de alivio (como la reducción del IVA de alimentos básicos) han sido efectivas.',
-    what_we_know: 'El INE calcula mensualmente el IPC analizando la evolución de precios de una cesta representativa de bienes y servicios. El IPC subyacente (que excluye alimentos no elaborados y productos energéticos) sirve para medir el núcleo duro de la inflación estructural.',
-    what_we_do_not_know: 'El impacto real de la especulación de márgenes empresariales en las grandes cadenas de distribución en comparación con el incremento real de costes de origen.',
+    what_is_happening: 'El debate de precios en Espa??a se centra en el encarecimiento de la cesta de la compra y de la energ??a acumulado, pese a la reducci??n interanual del IPC general por debajo de la media europea.',
+    what_we_know: 'El IPC es calculado mensualmente por el INE. El Gobierno aplic?? medidas correctoras como la reducci??n del IVA de alimentos b??sicos (pan, leche, huevos al 0%) y rebajas al impuesto de la electricidad y gas natural.',
+    what_we_do_not_know: 'El efecto final que tendr?? la retirada paulatina de las bonificaciones fiscales sobre el IPC general del pr??ximo ejercicio.',
     key_facts: [
-      'El IVA de ciertos alimentos de primera necesidad fue suprimido temporalmente por el Real Decreto-ley 8/2023.',
-      'La inflación subyacente suele reaccionar de forma más lenta a las bajadas de tipos de interés del BCE.',
-      'La cesta de la compra en España ha acumulado un encarecimiento superior al 25% desde el inicio del conflicto en Ucrania.'
+      'La inflaci??n subyacente (que excluye energ??a y alimentos frescos) muestra mayor resistencia a la baja.',
+      'El aceite de oliva registr?? un encarecimiento superior al 150% interanual en origen debido a la sequ??a prolongada.'
     ],
     main_sources: [
-      { name: 'INE - Índices de Precios de Consumo (IPC) y Cesta de la Compra', url: 'https://www.ine.es/' },
+      { name: 'INE - ??ndices de Precios de Consumo (IPC) y Cesta de la Compra', url: 'https://www.ine.es/' },
       { name: 'Real Decreto-ley 8/2023 de Medidas de Alivio e Impuestos (BOE)', url: 'https://www.boe.es/' }
     ],
     chronology: [
-      { date: 'Diciembre 2023', event: 'Prórroga de la supresión del IVA para alimentos básicos de primera necesidad.' },
-      { date: 'Junio 2024', event: 'El BCE acuerda la primera rebaja de tipos de interés tras dos años de subidas continuas.' }
+      { date: 'Diciembre 2023', event: 'Pr??rroga de la supresi??n del IVA para alimentos b??sicos de primera necesidad.' },
+      { date: 'Junio 2024', event: 'El BCE acuerda la primera rebaja de tipos de inter??s tras dos a??os de subidas continuas.' }
     ],
     frequent_confusions: [
-      { confusion: 'Que el IPC baje al 2% significa que los precios de los supermercados están bajando.', reality: 'Falso. Significa que los precios suben de forma más lenta (un 2% anual en lugar de un 8%), pero el coste acumulado sigue siendo el mismo.' }
+      { confusion: 'Que el IPC baje al 2% significa que los precios de los supermercados est??n bajando.', reality: 'Falso. Significa que los precios suben de forma m??s lenta (un 2% anual en lugar de un 8%), pero el coste acumulado sigue siendo el mismo.' },
+      { confusion: 'El gobierno manipula el IPC excluyendo el precio del aceite de oliva de las estad??sticas.', reality: 'Falso. El INE incluye el aceite de oliva dentro del grupo de "aceites y grasas" de la cesta de la compra oficial y publica mensualmente su encarecimiento detallado.' },
+      { confusion: 'La bajada del IVA de los alimentos se la quedaron en su totalidad los supermercados subiendo m??rgenes.', reality: 'Falso. Los informes de la CNMC y del Banco de Espa??a concluyeron que el descuento fiscal se traslad?? en m??s del 95% a los precios de venta al p??blico en el momento de su aplicaci??n.' }
     ],
-    quick_replies: 'Una bajada del IPC no es una bajada de precios, sino una ralentización en su ritmo de subida. Las medidas de rebaja del IVA amortiguaron parcialmente los precios de alimentos básicos, pero el coste acumulado desde 2022 es severo.',
-    pending_questions: 'Evolución final de las rebajas fiscales temporales una vez las directrices fiscales europeas exijan recortes de déficit.'
+    quick_replies: 'Una bajada del IPC no es una bajada de precios, sino una ralentizaci??n en su ritmo de subida. Las medidas de rebaja del IVA amortiguaron parcialmente los precios de alimentos b??sicos, pero el coste acumulado desde 2022 es severo.',
+    pending_questions: 'Evoluci??n de los m??rgenes comerciales de las distribuidoras en origen agropecuario.'
   },
-  'empleo-y-cifras-de-paro': {
-    what_is_happening: 'El debate político gira sobre la veracidad del descenso del paro registrado tras la reforma laboral, con críticas a la supuesta "ocultación" de parados mediante la figura de los fijos discontinuos.',
-    what_we_know: 'El desempleo se mide mediante dos vías oficiales: el Paro Registrado del SEPE (demandantes apuntados en las oficinas de empleo) y la EPA del INE (encuesta trimestral homologada por Eurostat). Los fijos discontinuos en periodo de inactividad no se computan como parados registrados según una orden ministerial vigente desde 1985.',
-    what_we_do_not_know: 'La cifra exacta de fijos discontinuos inactivos en tiempo real debido a demoras en los cruces informáticos de la Seguridad Social y las CCAA.',
+  'sanidad-publica': {
+    what_is_happening: 'La saturaci??n de la atenci??n primaria, el r??cord hist??rico de las listas de espera para operaciones y el debate sobre la derivaci??n de fondos a conciertos con la sanidad privada centran la agenda sanitaria.',
+    what_we_know: 'El Sistema Nacional de Salud (SNS) est?? transferido en su gesti??n a las CCAA. El Ministerio de Sanidad unifica los datos de listas de espera (SISLE) reflejando m??s de 849.000 pacientes esperando quir??fano. El gasto p??blico sanitario equivale al 7.8% del PIB.',
+    what_we_do_not_know: 'La efectividad de los planes de choque auton??micos para reducir las listas de espera ante la falta cr??nica de m??dicos especialistas disponibles en bolsa laboral.',
     key_facts: [
-      'La EPA es el indicador oficial de referencia internacional para comparar tasas de desempleo homogéneas en la UE.',
-      'La figura del contrato fijo discontinuo sustituyó al contrato temporal de obra y servicio tras la reforma laboral de 2021.',
-      'Los fijos discontinuos inactivos perciben desempleo si cumplen el periodo de carencia mínimo cotizado.'
+      'El tiempo medio de espera quir??rgica se sit??a en 128 d??as, con diferencias de m??s de 60 d??as entre CCAA.',
+      'La sanidad privada realiza m??s del 30% de la actividad quir??rgica del pa??s mediante seguros colectivos o conciertos p??blicos.'
     ],
     main_sources: [
-      { name: 'INE - Encuesta de Población Activa (EPA) Trimestral', url: 'https://www.ine.es/' },
-      { name: 'SEPE - Estadísticas Mensuales de Demandantes de Empleo y Paro Registrado', url: 'https://sepe.es/' }
+      { name: 'Ministerio de Sanidad - Indicadores del Sistema Nacional de Salud (SISLE)', url: 'https://www.sanidad.gob.es/' },
+      { name: 'INE - Estad??sticas de Gasto Sanitario P??blico y Privado', url: 'https://www.ine.es/' }
     ],
     chronology: [
-      { date: 'Diciembre 2021', event: 'Aprobación del Real Decreto-ley 32/2021 de reforma del mercado de trabajo.' },
-      { date: 'Enero 1985', event: 'Entrada en vigor de la Orden Ministerial que regula el cómputo de fijos discontinuos inactivos.' }
+      { date: 'A??o 2023', event: 'Las listas de espera para cirug??a no urgente marcan el r??cord de la serie hist??rica en Espa??a.' }
     ],
     frequent_confusions: [
-      { confusion: 'El gobierno oculta a un millón de parados considerándolos fijos discontinuos.', reality: 'Falso. El criterio para clasificar a los fijos discontinuos inactivos como demandantes con relación laboral data de 1985, no es una invención de la última reforma laboral.' }
+      { confusion: 'El Estado puede obligar a un m??dico a trabajar en la sanidad p??blica prohibi??ndole la privada.', reality: 'Falso. La ley de incompatibilidades permite trabajar en ambos sectores siempre que no haya coincidencia de horarios o conflicto de intereses directos seg??n la plaza auton??mica.' },
+      { confusion: 'La sanidad p??blica de Espa??a es totalmente gratuita para los ciudadanos de forma incondicional.', reality: 'Falso. Se financia ??ntegramente mediante los impuestos generales del sistema tributario (no mediante cotizaciones de la SS), y contempla copagos variables en farmacias seg??n el nivel de renta.' },
+      { confusion: 'Los inmigrantes sin papeles colapsan las listas de espera de los hospitales.', reality: 'Falso. Los inmigrantes irregulares solo acceden por urgencias de forma ordinaria o bajo tarjetas de protecci??n temporal auton??micas espec??ficas, representando menos del 5% del gasto hospitalario total.' }
     ],
-    quick_replies: 'El cálculo del paro registrado sigue las mismas reglas vigentes desde 1985 en España. La EPA, que sí mide los parados reales por encuesta activa homologada por Eurostat, ratifica el incremento del empleo y la reducción del desempleo general.',
-    pending_questions: 'Publicación de un registro detallado en tiempo real del tiempo medio de inactividad de los fijos discontinuos.'
+    quick_replies: 'Las listas de espera quir??rgica marcan m??ximos hist??ricos por la falta de personal y la ineficiencia organizativa de las transferencias sanitarias. El gasto p??blico equivale al 7.8% del PIB.',
+    pending_questions: 'Armonizaci??n de las ratios de personal de enfermer??a y facultativos entre CCAA.'
   },
-  'autonomos-y-fiscalidad': {
-    what_is_happening: 'El nuevo sistema de cotización por ingresos reales genera incertidumbre y quejas entre los trabajadores autónomos de rentas medias y bajas por el incremento gradual de sus cuotas obligatorias.',
-    what_we_know: 'El sistema aprobado por el Real Decreto-ley 13/2022 establece un sistema de 15 tramos de rendimiento neto. El autónomo declara sus previsión de ingresos y la Seguridad Social regulariza la cuota al año siguiente cruzando datos fiscales con la Agencia Tributaria.',
-    what_we_do_not_know: 'El volumen de devoluciones o reclamaciones que tendrá que realizar la Seguridad Social tras cruzar los primeros ejercicios fiscales completos con Hacienda.',
+  'justicia-imputado-condenado': {
+    what_is_happening: 'El debate judicial sobre la presunci??n de inocencia, los juicios paralelos en medios de comunicaci??n y el uso pol??tico de la figura de la querella popular divide la opini??n sobre el funcionamiento de los tribunales.',
+    what_we_know: 'La LECrim regula las fases procesales. La condici??n de investigado garantiza el derecho a declarar con asistencia legal. El auto de procesamiento formaliza los cargos criminales para ir a juicio. La presunci??n de inocencia (Art. 24 CE) prevalece hasta que exista una sentencia firme.',
+    what_we_do_not_know: 'El porcentaje exacto de querellas archivadas preliminarmente frente a las que terminan en apertura de juicio oral debido a la falta de registros anuales del CGPJ por tipolog??a de delito.',
     key_facts: [
-      'Las cuotas mínimas para rendimientos inferiores al SMI han bajado ligeramente, pero suben sustancialmente en tramos medios y altos.',
-      'El rendimiento neto se calcula restando de los ingresos los gastos deducibles más un 7% de gastos de difícil justificación (5% para societarios).',
-      'La tarifa plana estatal de 80 euros al mes dura 12 meses, prorrogables si los ingresos no superan el SMI.'
+      'El t??rmino legal "imputado" fue sustituido en 2015 por el de "investigado" para evitar el estigma social anticipado.',
+      'Las acusaciones populares deben depositar fianza para personarse en la causa penal, aunque el juez puede eximirles o reducirla.'
     ],
     main_sources: [
-      { name: 'Seguridad Social - Nuevo Sistema de Cotización para Autónomos (RETA)', url: 'https://www.seg-social.es/' },
-      { name: 'Real Decreto-ley 13/2022 de Modificación del RETA (BOE)', url: 'https://www.boe.es/' }
+      { name: 'Ley de Enjuiciamiento Criminal - Art??culos de la Fase de Instrucci??n (BOE)', url: 'https://www.boe.es/' },
+      { name: 'Consejo General del Poder Judicial - Memorias Estad??sticas Anuales', url: 'https://www.poderjudicial.es/' }
     ],
     chronology: [
-      { date: 'Enero 2023', event: 'Entrada en vigor del sistema de cotización por tramos de rendimientos netos reales.' },
-      { date: 'Año 2025', event: 'Inicio del primer cruce fiscal masivo para la regularización de cuotas del ejercicio 2023.' }
+      { date: 'Octubre 2015', event: 'Reforma de la LECrim que introduce los t??rminos de investigado y encausado.' }
     ],
     frequent_confusions: [
-      { confusion: 'Con la nueva ley, si facturo 500 euros al mes tengo que pagar 300 euros de cuota obligatoria.', reality: 'Falso. El tramo mínimo de rendimiento neto inferior a 670€/mes contempla una cuota reducida de unos 230€/mes, y la tarifa plana cubre los inicios con 80€/mes.' }
+      { confusion: 'Que un juez admita a tr??mite una querella contra ti significa que eres culpable del delito.', reality: 'Falso. La admisi??n a tr??mite solo indica que la querella cumple los requisitos formales m??nimos y que los hechos narrados justifican iniciar una investigaci??n preliminar.' },
+      { confusion: 'La prisi??n provisional constituye una pena anticipada impuesta por el juez de instrucci??n.', reality: 'Falso. Es una medida cautelar excepcional que solo se decreta por riesgo de fuga, destrucci??n de pruebas o reiteraci??n delictiva, no una condena en firme.' },
+      { confusion: 'Los jueces en Espa??a son nombrados directamente a dedo por el Gobierno en activo.', reality: 'Falso. El acceso a la carrera judicial se realiza mediante oposici??n libre estatal ciega de m??ritos y ex??menes. Solo los vocales del CGPJ y magistrados del TC tienen designaci??n pol??tica parlamentaria.' }
     ],
-    quick_replies: 'El nuevo sistema grava al autónomo según su rendimiento neto real y no sobre bases de elección voluntaria. La regularización se realiza a año vencido cruzando las declaraciones de la Renta con los registros de la Seguridad Social.',
-    pending_questions: 'Ampliación de los gastos deducibles admitidos en el RETA para equiparar la fiscalidad de autónomos individuales a la de sociedades de capital.'
+    quick_replies: 'Estar investigado o imputado no prejuzga la culpabilidad, sino que otorga plenas garant??as procesales de defensa. La presunci??n de inocencia exige pruebas de cargo v??lidas en juicio oral para dictar condena.',
+    pending_questions: 'Reforma de la Ley de Enjuiciamiento Criminal para otorgar la direcci??n de la instrucci??n al Fiscal.'
   },
-  'impuestos-y-ahorro': {
-    what_is_happening: 'El debate fiscal en España enfrenta la presión fiscal de rentas medias frente a los nuevos tributos a grandes fortunas y beneficios bancarios o energéticos.',
-    what_we_know: 'El sistema fiscal español está estructurado en impuestos directos (IRPF, Sociedades) e indirectos (IVA, Especiales) amparados por el principio de progresividad (Art. 31 CE). La Ley 38/2022 implantó el Impuesto Temporal de Solidaridad de las Grandes Fortunas para complementar el Impuesto de Patrimonio en CCAA que lo bonificaban.',
-    what_we_do_not_know: 'La recaudación final acumulada de los impuestos sobre banca y energéticas tras los recursos y litigios judiciales planteados por las patronales.',
+  'consumo-viral-productos-milagro': {
+    what_is_happening: 'La proliferaci??n de cuentas de influencers que recomiendan dietas curativas, suplementos alimenticios sin control y cosm??ticos con supuestas propiedades milagrosas elude los cauces farmac??uticos y la regulaci??n publicitaria.',
+    what_we_know: 'El Real Decreto 1907/1996 proh??be la publicidad de productos alimenticios o cosm??ticos con propiedades preventivas o curativas de enfermedades. La AEMPS coordina las alertas sanitarias y ordena la retirada inmediata de lotes sospechosos.',
+    what_we_do_not_know: 'El alcance real de los da??os hep??ticos o renales asociados a la ingesta masiva de suplementos adquiridos en portales extranjeros de internet que eluden los controles de aduanas.',
     key_facts: [
-      'El IRPF es un impuesto cedido parcialmente: el 50% de la recaudación y la tarifa autonómica dependen de cada Comunidad Autónoma.',
-      'El Impuesto sobre el Patrimonio está bonificado al 100% en CCAA como Madrid y Andalucía, lo que motivó el impuesto estatal de Solidaridad.',
-      'La Constitución prohíbe que el sistema tributario tenga carácter confiscatorio.'
+      'Los complementos alimenticios no requieren evaluaci??n cl??nica previa de eficacia para salir al mercado, solo registro sanitario formal.',
+      'La CNMC y Consumo sancionan la publicidad encubierta en redes que oculte la vinculaci??n comercial del creador de contenido.'
     ],
     main_sources: [
-      { name: 'Agencia Tributaria - Portal de Estadísticas de Recaudación y Tributos', url: 'https://sede.agenciatributaria.gob.es/' },
-      { name: 'Ley 38/2022 del Impuesto a Grandes Fortunas y Gravámenes Temporales (BOE)', url: 'https://www.boe.es/' }
+      { name: 'AEMPS - Agencia Espa??ola de Medicamentos y Productos Sanitarios', url: 'https://www.aemps.gob.es/' },
+      { name: 'Real Decreto 1907/1996 sobre Publicidad de Productos Milagro (BOE)', url: 'https://www.boe.es/' }
     ],
     chronology: [
-      { date: 'Noviembre 2022', event: 'Publicación de la Ley 38/2022 de creación del impuesto a las grandes fortunas.' },
-      { date: 'Noviembre 2023', event: 'El Tribunal Constitucional avala la constitucionalidad del gravamen a las grandes fortunas.' }
+      { date: 'A??o 2024', event: 'Entrada en vigor del nuevo Reglamento de Influencers de la Ley General de Comunicaci??n Audiovisual.' }
     ],
     frequent_confusions: [
-      { confusion: 'El impuesto a las grandes fortunas grava a cualquier ahorrador con un piso en propiedad.', reality: 'Falso. El mínimo exento se sitúa en 3 millones de euros de patrimonio neto, con una exención adicional de hasta 700.000€ para la vivienda habitual.' }
+      { confusion: 'Cualquier producto vendido en herbolarios o farmacias est?? demostrado cient??ficamente que cura.', reality: 'Falso. Los productos homeop??ticos y fitoterap??uticos se registran bajo categor??as de registro simplificadas que no exigen ensayos cl??nicos de eficacia curativa.' },
+      { confusion: 'Las marcas de col??geno o batidos detox tienen aval m??dico oficial para sus reclamos de salud.', reality: 'Falso. La EFSA (Autoridad Europea de Seguridad Alimentaria) ha denegado m??s del 90% de las alegaciones de salud solicitadas por fabricantes de col??geno y detox por falta de rigor cient??fico.' },
+      { confusion: 'Los influencers pueden recomendar tratamientos m??dicos en sus perfiles sin titulaci??n.', reality: 'Falso. La ley proh??be la prescripci??n no oficial de medicamentos y la publicidad de tratamientos hospitalarios o m??dicos por personas no cualificadas.' }
     ],
-    quick_replies: 'El sistema fiscal español combina la base estatal con competencias de gestión cedidas a las autonomías. El gravamen sobre grandes fortunas actúa como un tributo de nivelación para fortunas superiores a los 3 millones de euros de patrimonio neto.',
-    pending_questions: 'Reforma del Impuesto sobre Sociedades y armonización del impuesto de Sucesiones y Donaciones entre CCAA.'
+    quick_replies: 'Los complementos de salud y col??genos no son medicamentos y la ley proh??be atribuirles propiedades terap??uticas o curativas. Exige siempre el etiquetado de contenido patrocinado (#Publi) en influencers.',
+    pending_questions: 'Sanci??n efectiva de las webs extranjeras que venden pseudoterapias curativas a enfermos terminales.'
   },
-  'politica-y-leyes': {
-    what_is_happening: 'La intensa actividad legislativa mediante la vía del Real Decreto-ley en el Congreso abre debates sobre la calidad democrática, la separación de poderes y la tramitación de leyes de gran calado sin dictámenes de órganos consultivos.',
-    what_we_know: 'El Real Decreto-ley es una norma con rango de ley aprobada por el Gobierno bajo casos de "extraordinaria y urgente necesidad" (Art. 86 CE), que requiere posterior convalidación en el Congreso. Los Proyectos de Ley ordinarios exigen debate de enmiendas y consultas previas.',
-    what_we_do_not_know: 'El criterio final del Tribunal Constitucional sobre el abuso de la vía de urgencia si los recursos de la oposición prosperan en bloque.',
+  'ciberestafas-y-dinero-facil': {
+    what_is_happening: 'Las estafas de suplantaci??n de identidad mediante SMS o correo (phishing/smishing), el secuestro de cuentas de WhatsApp y los fraudes de falsas inversiones en criptomonedas captan el dinero de miles de ciudadanos.',
+    what_we_know: 'La Ley PSD2 obliga a los bancos a autenticar con doble factor las transferencias. Si el banco es hackeado o no detecta la brecha, es civilmente responsable de la devoluci??n, salvo que demuestre negligencia grave del usuario. La CNMV mantiene una base de advertencias p??blicas sobre entidades no autorizadas.',
+    what_we_do_not_know: 'El volumen de dinero transferido que logra ser recuperado una vez es desviado a cuentas bancarias ubicadas en para??sos fiscales o convertido a redes descentralizadas de criptomonedas.',
     key_facts: [
-      'El Consejo de Estado y el CGPJ emiten informes consultivos no vinculantes en proyectos legislativos ordinarios.',
-      'Un Real Decreto-ley convalidado puede tramitarse posteriormente como proyecto de ley por el procedimiento de urgencia.',
-      'Las leyes orgánicas exigen la votación favorable de la mayoría absoluta del Congreso en una votación final sobre el conjunto del proyecto.'
+      'Las denuncias por ciberdelincuencia representan m??s del 20% del total de infracciones penales registradas en Espa??a.',
+      'Los ciberestafadores utilizan n??meros de tel??fono y cuentas bancarias muleros falsas para dificultar su localizaci??n.'
     ],
     main_sources: [
-      { name: 'Congreso de los Diputados - Estado de la Tramitación de Leyes', url: 'https://www.congreso.es/' },
-      { name: 'Tribunal Constitucional - Doctrina y Sentencias sobre Decretos-leyes', url: 'https://www.tribunalconstitucional.es/' }
+      { name: 'INCIBE - Instituto Nacional de Ciberseguridad de Espa??a', url: 'https://www.incibe.es/' },
+      { name: 'CNMV - Comisi??n Nacional del Mercado de Valores (Alertas de Inversi??n)', url: 'https://www.cnmv.es/' }
     ],
     chronology: [
-      { date: 'Diciembre 1978', event: 'La Constitución delimita el uso excepcional del Real Decreto-ley en el Art. 86.' },
-      { date: 'Año 2024', event: 'El Tribunal Constitucional reitera los límites a la incorporación de enmiendas ajenas a la materia de la ley.' }
+      { date: 'A??o 2024', event: 'Las denuncias por phishing y estafas en tarjetas de cr??dito marcan el m??ximo hist??rico del pa??s.' }
     ],
     frequent_confusions: [
-      { confusion: 'El Presidente del Gobierno puede aprobar leyes definitivas sin pasar por el Congreso mediante Decretos.', reality: 'Falso. Todo Real Decreto-ley debe ser debatido y convalidado o derogado por el Congreso en un plazo máximo de 30 días.' }
+      { confusion: 'Si caes en un phishing y transfieres dinero, el banco no te devolver?? nada en ning??n caso.', reality: 'Falso. La jurisprudencia del Tribunal Supremo establece que el banco debe restituir el dinero a menos que pruebe que el cliente actu?? de forma temeraria o con dolo directo.' },
+      { confusion: 'Los bots o canales de Telegram que prometen duplicar tu capital con apuestas deportivas son legales.', reality: 'Falso. Constituyen chiringuitos de captaci??n no autorizados y fraudes piramidales Ponzi exentos de la regulaci??n y protecci??n del inversor de la CNMV.' },
+      { confusion: 'Una llamada con el n??mero real de tu banco en pantalla garantiza que est??s hablando con ellos.', reality: 'Falso. Es la t??cnica llamada "Caller ID Spoofing": los ciberdelincuentes suplantan el prefijo o el n??mero real que aparece en tu m??vil usando centralitas VoIP.' }
     ],
-    quick_replies: 'En España, el ejecutivo legisla por vía de urgencia mediante Decretos-leyes, pero requiere siempre el respaldo o convalidación parlamentaria del Congreso. Las leyes estructurales exigen tramitación ordinaria y mayorías de control parlamentario.',
-    pending_questions: 'Reforma del reglamento del Congreso para impedir el uso masivo de enmiendas de enmienda en leyes no relacionadas.'
+    quick_replies: 'Las ciberestafas representan la tipolog??a delictiva de mayor crecimiento. El banco responde civilmente del dinero sustra??do a menos que acredite negligencia grave del usuario. Desconf??a de rentabilidades millonarias garantizadas.',
+    pending_questions: 'Coordinaci??n policial internacional para congelar fondos robados en criptoactivos.'
   },
-  'menores-extranjeros-no-acompanados': {
-    what_is_happening: 'La saturación de los centros de acogida de menores en Canarias y Ceuta y la falta de un mecanismo de reparto automático genera tensiones de reparto y asilo entre administraciones autonómicas y el Estado.',
-    what_we_know: 'La tutela de menores extranjeros no acompañados es competencia exclusiva de la Comunidad Autónoma receptora bajo el régimen general de protección infantil. La determinación de la edad se realiza mediante pruebas radiológicas bajo control de la Fiscalía de Menores si no existen documentos de identidad fehacientes.',
-    what_we_do_not_know: 'El coste exacto anual unificado de mantenimiento de los centros por menor, dado que cada CCAA gestiona y licita sus propios servicios de acogimiento de forma dispar.',
+  'corrupcion-y-promesas-politicas': {
+    what_is_happening: 'Las comisiones y el presunto cohecho en la adjudicaci??n de contratos de emergencia de mascarillas durante la pandemia abren debates sobre los controles internos de la contrataci??n p??blica en situaciones de crisis extrema.',
+    what_we_know: 'El art??culo 120 de la LCSP regula la v??a de emergencia, permitiendo contratar de forma verbal e inmediata sin concurrencia p??blica previa. La fiscalizaci??n por el Tribunal de Cuentas o la intervenci??n es a posteriori, tras la entrega de los bienes contratados.',
+    what_we_do_not_know: 'El desv??o exacto de comisiones que termin?? en cuentas de intermediarios privados a trav??s de sociedades instrumentales ubicadas en el extranjero.',
     key_facts: [
-      'Los menores extranjeros tutelados no tienen derecho a pagas monetarias de 4.200 euros directos; la administración financia el coste operativo de las plazas.',
-      'El retorno de un menor exige informe positivo de los servicios de protección del menor y la localización del entorno familiar.',
-      'La Ley de Extranjería establece el procedimiento de documentación del menor a los 90 días de la tutela.'
+      'Los contratos de emergencia representaron m??s del 70% de las adjudicaciones sanitarias realizadas en los meses ??lgidos del a??o 2020.',
+      'La Oficina de Conflicto de Intereses vigila la incompatibilidad de cargos p??blicos en la firma de contratos con proveedores vinculados.'
     ],
     main_sources: [
-      { name: 'Fiscalía de Menores - Protocolo Marco de Menores Extranjeros No Acompañados', url: 'https://www.fiscal.es/' },
-      { name: 'Ministerio de Juventud e Infancia - Datos de Tutelas de Menores', url: 'https://www.juventudeinfancia.gob.es/' }
+      { name: 'Tribunal de Cuentas - Fiscalizaci??n de Contratos de Emergencia de la Pandemia', url: 'https://www.tcu.es/' },
+      { name: 'Ley de Contratos del Sector P??blico - Art??culo 120 sobre Emergencia (BOE)', url: 'https://www.boe.es/' }
     ],
     chronology: [
-      { date: 'Julio 2024', event: 'El Congreso rechaza debatir la reforma obligatoria del reparto del Art. 35 de la Ley de Extranjería.' },
-      { date: 'Año 2023', event: 'Canarias declara la situación de emergencia migratoria infantil por sobreocupación de centros.' }
+      { date: 'Marzo 2020', event: 'El Gobierno Central activa la contrataci??n por la v??a de emergencia excepcional del art??culo 120.' }
     ],
     frequent_confusions: [
-      { confusion: 'Los menores extranjeros reciben un sueldo directo de 600€ al mes para gastar libremente.', reality: 'Falso. Dependiendo de la Comunidad, solo se les concede una pequeña ayuda de bolsillo para transporte y aseo de entre 10 y 30 euros semanales, ligada a la escolarización.' }
+      { confusion: 'La contrataci??n por v??a de emergencia exime del deber de justificar en qu?? se gasta el dinero p??blico.', reality: 'Falso. Exime de los tr??mites competitivos de licitaci??n previa, pero obliga a rendir cuentas a posteriori justificando la necesidad, la entrega del material y los precios abonados.' },
+      { confusion: 'Cualquier comisionista privado en el sector sanitario comete un delito penal de corrupci??n.', reality: 'Falso. La intermediaci??n comercial privada es legal en Espa??a y se cobra comisi??n por facilitar suministros. Solo constituye delito de cohecho o tr??fico de influencias si media soborno a funcionario o prevalecimiento.' },
+      { confusion: 'El Tribunal de Cuentas dicta condenas de prisi??n para los pol??ticos corruptos.', reality: 'Falso. El Tribunal de Cuentas tiene competencias exclusivas de jurisdicci??n contable civil: solo condena a reintegrar el dinero p??blico desviado, el enjuiciamiento penal corresponde a los juzgados ordinarios.' }
     ],
-    quick_replies: 'Los menores tutelados están a cargo de las comunidades. Las cifras de coste difundidas en redes corresponden a los contratos de gestión de los centros de acogimiento. Los menores no reciben pagas metálicas directas elevadas.',
-    pending_questions: 'Creación de una base de datos de registro biométrico unificado en España para evitar duplicidades de filiación entre CCAA.'
+    quick_replies: 'La contrataci??n de emergencia exime de licitaci??n por urgencia, pero obliga a fiscalizaci??n contable a posteriori. Las comisiones solo son delictivas si hay soborno, sobrecostes ama??ados o desv??o de fondos a favor de cargos.',
+    pending_questions: 'Endurecimiento de los requisitos de solvencia t??cnica de los proveedores en licitaciones expr??s.'
+  },
+  'seguridad-obras-publicas': {
+    what_is_happening: 'Los bulos y alertas sobre el colapso inminente de infraestructuras cr??ticas (presas, viaductos de autov??as) y las desinformaciones sobre la demolici??n intencionada de embalses en plena sequ??a generan alarma social.',
+    what_we_know: 'La Directiva Europea de Aguas y la Estrategia de Biodiversidad de la UE exigen restaurar los ecosistemas fluviales. Esto obliga a la eliminaci??n de peque??as barreras en desuso (azudes, compuertas obsoletas). Las presas de abastecimiento no se demuelen. La vigilancia estructural de presas y viaductos se realiza con sensores l??ser continuos.',
+    what_we_do_not_know: 'La inversi??n global total acumulada necesaria para renovar los miles de puentes de la red secundaria auton??mica y local que muestran s??ntomas de envejecimiento.',
+    key_facts: [
+      'Espa??a es el pa??s de Europa y el quinto del mundo con mayor n??mero de grandes presas operativas (m??s de 1.200 embalses).',
+      'Las obras de restauraci??n fluvial retiraron m??s de 100 barreras fluviales en desuso en el ??ltimo a??o natural.'
+    ],
+    main_sources: [
+      { name: 'Ministerio para la Transici??n Ecol??gica - Inventario Oficial de Presas y Embalses', url: 'https://www.miteco.gob.es/' },
+      { name: 'Direcci??n General del Agua - Normas sobre Obras y Restauraci??n de R??os', url: 'https://www.miteco.gob.es/' }
+    ],
+    chronology: [
+      { date: 'A??o 2023', event: 'Espa??a encabeza la retirada de azudes obsoletos en Europa siguiendo las directrices ecol??gicas de la UE.' }
+    ],
+    frequent_confusions: [
+      { confusion: 'El Gobierno ha demolido presas operativas llenas de agua en plena sequ??a extrema.', reality: 'Falso. Las demoliciones corresponden a peque??os azudes, azudes ruinosos o barreras fluviales inservibles que no reten??an agua para regad??o o abastecimiento. Ning??n gran embalse de agua operativo ha sido destruido.' },
+      { confusion: 'Cualquier grieta visible en el viaducto de una autov??a implica que se va a derrumbar de inmediato.', reality: 'Falso. El hormig??n armado presenta juntas de dilataci??n t??rmicas obligatorias y microfisuras superficiales. Solo las fisuras estructurales profundas bajo el nivel de fatiga comprometen la estabilidad.' },
+      { confusion: 'La retirada de azudes e infraestructuras fluviales obsoletas perjudica el abastecimiento humano.', reality: 'Falso. Las barreras retiradas son obst??culos obsoletos que imped??an la migraci??n de peces y aceleraban la acumulaci??n de sedimentos perjudiciales, sin aportar agua a la red de consumo de la poblaci??n.' }
+    ],
+    quick_replies: 'Espa??a restaura sus r??os retirando obst??culos y azudes inservibles de escaso caudal en desuso. Las grandes presas de abastecimiento siguen operativas bajo monitorizaci??n l??ser estructural.',
+    pending_questions: 'Financiaci??n de las confederaciones para la limpieza de sedimentos pesados acumulados en el fondo de los embalses.'
   }
 };
