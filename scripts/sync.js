@@ -54,13 +54,20 @@ try {
     fs.renameSync(distPath, backupPath);
   }
   
-  fs.renameSync(tempPath, distPath);
+  // Si Astro compiló a un subdirectorio dist_temp/dist, usamos ese subdirectorio para el swap
+  const finalTempPath = fs.existsSync(path.join(tempPath, 'dist')) ? path.join(tempPath, 'dist') : tempPath;
+  fs.renameSync(finalTempPath, distPath);
+  
+  // Limpiar cualquier residuo de dist_temp
+  if (fs.existsSync(tempPath)) {
+    fs.rmSync(tempPath, { recursive: true, force: true });
+  }
   
   if (fs.existsSync(backupPath)) {
     fs.rmSync(backupPath, { recursive: true, force: true });
   }
   
-  console.log(`✅ [EXITO] Reconstruyendo Portal Estático (Astro Build Atómico) completado.`);
+  console.log(`\n✅ [EXITO] Reconstruyendo Portal Estático (Astro Build Atómico) completado.`);
   buildSuccess = true;
 } catch (error) {
   console.error(`❌ [ERROR] Reconstruyendo Portal Estático (Astro Build Atómico) falló.`);
