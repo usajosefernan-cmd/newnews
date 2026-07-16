@@ -36,7 +36,11 @@ console.log(`🚀 [PASO] Ejecutando: Compilación Astro Atómica (Deploy/Build).
 console.log(`======================================================`);
 try {
   // Compilar Astro a la carpeta temporal dist_temp
-  execSync('npx astro build --outDir dist_temp', { stdio: 'inherit', env: process.env });
+  const buildEnv = { ...process.env };
+  if (process.platform === 'linux') {
+    buildEnv.SQLITE_DB_PATH = '/home/ubuntu/db/newnews/newnews.db';
+  }
+  execSync('npx astro build --outDir dist_temp', { stdio: 'inherit', env: buildEnv });
   
   const distPath = path.resolve('dist');
   const tempPath = path.resolve('dist_temp');

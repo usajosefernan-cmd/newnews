@@ -125,6 +125,21 @@ async function runPipeline() {
         let viralityScore = item.virality_score || 5.0;
         
         if (!isRequestedManual) {
+          // Pre-filtro local de keywords de entretenimiento/deportes
+          const textLower = textToProcess.toLowerCase();
+          const forbiddenKeywords = [
+            'fútbol', 'futbol', 'eurocopa', 'copa américa', 'copa america', 'real madrid', 'barcelona',
+            'fc barcelona', 'mbappé', 'mbappe', 'messi', 'ronaldo', 'partido', 'vs', 'contra', 'juego',
+            'canción', 'película', 'cine', 'concierto', 'música', 'tenis', 'alcaraz', 'nadal', 'fórmula 1', 'f1',
+            'liga', 'champions', 'fichaje', 'entrenamiento'
+          ];
+          const hasForbidden = forbiddenKeywords.some(kw => textLower.includes(kw));
+          if (hasForbidden) {
+            updateScrapedStatus.run('ruido', 0.0, item.virality_score, item.id);
+            console.log(`  -> [Pre-Filter Local] Descartado por contener palabra clave prohibida.`);
+            continue;
+          }
+
           const noise = await filterNoise(textToProcess, item.platform);
           if (noise.is_noise) {
             updateScrapedStatus.run('ruido', 0.0, item.virality_score, item.id);
@@ -307,11 +322,33 @@ async function runPipeline() {
         `);
         // Registrar el principal
         insertArticleTopic.run(articleId, topicId);
-        // Registrar los secundarios si existen
-        if (metrics.allTopics && Array.isArray(metrics.allTopics)) {
-          for (const tId of metrics.allTopics) {
-            if (tId !== topicId) {
-              insertArticleTopic.run(articleId, tId);
+        // Insertar tags "on-the-fly"
+        if (article.tags && Array.isArray(article.tags)) {
+          const insertTag = db.prepare(`
+            INSERT OR IGNORE INTO tags (id, slug, name)
+            VALUES (?, ?, ?)
+          `);
+          const insertArticleTag = db.prepare(`
+            INSERT OR IGNORE INTO article_tags (article_id, tag_id)
+            VALUES (?, ?)
+          `);
+
+          for (const rawTag of article.tags) {
+            if (rawTag && typeof rawTag === 'string' && rawTag.trim()) {
+              const name = rawTag.trim();
+              const slug = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+              
+              // Ver si ya existe
+              let existingTag = db.prepare("SELECT id FROM tags WHERE slug = ?").get(slug);
+              let tagId;
+              if (existingTag) {
+                tagId = existingTag.id;
+              } else {
+                tagId = `tag-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+                insertTag.run(tagId, slug, name);
+              }
+              
+              insertArticleTag.run(articleId, tagId);
             }
           }
         }

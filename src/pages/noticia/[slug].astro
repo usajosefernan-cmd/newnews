@@ -35,7 +35,6 @@ if (article) {
     WHERE at.article_id = ? AND t.status = 'activo'
   `).all(article.id) as any[];
   
-  // Si por alguna razón está vacía, usar el tema principal del artículo como fallback
   if (articleTopics.length === 0 && article.topic_title) {
     articleTopics.push({ title: article.topic_title, slug: article.topic_slug });
   }
@@ -46,6 +45,14 @@ const sources = article ? db.prepare("SELECT * FROM sources WHERE article_id = ?
 
 // Cargar posts sociales
 const socialPosts = article ? db.prepare("SELECT * FROM social_posts WHERE article_id = ?").all(article.id) as any[] : [];
+
+// Cargar tags reales asociados
+const tags = article ? db.prepare(`
+  SELECT t.name, t.slug 
+  FROM tags t
+  JOIN article_tags at ON t.id = at.tag_id
+  WHERE at.article_id = ?
+`).all(article.id) as any[] : [];
 
 // Cargar artículos relacionados (mismo tema)
 const relatedSameTopic = db.prepare(`
@@ -63,7 +70,7 @@ const relatedOtherTopics = db.prepare(`
   LIMIT 2
 `).all(article.topic_id) as any[];
 
-// Cargar item del radar correspondiente para extraer mátricas y scores reales (código cero simulador)
+// Cargar item del radar correspondiente para extraer métricas y scores reales (código cero simulador)
 const scrapedItem = db.prepare("SELECT metrics_json, virality_score, risk_score FROM scraped_items WHERE url = ?").get(article.origin_url) as any;
 
 db.close();
@@ -75,6 +82,15 @@ if (article && article.origin_url) {
   const match = article.origin_url.match(regExp);
   if (match && match[2].length === 11) {
     directYoutubeId = match[2];
+  }
+}
+
+// Extraer TikTok Video ID si es aplicable
+let tiktokVideoId = '';
+if (article && article.origin_url && (article.origin_platform === 'TikTok' || article.origin_url.includes('tiktok.com'))) {
+  const match = article.origin_url.match(/\/video\/(\d+)/);
+  if (match) {
+    tiktokVideoId = match[1];
   }
 }
 
@@ -91,11 +107,7 @@ if (scrapedItem && scrapedItem.metrics_json) {
     realMetrics.views = parsed.views || parsed.viewCount || parsed.views_count || null;
   } catch (e) {}
 }
-const viralityScore = scrapedItem?.virality_score || null;
-const riskScore = scrapedItem?.risk_score || null;
 
-
-// Mapa de veredicto a color neón
 const getVerdictClass = (verdict) => {
   const v = verdict.toLowerCase();
   if (v.includes('verdadero')) return 'green';
@@ -133,205 +145,7 @@ function formatOriginalDate(dateString) {
   });
 }
 
-// Helpers auxiliares de metadatos sociales
-const getDeterministicGradient = (username) => {
-  const gradients = [
-    'linear-gradient(135deg, #0088cc 0%, #005580 100%)', // Azul Telegram
-    'linear-gradient(135deg, #7b2cbf 0%, #3c096c 100%)', // Morado cyberpunk
-    'linear-gradient(135deg, #e63946 0%, #1d3557 100%)', // Rojo coral
-    'linear-gradient(135deg, #2a9d8f 0%, #264653 100%)', // Verde petróleo
-    'linear-gradient(135deg, #f5a623 0%, #d0021b 100%)', // Naranja/Fuego
-    'linear-gradient(135deg, #1d9bf0 0%, #0a66c2 100%)', // Azul social
-    'linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%)' // Sunset
-  ];
-  let sum = 0;
-  for (let i = 0; i < username.length; i++) {
-    sum += username.charCodeAt(i);
-  }
-  return gradients[sum % gradients.length];
-};
-
-const formatDisplayName = (username) => {
-  const u = username.toLowerCase();
-  if (u === 'alviseperez') return 'Alvise Pérez';
-  if (u === 'alvsjng') return 'Alvisjng';
-  if (u === 'vox_es') return 'VOX España';
-  if (u === 'ppopular') return 'Partido Popular';
-  if (u === 'psoe') return 'PSOE';
-  if (u === 'empleo_es') return 'Ministerio de Trabajo';
-  if (u === 'comisioneuropea') return 'Comisión Europea';
-  return username
-    .replace(/[_\-]/g, ' ')
-    .split(' ')
-    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
-};
-
-const getInitials = (displayName) => {
-  return displayName
-    .split(' ')
-    .map(w => w[0])
-    .join('')
-    .substring(0, 2)
-    .toUpperCase();
-};
-
-const getSocialPostMeta = (url, platform) => {
-  if (!url) return null;
-  const lowerPlat = platform.toLowerCase();
-  
-  // Usar la fecha original de publicacion (origin_date) si está disponible, si no published_at
-  const dateObj = article.origin_date ? new Date(article.origin_date) : new Date(article.published_at);
-  const dateStr = dateObj.toLocaleString('es-ES', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-
-  const verifiedAccounts = ['alviseperez', 'vox_es', 'ppopular', 'psoe', 'empleo_es', 'comisioneuropea'];
-  const metrics = realMetrics;
-
-  // 1. TELEGRAM
-  if (lowerPlat.includes('telegram') || url.includes('t.me') || url.includes('telegram.me')) {
-    const match = url.match(/telegram\.me\/s\/([^\/]+)\/(\d+)/i) || url.match(/t\.me\/([^\/]+)\/(\d+)/i);
-    const rawUser = match ? match[1] : 'canal_telegram';
-    const postId = match ? match[2] : '0';
-    const displayName = formatDisplayName(rawUser);
-    const avatarColor = getDeterministicGradient(rawUser);
-    
-    return {
-      type: 'telegram',
-      username: `@${rawUser}`,
-      postId: `#${postId}`,
-      displayName,
-      verified: verifiedAccounts.includes(rawUser.toLowerCase()),
-      avatarColor,
-      initials: getInitials(displayName),
-      dateStr,
-      url,
-      metrics
-    };
-  }
-
-  // 2. TWITTER / X
-  if (lowerPlat.includes('x') || lowerPlat.includes('twitter') || url.includes('x.com') || url.includes('twitter.com')) {
-    const match = url.match(/(?:x|twitter)\.com\/([^\/]+)\/status\/(\d+)/i);
-    const rawUser = match ? match[1] : 'usuario_x';
-    const postId = match ? match[2] : '';
-    const displayName = formatDisplayName(rawUser);
-    const avatarColor = getDeterministicGradient(rawUser);
-    
-    return {
-      type: 'x',
-      username: `@${rawUser}`,
-      postId: postId ? `post: ${postId.substring(0, 8)}...` : '',
-      displayName,
-      verified: verifiedAccounts.includes(rawUser.toLowerCase()),
-      avatarColor,
-      initials: getInitials(displayName),
-      dateStr,
-      url,
-      metrics
-    };
-  }
-
-  // 3. INSTAGRAM
-  if (lowerPlat.includes('instagram') || url.includes('instagram.com')) {
-    const match = url.match(/instagram\.com\/p\/([^\/]+)/i) || url.match(/instagram\.com\/([^\/]+)/i);
-    const rawUser = match ? match[1] : 'usuario_instagram';
-    const displayName = formatDisplayName(rawUser);
-    const avatarColor = 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)';
-    
-    return {
-      type: 'instagram',
-      username: `@${rawUser}`,
-      postId: 'Post',
-      displayName,
-      verified: verifiedAccounts.includes(rawUser.toLowerCase()),
-      avatarColor,
-      initials: getInitials(displayName),
-      dateStr,
-      url,
-      metrics
-    };
-  }
-
-  // 4. YOUTUBE
-  if (lowerPlat.includes('youtube') || url.includes('youtube.com') || url.includes('youtu.be')) {
-    let youtubeId = '';
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\/shorts\/)([^#\&\?]*).*/;
-    const match = url.match(regExp);
-    if (match && match[2].length === 11) {
-      youtubeId = match[2];
-    }
-    
-    return {
-      type: 'youtube',
-      youtubeId,
-      url,
-      dateStr,
-      metrics
-    };
-  }
-
-  // 5. TIKTOK
-  if (lowerPlat.includes('tiktok') || url.includes('tiktok.com')) {
-    let tiktokVideoId = '';
-    const match = url.match(/\/video\/(\d+)/);
-    if (match) {
-      tiktokVideoId = match[1];
-    }
-
-    return {
-      type: 'tiktok',
-      tiktokVideoId,
-      url,
-      dateStr,
-      metrics
-    };
-  }
-
-  // Fallback genárico para cualquier URL
-  return {
-    type: 'generic',
-    url,
-    dateStr,
-    metrics
-  };
-};
-
-const socialMeta = getSocialPostMeta(article.origin_url, article.origin_platform);
-
-// Unificación estética de metadatos sociales (Código Cero Simulador)
-const resolvedSocialMeta = socialMeta || {
-  displayName: article.origin_platform === 'YouTube' ? 'Canal de YouTube' : article.origin_platform === 'TikTok' ? 'Perfil de TikTok' : article.origin_platform === 'Telegram' ? 'Canal de Telegram' : article.origin_platform === 'X' ? 'Publicación de X' : 'Publicación de Redes',
-  username: `@${article.origin_platform.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
-  initials: article.origin_platform === 'YouTube' ? 'YT' : article.origin_platform === 'TikTok' ? 'TT' : article.origin_platform === 'Telegram' ? 'TG' : article.origin_platform === 'X' ? 'X' : 'RD',
-  avatarColor: article.origin_platform === 'YouTube' ? '#ff0000' : article.origin_platform === 'TikTok' ? '#00f2fe' : article.origin_platform === 'Telegram' ? '#0088cc' : article.origin_platform === 'X' ? '#000000' : 'var(--neon-blue)',
-  type: article.origin_platform.toLowerCase(),
-  verified: false,
-  dateStr: formatOriginalDate(article.origin_date),
-  metrics: realMetrics
-};
-
-// Precalculados para el termómetro
-const termometroScore = article.newnews_score || 50;
-let termometroLabel = 'Confuso';
-if (termometroScore <= 20) {
-  termometroLabel = 'Ruido bajo';
-} else if (termometroScore <= 40) {
-  termometroLabel = 'Dudoso';
-} else if (termometroScore <= 60) {
-  termometroLabel = 'Confuso';
-} else if (termometroScore <= 80) {
-  termometroLabel = 'Viral y preocupante';
-} else {
-  termometroLabel = 'Prioridad alta / Alarma';
-}
-
-// Precalculados para el truco usado
+// Mapa de veredicto a color
 const trickUsed = (article.trick_used || '').toLowerCase();
 let trickDesc = 'Se utilizan afirmaciones genéricas descontextualizadas del marco legal oficial del BOE o del INE para generar desinformación.';
 if (trickUsed === 'cherry-picking') {
@@ -352,19 +166,55 @@ if (trickUsed === 'cherry-picking') {
   trickDesc = 'Se recomienda un producto o inversión con enlaces de referidos camuflados de recomendación sincera, ocultando el incentivo económico detrás.';
 }
 
+// Formateador Markdown a HTML estructurado
+function renderMarkdown(md) {
+  if (!md) return '';
+  let html = md;
+  // Escapar HTML básico
+  html = html
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+    
+  // Convertir cabeceras
+  html = html.replace(/^### (.*?)$/gm, '<h3 style="font-size: 1.15rem; font-weight: 800; color: #ffffff; margin-top: 1.5rem; margin-bottom: 0.5rem; font-family: var(--font-title); letter-spacing: -0.02em;">$1</h3>');
+  html = html.replace(/^#### (.*?)$/gm, '<h4 style="font-size: 1.0rem; font-weight: 800; color: var(--neon-blue); margin-top: 1.25rem; margin-bottom: 0.5rem; font-family: var(--font-title);">$1</h4>');
+
+  // Convertir negritas (**texto**)
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong style="color: #ffffff; font-weight: 700;">$1</strong>');
+
+  // Convertir cursivas (*texto*)
+  html = html.replace(/\*(.*?)\*/g, '<em style="font-style: italic;">$1</em>');
+
+  // Convertir listas con guiones
+  html = html.replace(/^- (.*?)$/gm, '<li style="margin-left: 1.25rem; list-style-type: square; margin-bottom: 0.35rem; color: var(--text-muted);">$1</li>');
+  
+  // Convertir saltos de línea dobles en párrafos
+  const paragraphs = html.split(/\n\s*\n/);
+  html = paragraphs.map(p => {
+    const trimmed = p.trim();
+    if (!trimmed) return '';
+    if (trimmed.startsWith('<h3') || trimmed.startsWith('<h4') || trimmed.startsWith('<li')) {
+      return trimmed;
+    }
+    return `<p style="margin-bottom: 1rem; line-height: 1.65; color: #E2E8F0;">${trimmed}</p>`;
+  }).join('\n');
+
+  return html;
+}
 ---
 
 <Layout title={article.title} description={article.subtitle} category={article.category}>
   <div class="container" style="padding-top: 1.5rem; padding-bottom: 5rem; max-width: 680px; margin: 0 auto;">
     
     <!-- Migas de pan cyberpunk -->
-    <div style="margin-bottom: 2rem; font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+    <div style="margin-bottom: 1.5rem; font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
       <a href="/" style="text-decoration: none; color: var(--text-muted); transition: color 0.2s;" class="nav-link">Radar</a>
       <span style="color: rgba(255,255,255,0.15);">/</span>
       <a href="/temas" style="text-decoration: none; color: var(--text-muted); transition: color 0.2s;" class="nav-link">Expedientes</a>
       <span style="color: rgba(255,255,255,0.15);">/</span>
       {articleTopics.map((topic, tIdx) => (
-        <span key={topic.slug} style="display: inline-flex; align-items: center; gap: 0.25rem; margin-right: 0.25rem;">
+        <span style="display: inline-flex; align-items: center; gap: 0.25rem; margin-right: 0.25rem;">
           {tIdx > 0 && <span style="color: rgba(255,255,255,0.15);">+</span>}
           <a href={`/tema/${topic.slug}`} style="text-decoration: none; color: var(--neon-blue); font-weight: 800;" class="hover-link">{topic.title}</a>
         </span>
@@ -372,18 +222,65 @@ if (trickUsed === 'cherry-picking') {
     </div>
 
     <!-- Título principal elegante (Igual que la Web) -->
-    <header style="margin-bottom: 2.5rem; text-align: center;">
-      <h1 style="font-size: 2.3rem; line-height: 1.2; font-weight: 900; color: #ffffff; font-family: var(--font-title); margin-bottom: 0.5rem; letter-spacing: -0.03em;">
+    <header style="margin-bottom: 2rem; text-align: center;">
+      <h1 style="font-size: 2.2rem; line-height: 1.2; font-weight: 900; color: #ffffff; font-family: var(--font-title); margin-bottom: 0.5rem; letter-spacing: -0.03em;">
         {article.title}
       </h1>
-      <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted); font-weight: bold; margin-top: 0.75rem;">
+      <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted); font-weight: bold; margin-top: 0.75rem;">
         {article.category.toUpperCase()} • IMPACTO SOCIAL VERIFICADO
       </div>
+      
+      <!-- Tags Cyberpunk en Cabecera -->
+      {tags.length > 0 && (
+        <div style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+          {tags.map(t => (
+            <a href={`/tag/${t.slug}`} style="text-decoration: none; font-size: 0.7rem; font-family: monospace; font-weight: 800; color: var(--neon-blue); background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.2); padding: 0.2rem 0.55rem; border-radius: 4px; transition: all 0.2s;" class="hover-link">
+              #{t.name}
+            </a>
+          ))}
+        </div>
+      )}
     </header>
+
+    <!-- Caja de Origen de la Publicación y Captura Real -->
+    {article.origin_url && (
+      <div class="cyber-card" style="padding: 1.2rem; background: rgba(18, 22, 41, 0.35); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px; margin-bottom: 2rem; display: grid; grid-template-columns: 1fr auto; gap: 1.5rem; align-items: center;">
+        <div style="text-align: left;">
+          <span style="font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--neon-rose); display: block; margin-bottom: 0.4rem; letter-spacing: 0.08em; font-family: monospace;">
+            🚨 ORIGEN DE LA DECLARACIÓN DETECTADA:
+          </span>
+          <p style="font-size: 0.88rem; margin: 0 0 0.75rem 0; line-height: 1.5; color: var(--text-muted); font-style: italic;">
+            "{article.claim || 'Publicación en redes sociales.'}"
+          </p>
+          <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            <span>Plataforma: <strong style="color: #fff;">{article.origin_platform || 'Instagram'}</strong></span>
+            <span style="color: rgba(255,255,255,0.15);">|</span>
+            <a href={article.origin_url} target="_blank" rel="noopener noreferrer" style="color: var(--neon-blue); text-decoration: underline; font-weight: 800; display: inline-flex; align-items: center; gap: 0.25rem;" class="hover-link">
+              Ver post original en {article.origin_platform || 'Instagram'} 
+              <svg style="width: 12px; height: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              </svg>
+            </a>
+          </div>
+        </div>
+        {article.multimedia_url && !article.multimedia_url.includes('unsplash.com/photo-1541872703-74c5e44368f9') && (
+          <div style="width: 80px; height: 80px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); overflow: hidden; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <img src={article.multimedia_url} alt="Captura original" style="max-width: 100%; max-height: 100%; object-fit: cover;" />
+          </div>
+        )}
+      </div>
+    )}
+
+    <!-- Portada Multimedia / Captura de Vídeo del Artículo -->
+    {article.multimedia_url && !article.multimedia_url.includes('unsplash.com/photo-1541872703-74c5e44368f9') && (
+      <div style="margin-bottom: 2rem; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); background: #000; box-shadow: 0 8px 30px rgba(0,0,0,0.5);">
+        <img src={article.multimedia_url} alt="Evidencia o captura original del debate" style="width: 100%; height: auto; max-height: 380px; object-fit: cover; display: block;" />
+      </div>
+    )}
 
     <!-- Gran Banner de Veredicto Sólido -->
     <div style="margin-bottom: 1.5rem; text-align: center;">
-      <div class={`verdict-banner ${article.verdict.toLowerCase().replace(' ', '-')}`} style={`display: inline-block; width: 100%; padding: 1.25rem; border-radius: 12px; font-size: 1.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--font-title); text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); color: #ffffff; background: ${article.verdict.toLowerCase().includes('verdadero') ? 'rgba(0, 245, 160, 0.15)' : article.verdict.toLowerCase().includes('falso') ? 'rgba(220, 39, 67, 0.15)' : 'rgba(255, 183, 3, 0.15)'}; border: 2px solid ${article.verdict.toLowerCase().includes('verdadero') ? 'var(--neon-green)' : article.verdict.toLowerCase().includes('falso') ? 'var(--neon-rose)' : 'var(--neon-amber)'};`}>
+      <div class={`verdict-banner ${article.verdict.toLowerCase().replace(' ', '-')}`} style={`display: inline-block; width: 100%; padding: 1.2rem; border-radius: 12px; font-size: 1.7rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--font-title); text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); color: #ffffff; background: ${article.verdict.toLowerCase().includes('verdadero') ? 'rgba(0, 245, 160, 0.15)' : article.verdict.toLowerCase().includes('falso') ? 'rgba(220, 39, 67, 0.15)' : 'rgba(255, 183, 3, 0.15)'}; border: 2px solid ${article.verdict.toLowerCase().includes('verdadero') ? 'var(--neon-green)' : article.verdict.toLowerCase().includes('falso') ? 'var(--neon-rose)' : 'var(--neon-amber)'};`}>
         {article.verdict}
       </div>
     </div>
@@ -399,8 +296,8 @@ if (trickUsed === 'cherry-picking') {
     </div>
 
     <!-- Panel: Conclusión de la Auditoría -->
-    <div class="cyber-card" style="padding: 1.75rem; background: rgba(18, 22, 41, 0.35); border-color: rgba(255,255,255,0.06); border-radius: 12px; margin-bottom: 1.75rem;">
-      <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; color: #ffffff; font-family: var(--font-title); font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
+    <div class="cyber-card" style="padding: 1.5rem; background: rgba(18, 22, 41, 0.35); border-color: rgba(255,255,255,0.06); border-radius: 12px; margin-bottom: 1.5rem;">
+      <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; color: #ffffff; font-family: var(--font-title); font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
         <svg style="width: 18px; height: 18px; color: var(--neon-blue);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
         </svg>
@@ -412,8 +309,8 @@ if (trickUsed === 'cherry-picking') {
     </div>
 
     <!-- Panel: El Truco -->
-    <div class="cyber-card" style="padding: 1.75rem; background: rgba(18, 22, 41, 0.35); border-color: rgba(255,255,255,0.06); border-radius: 12px; margin-bottom: 2rem;">
-      <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; color: #ffffff; font-family: var(--font-title); font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
+    <div class="cyber-card" style="padding: 1.5rem; background: rgba(18, 22, 41, 0.35); border-color: rgba(255,255,255,0.06); border-radius: 12px; margin-bottom: 2rem;">
+      <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; color: #ffffff; font-family: var(--font-title); font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
         <svg style="width: 18px; height: 18px; color: var(--neon-purple);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
         </svg>
@@ -429,7 +326,6 @@ if (trickUsed === 'cherry-picking') {
 
     <!-- PANELES COMPARATIVOS DIRECTOS: EL MITO vs EL HECHO REAL -->
     <div style="display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 2.5rem;">
-      
       <!-- EL MITO (Borde Rojo / Rosa) -->
       <div class="cyber-card" style="padding: 1.5rem; border: 1px solid rgba(220, 39, 67, 0.25); background: rgba(220, 39, 67, 0.02); border-radius: 12px;">
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; color: var(--neon-rose); font-family: var(--font-title); font-size: 0.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;">
@@ -455,15 +351,55 @@ if (trickUsed === 'cherry-picking') {
           {article.what_is_true || "Los datos oficiales comparados desmienten las afirmaciones sin base."}
         </p>
       </div>
-
     </div>
 
-    <!-- Explicación de los Hechos (Cuerpo del Artículo) -->
+    <!-- ═══ INFOGRAFÍA SVG DE HERMES CON DESCARGADOR PNG 3X ═══ -->
+    {article.infographic_svg && (
+      <div style="margin-bottom: 2.5rem;">
+        <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.1em; display: block; margin-bottom: 0.75rem; text-align: left;">Infografía de Auditoría Rápida</span>
+        
+        <div class="cyber-card infographic-wrapper" style="padding: 1.25rem; background: rgba(18, 22, 41, 0.45); border-color: rgba(0, 240, 255, 0.15); border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+          <div id="infographic-container" style="width: 100%; max-width: 420px; display: block; filter: drop-shadow(0px 0px 10px rgba(0, 240, 255, 0.1));">
+            <Fragment set:html={article.infographic_svg} />
+          </div>
+          
+          <div style="display: flex; width: 100%; justify-content: center; border-top: 1px dashed rgba(255,255,255,0.06); padding-top: 0.85rem;">
+            <button id="download-png-btn" class="cyber-btn" style="padding: 0.5rem 1rem; font-size: 0.75rem; border-radius: 8px; font-weight: 800; display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; transition: all 0.2s;">
+              <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+              </svg>
+              Descargar PNG (Retina 3x para Historias)
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    <!-- Reproductor de Video Original (YouTube / TikTok) -->
+    {directYoutubeId && (
+      <div style="margin-bottom: 2.5rem;">
+        <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.1em; display: block; margin-bottom: 0.75rem;">Vídeo de la Declaración (YouTube)</span>
+        <div style="position: relative; width: 100%; padding-bottom: 56.25%; height: 0; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 8px 30px rgba(0,0,0,0.5);">
+          <iframe src={`https://www.youtube.com/embed/${directYoutubeId}`} style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" allowfullscreen></iframe>
+        </div>
+      </div>
+    )}
+
+    {tiktokVideoId && (
+      <div style="margin-bottom: 2.5rem; display: flex; flex-direction: column; align-items: center;">
+        <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.1em; display: block; margin-bottom: 0.75rem; align-self: flex-start; width: 100%;">Vídeo de la Declaración (TikTok)</span>
+        <div style="width: 100%; max-width: 325px; height: 580px; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 8px 30px rgba(0,0,0,0.5); background: rgba(0,0,0,0.25);">
+          <iframe src={`https://www.tiktok.com/embed/v2/${tiktokVideoId}`} style="width: 100%; height: 100%; border: none;" allowfullscreen></iframe>
+        </div>
+      </div>
+    )}
+
+    <!-- Explicación de los Hechos (Cuerpo del Artículo Maquetado) -->
     {article.explanation && (
       <section style="margin-bottom: 2.5rem;">
         <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.1em; display: block; margin-bottom: 0.75rem;">Análisis Detallado y Datos Oficiales</span>
-        <div style="font-size: 0.95rem; line-height: 1.65; color: #E2E8F0; white-space: pre-wrap; background: rgba(18, 22, 41, 0.2); padding: 1.5rem;" class="cyber-card">
-          {article.explanation}
+        <div style="font-size: 0.95rem; line-height: 1.65; color: #E2E8F0; background: rgba(18, 22, 41, 0.2); padding: 1.5rem;" class="cyber-card">
+          <Fragment set:html={renderMarkdown(article.explanation)} />
         </div>
       </section>
     )}
@@ -563,7 +499,7 @@ if (trickUsed === 'cherry-picking') {
       </div>
     </section>
 
-    <!-- Botán Volver -->
+    <!-- Botón Volver -->
     <div style="margin-bottom: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
       <a href="/" class="cyber-btn" style="width: 100%; text-align: center; border-radius: 12px; padding: 0.75rem;">
         Volver al Radar Principal
@@ -573,28 +509,42 @@ if (trickUsed === 'cherry-picking') {
   </div>
 </Layout>
 
-<!-- Script interactivo de copiado rápido al portapapeles con feedback visual en el botón -->
+<!-- Script para el descargador interactivo PNG retina (3x) -->
 <script is:inline>
-  document.querySelectorAll('.copy-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const targetId = btn.getAttribute('data-target');
-      const text = document.getElementById(targetId).innerText;
+  document.getElementById('download-png-btn')?.addEventListener('click', () => {
+    const svgEl = document.querySelector('#infographic-container svg');
+    if (!svgEl) return;
+
+    const viewBox = svgEl.getAttribute('viewBox') || '0 0 390 1000';
+    const [, , w, h] = viewBox.split(' ').map(Number);
+    
+    // Escala 3x retina para Stories
+    const scale = 3;
+    const canvas = document.createElement('canvas');
+    canvas.width = w * scale;
+    canvas.height = h * scale;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Serialización SVG limpia
+    const svgString = new XMLSerializer().serializeToString(svgEl);
+    const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+    const blobUrl = URL.createObjectURL(svgBlob);
+    
+    const img = new Image();
+    img.onload = () => {
+      // Fondo transparente
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       
-      navigator.clipboard.writeText(text).then(() => {
-        const originalText = btn.innerText;
-        btn.innerText = 'áCopiado con áxito!';
-        btn.style.borderColor = 'var(--neon-green)';
-        btn.style.color = 'var(--neon-green)';
-        
-        setTimeout(() => {
-          btn.innerText = originalText;
-          btn.style.borderColor = 'var(--border-color)';
-          btn.style.color = 'var(--text-main)';
-        }, 1500);
-      }).catch(err => {
-        console.error('Error al copiar al portapapeles:', err);
-      });
-    });
+      const link = document.createElement('a');
+      link.download = `newnews-auditoria-${Date.now()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      
+      URL.revokeObjectURL(blobUrl);
+    };
+    img.src = blobUrl;
   });
 </script>
 

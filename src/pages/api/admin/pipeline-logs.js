@@ -4,7 +4,7 @@ import path from 'node:path';
 export const prerender = false;
 
 export async function GET() {
-  const logFile = path.resolve('data/logs/pipeline.log');
+  const logFile = path.join(process.cwd(), 'data/logs/pipeline.log');
   if (!fs.existsSync(logFile)) {
     return new Response(JSON.stringify({ logs: ['> Sin registros de actividad del motor Hermes todavía.'] }), {
       headers: { 'Content-Type': 'application/json' }

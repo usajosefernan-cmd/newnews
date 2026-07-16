@@ -196,6 +196,11 @@ const { draftsWithDetails, activeTopics, getVerdictClass } = Astro.props;
             </div>
           </div>
 
+          <div class="form-group">
+            <label style="display: block; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.4rem;">Etiquetas / Tags (separadas por comas):</label>
+            <input type="text" name="tags" value={art.tags ? art.tags.join(', ') : ''} placeholder="Ej: vivienda, jóvenes, alquiler, bulo" class="edit-input" style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); color: #fff; padding: 0.6rem; border-radius: 6px; font-size: 0.85rem;" />
+          </div>
+
           <div class="form-actions" style="margin-top: 0.5rem;">
             <button type="submit" class="cyber-btn accent" style="width: 100%; padding: 0.7rem; font-weight: bold; text-transform: uppercase;"> Guardar y Publicar en Web</button>
           </div>

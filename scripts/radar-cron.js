@@ -1,6 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
+import { execFileSync } from 'node:child_process';
+import { chromium } from 'playwright';
+import { fileURLToPath } from 'node:url';
 
 // Redirigir consola a un archivo de log unificado para el panel de administración
 const logFile = path.resolve('data/logs/pipeline.log');
@@ -274,166 +277,375 @@ async function fetchTelegramChannel(channel) {
 }
 
 // ═══ NITTER / X RSS FEEDS ═══
-async function fetchNitterFeed(feed) {
+// ═══ X (TWITTER) PLAYWRIGHT SCRAPER ═══
+async function scrapeXPlaywright(xAccounts, queries) {
   const items = [];
-  // Lista de instancias Nitter públicas para intentar (failover)
-  const nitterInstances = [
-    'https://nitter.privacydev.net',
-    'https://nitter.poast.org',
-    'https://nitter.woodland.cafe'
-  ];
-  
-  for (const instance of nitterInstances) {
-    try {
-      const rssUrl = `${instance}/${feed.username}/rss`;
-      console.log(`[Radar Motor] Probando Nitter RSS: ${rssUrl}...`);
-      const response = await fetch(rssUrl, { 
-        headers: userAgentHeader,
-        signal: AbortSignal.timeout(3000)
-      });
-      
-      if (!response.ok) continue;
-      
-      const xml = await response.text();
-      const itemRegex = /<item>([\s\S]*?)<\/item>/g;
-      const matches = xml.matchAll(itemRegex);
-      
-      for (const match of matches) {
-        const itemContent = match[1];
-        const titleMatch = itemContent.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/) || itemContent.match(/<title>([\s\S]*?)<\/title>/);
-        const linkMatch = itemContent.match(/<link>([\s\S]*?)<\/link>/);
-        const descMatch = itemContent.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/) || itemContent.match(/<description>([\s\S]*?)<\/description>/);
-        const pubDateMatch = itemContent.match(/<pubDate>([\s\S]*?)<\/pubDate>/);
+  const sessionPath = '/home/ubuntu/db/newnews/x_session';
+  try {
+    fs.mkdirSync(sessionPath, { recursive: true });
+  } catch (e) {}
+
+  console.log(`[Radar Motor] Iniciando navegador Playwright para X...`);
+  let browserContext;
+  try {
+    browserContext = await chromium.launchPersistentContext(sessionPath, {
+      headless: true,
+      viewport: { width: 1280, height: 800 },
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+      args: ['--disable-blink-features=AutomationControlled', '--no-sandbox', '--disable-setuid-sandbox']
+    });
+    
+    const page = await browserContext.newPage();
+    
+    // 1. Scrape Accounts
+    for (const account of xAccounts) {
+      try {
+        const url = `https://x.com/${account.username}`;
+        console.log(`[Radar Motor] Scrapeando cuenta de X: @${account.username}...`);
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
+        await page.waitForTimeout(3000);
         
-        if (titleMatch && linkMatch) {
-          if (pubDateMatch) {
-            const pubDate = new Date(pubDateMatch[1].trim());
-            const diffHours = (new Date().getTime() - pubDate.getTime()) / (1000 * 60 * 60);
-            if (diffHours > 24) continue; // Solo 24 horas
+        // Scroll slightly to trigger load
+        await page.evaluate(() => window.scrollBy(0, 800));
+        await page.waitForTimeout(2000);
+        
+        const tweets = await page.evaluate((authorName) => {
+          const results = [];
+          const tweetElements = document.querySelectorAll('article[data-testid="tweet"]');
+          for (const el of tweetElements) {
+            const textEl = el.querySelector('[data-testid="tweetText"]');
+            const linkEl = el.querySelector('a[href*="/status/"]');
+            if (!textEl || !linkEl) continue;
+            
+            const link = linkEl.href;
+            const text = textEl.innerText || '';
+            const title = text.split('\n')[0] || 'Tweet';
+            
+            const imgEl = el.querySelector('[data-testid="tweetPhoto"] img');
+            const imageUrl = imgEl ? imgEl.src : null;
+            
+            const likeEl = el.querySelector('[data-testid="like"]');
+            const likeText = likeEl ? likeEl.innerText || '' : '0';
+            
+            let likes = 0;
+            const cleanLike = likeText.trim().toUpperCase();
+            if (cleanLike.includes('K')) likes = parseFloat(cleanLike.replace('K', '')) * 1000;
+            else if (cleanLike.includes('M')) likes = parseFloat(cleanLike.replace('M', '')) * 1000000;
+            else likes = parseInt(cleanLike.replace(/\D/g, '')) || 0;
+            
+            results.push({
+              title: title.substring(0, 180),
+              link,
+              description: text,
+              platform: 'X',
+              author: authorName,
+              score: likes,
+              comments: 0,
+              views: 0,
+              origin_date: new Date().toISOString(),
+              imageUrl
+            });
           }
-
-          let link = linkMatch[1].trim();
-          // Convertir link de Nitter a link real de X
-          link = link.replace(new RegExp(instance.replace('https://', '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), 'x.com');
-          if (!link.startsWith('http')) link = `https://x.com/${feed.username}`;
-          
-          const title = titleMatch[1].trim().replace(/<\/?[^>]+(>|$)/g, '');
-          const description = descMatch ? descMatch[1].trim().replace(/<\/?[^>]+(>|$)/g, '').substring(0, 300) : '';
-          
-          let imageUrl = null;
-          if (descMatch) {
-            const imgHtmlMatch = descMatch[1].match(/<img[^>]*src="([^"]+)"/i);
-            if (imgHtmlMatch) {
-              imageUrl = imgHtmlMatch[1];
-              if (imageUrl.startsWith('/')) {
-                imageUrl = instance + imageUrl;
-              }
-            }
-          }
-
-          items.push({
-            title: title.substring(0, 200),
-            link,
-            description,
-            platform: 'X',
-            author: `@${feed.username}`,
-            score: 100,
-            comments: 0,
-            origin_date: pubDateMatch ? new Date(pubDateMatch[1].trim()).toISOString() : new Date().toISOString(),
-            imageUrl: imageUrl || null
-          });
-        }
+          return results;
+        }, `@${account.username}`);
+        
+        items.push(...tweets);
+        console.log(`[Radar Motor] -> @${account.username}: Encontrados ${tweets.length} tweets.`);
+      } catch (err) {
+        console.log(`[Radar Motor] Error scrapeando cuenta de X @${account.username}:`, err.message);
       }
-      
-      if (items.length > 0) {
-        console.log(`[Radar Motor] -> ${feed.name}: Detectados ${items.length} posts de X vía ${instance}.`);
-        break; // Éxito, no probar más instancias
-      }
-    } catch (err) {
-      console.log(`[Radar Motor] Nitter instance failed: ${err.message}`);
-      continue;
     }
-  }
-  
-  if (items.length === 0) {
-    console.log(`[Radar Motor] ⚠️ No se pudo acceder a X/@${feed.username} vía Nitter.`);
+    
+    // 2. Scrape Search Queries on X
+    for (const query of queries) {
+      try {
+        const searchUrl = `https://x.com/search?q=${encodeURIComponent(query)}&f=live`;
+        console.log(`[Radar Motor] Buscando en X (Playwright): "${query}"...`);
+        await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+        await page.waitForTimeout(3000);
+        
+        await page.evaluate(() => window.scrollBy(0, 800));
+        await page.waitForTimeout(2000);
+        
+        const searchTweets = await page.evaluate(() => {
+          const results = [];
+          const tweetElements = document.querySelectorAll('article[data-testid="tweet"]');
+          for (const el of tweetElements) {
+            const textEl = el.querySelector('[data-testid="tweetText"]');
+            const linkEl = el.querySelector('a[href*="/status/"]');
+            const userEl = el.querySelector('[data-testid="User-Name"] a');
+            if (!textEl || !linkEl) continue;
+            
+            const link = linkEl.href;
+            const text = textEl.innerText || '';
+            const title = text.split('\n')[0] || 'Tweet';
+            
+            let author = 'X User';
+            if (userEl) {
+              const href = userEl.getAttribute('href') || '';
+              author = '@' + href.replace('/', '');
+            }
+            
+            const imgEl = el.querySelector('[data-testid="tweetPhoto"] img');
+            const imageUrl = imgEl ? imgEl.src : null;
+            
+            const likeEl = el.querySelector('[data-testid="like"]');
+            const likeText = likeEl ? likeEl.innerText || '' : '0';
+            
+            let likes = 0;
+            const cleanLike = likeText.trim().toUpperCase();
+            if (cleanLike.includes('K')) likes = parseFloat(cleanLike.replace('K', '')) * 1000;
+            else if (cleanLike.includes('M')) likes = parseFloat(cleanLike.replace('M', '')) * 1000000;
+            else likes = parseInt(cleanLike.replace(/\D/g, '')) || 0;
+            
+            results.push({
+              title: title.substring(0, 180),
+              link,
+              description: text,
+              platform: 'X',
+              author,
+              score: likes,
+              comments: 0,
+              views: 0,
+              origin_date: new Date().toISOString(),
+              imageUrl
+            });
+          }
+          return results;
+        });
+        
+        items.push(...searchTweets);
+        console.log(`[Radar Motor] -> X búsqueda "${query}": Encontrados ${searchTweets.length} tweets.`);
+      } catch (err) {
+        console.log(`[Radar Motor] Error buscando en X para "${query}":`, err.message);
+      }
+    }
+  } catch (err) {
+    console.log(`[Radar Motor] Error general en navegador X:`, err.message);
+  } finally {
+    if (browserContext) {
+      try {
+        await browserContext.close();
+      } catch (e) {}
+    }
   }
   return items;
 }
 
-async function fetchNitterSearch(query) {
+// ═══ TIKTOK PLAYWRIGHT SCRAPER ═══
+async function scrapeTikTokPlaywright(queries) {
   const items = [];
-  const nitterInstances = [
-    'https://nitter.privacydev.net',
-    'https://nitter.poast.org',
-    'https://nitter.woodland.cafe'
-  ];
-  
-  for (const instance of nitterInstances) {
-    try {
-      const rssUrl = `${instance}/search/rss?q=${encodeURIComponent(query)}`;
-      console.log(`[Radar Motor] Buscando en X (Nitter): "${query}" vía ${instance}...`);
-      const response = await fetch(rssUrl, { 
-        headers: userAgentHeader,
-        signal: AbortSignal.timeout(4000)
-      });
-      
-      if (!response.ok) continue;
-      
-      const xml = await response.text();
-      const itemRegex = /<item>([\s\S]*?)<\/item>/g;
-      const matches = xml.matchAll(itemRegex);
-      
-      for (const match of matches) {
-        const itemContent = match[1];
-        const titleMatch = itemContent.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/) || itemContent.match(/<title>([\s\S]*?)<\/title>/);
-        const linkMatch = itemContent.match(/<link>([\s\S]*?)<\/link>/);
-        const descMatch = itemContent.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/) || itemContent.match(/<description>([\s\S]*?)<\/description>/);
-        const pubDateMatch = itemContent.match(/<pubDate>([\s\S]*?)<\/pubDate>/);
+  const sessionPath = '/home/ubuntu/db/newnews/tiktok_session';
+  try {
+    fs.mkdirSync(sessionPath, { recursive: true });
+  } catch (e) {}
+
+  console.log(`[Radar Motor] Iniciando navegador Playwright para TikTok...`);
+  let browserContext;
+  try {
+    browserContext = await chromium.launchPersistentContext(sessionPath, {
+      headless: true,
+      viewport: { width: 1280, height: 800 },
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+      args: ['--disable-blink-features=AutomationControlled', '--no-sandbox', '--disable-setuid-sandbox']
+    });
+    
+    const page = await browserContext.newPage();
+    
+    for (const query of queries) {
+      try {
+        const searchUrl = `https://www.tiktok.com/search?q=${encodeURIComponent(query)}&sort_type=1&publish_time=7`;
+        console.log(`[Radar Motor] Buscando en TikTok (Playwright): "${query}"...`);
+        await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+        await page.waitForTimeout(4000);
         
-        if (titleMatch && linkMatch) {
-          if (pubDateMatch) {
-            const pubDate = new Date(pubDateMatch[1].trim());
-            const diffHours = (new Date().getTime() - pubDate.getTime()) / (1000 * 60 * 60);
-            if (diffHours > 24) continue;
-          }
-
-          let link = linkMatch[1].trim();
-          link = link.replace(new RegExp(instance.replace('https://', '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), 'x.com');
+        // Scroll down to load videos
+        await page.evaluate(() => window.scrollBy(0, 800));
+        await page.waitForTimeout(2000);
+        
+        const videos = await page.evaluate((q) => {
+          const results = [];
+          const cards = document.querySelectorAll('[data-e2e="search_video-item"], div[class*="-DivVideoCardContainer"], div[class*="search-item"]');
           
-          const title = titleMatch[1].trim().replace(/<\/?[^>]+(>|$)/g, '');
-          const description = descMatch ? descMatch[1].trim().replace(/<\/?[^>]+(>|$)/g, '').substring(0, 300) : '';
-          
-          let imageUrl = null;
-          if (descMatch) {
-            const imgHtmlMatch = descMatch[1].match(/<img[^>]*src="([^"]+)"/i);
-            if (imgHtmlMatch) {
-              imageUrl = imgHtmlMatch[1];
-              if (imageUrl.startsWith('/')) {
-                imageUrl = instance + imageUrl;
-              }
+          for (const card of cards) {
+            const linkEl = card.querySelector('a[href*="/video/"]');
+            if (!linkEl) continue;
+            
+            const link = linkEl.href;
+            const descEl = card.querySelector('[data-e2e="search_video-desc"], div[class*="-DivVideoCardDesc"], [class*="desc"]');
+            const authorEl = card.querySelector('[data-e2e="search_video-author"], [class*="UniqueId"], [class*="author"]');
+            const imgEl = card.querySelector('img');
+            const viewsEl = card.querySelector('[data-e2e="search_video-views"], [class*="PlayNum"], [class*="views"]');
+            
+            const description = descEl ? descEl.innerText || '' : '';
+            const title = description.split('\n')[0] || `TikTok video`;
+            const author = authorEl ? authorEl.innerText || 'TikTok Creator' : 'TikTok Creator';
+            const imageUrl = imgEl ? imgEl.src : null;
+            const viewsText = viewsEl ? viewsEl.innerText || '0' : '0';
+            
+            let views = 0;
+            const cleanViews = viewsText.trim().toUpperCase();
+            if (cleanViews.includes('K')) views = parseFloat(cleanViews.replace('K', '')) * 1000;
+            else if (cleanViews.includes('M')) views = parseFloat(cleanViews.replace('M', '')) * 1000000;
+            else views = parseInt(cleanViews.replace(/\D/g, '')) || 0;
+            
+            let cleanLink = link;
+            const linkMatch = link.match(/\/video\/(\d+)/);
+            if (linkMatch) {
+              const videoId = linkMatch[1];
+              const cleanAuthor = author.startsWith('@') ? author : '@' + author;
+              cleanLink = `https://www.tiktok.com/${cleanAuthor}/video/${videoId}`;
             }
+            
+            results.push({
+              title: title.substring(0, 180),
+              link: cleanLink,
+              description: description || `Post de TikTok sobre "${q}"`,
+              platform: 'TikTok',
+              author: author.startsWith('@') ? author : '@' + author,
+              score: 0,
+              comments: 0,
+              views: views,
+              origin_date: new Date().toISOString(),
+              imageUrl
+            });
           }
+          
+          // Fallback if cards selector fails, try getting any video links
+          if (results.length === 0) {
+            const links = document.querySelectorAll('a[href*="/video/"]');
+            links.forEach(l => {
+              const href = l.href;
+              if (results.some(r => r.link === href)) return;
+              
+              const parent = l.closest('div');
+              let title = 'TikTok video';
+              let author = 'TikTok Creator';
+              let imageUrl = null;
+              if (parent) {
+                const text = parent.innerText || '';
+                title = text.split('\n')[0] || title;
+                const img = parent.querySelector('img');
+                if (img) imageUrl = img.src;
+              }
+              
+              let cleanLink = href;
+              const linkMatch = href.match(/\/video\/(\d+)/);
+              if (linkMatch) {
+                const videoId = linkMatch[1];
+                const cleanAuthor = author.startsWith('@') ? author : '@' + author;
+                cleanLink = `https://www.tiktok.com/${cleanAuthor}/video/${videoId}`;
+              }
+              
+              results.push({
+                title: title.substring(0, 180),
+                link: cleanLink,
+                description: `Post de TikTok detectado.`,
+                platform: 'TikTok',
+                author,
+                score: 0,
+                comments: 0,
+                views: 0,
+                origin_date: new Date().toISOString(),
+                imageUrl
+              });
+            });
+          }
+          
+          return results;
+        }, query);
+        
+        items.push(...videos);
+        console.log(`[Radar Motor] -> TikTok "${query}": Encontrados ${videos.length} videos.`);
+      } catch (err) {
+        console.log(`[Radar Motor] Error buscando en TikTok para "${query}":`, err.message);
+      }
+    }
+  } catch (err) {
+    console.log(`[Radar Motor] Error general en navegador TikTok:`, err.message);
+  } finally {
+    if (browserContext) {
+      try {
+        await browserContext.close();
+      } catch (e) {}
+    }
+  }
+  return items;
+}
 
-          items.push({
-            title: title.substring(0, 200),
-            link,
-            description,
-            platform: 'X',
-            author: 'X User',
-            score: 100,
-            comments: 5,
-            origin_date: pubDateMatch ? new Date(pubDateMatch[1].trim()).toISOString() : new Date().toISOString(),
-            imageUrl: imageUrl || null
-          });
-        }
+// ═══ INSTAGRAM SCRAPER (PLAYWRIGHT CHROMIUM) ═══
+async function scrapeInstagramPlaywright() {
+  const items = [];
+  const sessionPath = '/home/ubuntu/db/newnews/instagram_session';
+  try {
+    fs.mkdirSync(sessionPath, { recursive: true });
+  } catch (e) {}
+
+  console.log('[Radar Motor] Iniciando navegador Playwright para Instagram...');
+  let browserContext;
+  try {
+    browserContext = await chromium.launchPersistentContext(sessionPath, {
+      headless: true,
+      viewport: { width: 1280, height: 800 },
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+      args: ['--disable-blink-features=AutomationControlled', '--no-sandbox', '--disable-setuid-sandbox']
+    });
+
+    const page = await browserContext.newPage();
+    const hashtags = ['bulo', 'okupa', 'inmigracionEspana'];
+
+    for (const tag of hashtags) {
+      try {
+        const url = `https://www.instagram.com/explore/tags/${tag}/`;
+        console.log(`[Radar Motor] Scrapeando Instagram hashtag: #${tag}...`);
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 20000 });
+        await page.waitForTimeout(4000);
+
+        // Scroll leve para forzar carga
+        await page.evaluate(() => window.scrollBy(0, 600));
+        await page.waitForTimeout(2000);
+
+        const posts = await page.evaluate((tag_name) => {
+          const results = [];
+          const links = document.querySelectorAll('a[href*="/p/"]');
+          for (const a of links) {
+            const href = a.href;
+            if (results.some(r => r.link === href)) continue;
+
+            const img = a.querySelector('img');
+            const imageUrl = img ? img.src : null;
+            const alt = img ? img.alt || '' : '';
+            const title = alt.split('\n')[0] || `Publicación sobre #${tag_name}`;
+
+            results.push({
+              title: title.substring(0, 180),
+              link: href,
+              description: alt || `Post de Instagram sobre #${tag_name}`,
+              platform: 'Instagram',
+              author: 'Instagram Creator',
+              score: 0,
+              comments: 0,
+              views: 0,
+              origin_date: new Date().toISOString(),
+              imageUrl
+            });
+          }
+          return results;
+        }, tag);
+
+        items.push(...posts);
+        console.log(`[Radar Motor] -> Instagram #${tag}: Encontrados ${posts.length} posts.`);
+      } catch (err) {
+        console.log(`[Radar Motor] Error buscando en Instagram #${tag}:`, err.message);
       }
-      
-      if (items.length > 0) {
-        break;
-      }
-    } catch (err) {
-      continue;
+    }
+  } catch (err) {
+    console.log(`[Radar Motor] Error general en navegador Instagram:`, err.message);
+  } finally {
+    if (browserContext) {
+      try {
+        await browserContext.close();
+      } catch (e) {}
     }
   }
   return items;
@@ -579,68 +791,7 @@ async function fetchYouTubeSearch(query) {
   return items;
 }
 
-async function fetchDdgSocialSearch(query, platform) {
-  const items = [];
-  try {
-    let siteConstraint = '';
-    if (platform === 'Instagram') siteConstraint = 'site:instagram.com/p/ OR site:instagram.com/reel/';
-    else if (platform === 'TikTok') siteConstraint = 'site:tiktok.com/@';
-    else if (platform === 'Facebook') siteConstraint = 'site:facebook.com';
-    
-    const fullQuery = `${siteConstraint} "${query}"`;
-    console.log(`[Radar Motor] Buscando en ${platform} vía DDG: "${query}"...`);
-    
-    const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(fullQuery)}`;
-    const response = await fetch(url, { headers: userAgentHeader });
-    if (!response.ok) return items;
-
-    const html = await response.text();
-    
-    // Parsear enlaces que coincidan con la plataforma
-    const hrefs = [];
-    const hrefMatches = html.matchAll(/href="([^"]*)"/g);
-    for (const m of hrefMatches) {
-      let link = m[1];
-      if (link.includes('instagram.com/p/') || link.includes('instagram.com/reel/') || link.includes('tiktok.com/@') || link.includes('facebook.com')) {
-        // Limpiar redir de DDG si hiciera falta
-        if (link.includes('uddg=')) {
-          const matchUrl = link.match(/uddg=([^&]+)/);
-          if (matchUrl) link = decodeURIComponent(matchUrl[1]);
-        }
-        if (!hrefs.includes(link) && !link.includes('duckduckgo.com')) {
-          hrefs.push(link);
-        }
-      }
-    }
-
-    // Buscar títulos descriptivos
-    const titleRegex = /<a class="result__link"[^>]*>([\s\S]*?)<\/a>/g;
-    const titles = [];
-    let tMatch;
-    while ((tMatch = titleRegex.exec(html)) !== null) {
-      titles.push(tMatch[1].replace(/<\/?[^>]+(>|$)/g, "").trim());
-    }
-
-    hrefs.slice(0, 3).forEach((link, idx) => {
-      const title = titles[idx] || `Alarma / Post viral detectado en ${platform} sobre "${query}"`;
-      items.push({
-        title: title.substring(0, 180),
-        link,
-        description: `Alerta social y debate viral capturado de forma orgánica sobre "${query}" en la plataforma ${platform}.`,
-        platform,
-        author: `${platform} User`,
-        score: 1200,
-        comments: 10,
-        views: 15000, // Vistas simuladas para superar el filtro de 10k
-        origin_date: new Date().toISOString(),
-        imageUrl: null
-      });
-    });
-  } catch (err) {
-    console.log(`[Radar Motor] Error buscando en ${platform} para "${query}":`, err.message);
-  }
-  return items;
-}
+// fetchDdgSocialSearch eliminada (DDG e inyección views:15000 removidos para datos 100% reales)
 
 async function getGoogleTrendsQueries() {
   const queries = [];
@@ -719,75 +870,92 @@ async function runRadar() {
 
   const insertScrapedItem = db.prepare(`
     INSERT OR IGNORE INTO scraped_items (id, platform, url, text, author_public_name, metrics_json, detected_claim, suggested_topic, virality_score, risk_score, status, origin_date, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente', ?, datetime('now'))
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'triage_completado', ?, datetime('now'))
   `);
 
   let insertedCount = 0;
   const allItems = [];
 
-  // 1. Cargar RSS feeds
-  for (const feed of rssFeeds) {
-    const feedItems = await fetchRssFeed(feed);
-    allItems.push(...feedItems);
-  }
-
-  // 2. Cargar Reddit feeds
-  for (const feed of redditFeeds) {
-    const feedItems = await fetchRedditFeed(feed);
-    allItems.push(...feedItems);
-  }
-
-  // 2.5 Cargar Telegram channels
-  for (const channel of telegramChannels) {
-    const channelItems = await fetchTelegramChannel(channel);
-    allItems.push(...channelItems);
-  }
-
-  // 3. Cargar X/Twitter vía Nitter RSS
-  for (const account of xAccounts) {
-    const xItems = await fetchNitterFeed(account);
-    allItems.push(...xItems);
-  }
+  // 1. Cargar RSS feeds, Reddit feeds y Telegram channels en paralelo
+  console.log('[Radar Motor] Descargando fuentes estáticas (RSS, Reddit y Telegram) en paralelo...');
+  const staticFeedPromises = [
+    ...rssFeeds.map(feed => fetchRssFeed(feed)),
+    ...redditFeeds.map(feed => fetchRedditFeed(feed)),
+    ...telegramChannels.map(channel => fetchTelegramChannel(channel))
+  ];
+  const staticFeedResults = await Promise.all(staticFeedPromises);
+  staticFeedResults.forEach(items => allItems.push(...items));
 
   // 3.5 Búsquedas dinámicas y virales en YouTube, X (Twitter), Reddit, Instagram, TikTok y Facebook
-  const alarmWords = ['bulo', 'alarma', 'urgente', 'cuidado', 'mentira'];
-  const topicQueries = dbTopics.flatMap(t => alarmWords.slice(0, 3).map(aw => `${t.title} ${aw}`)).slice(0, 10);
-  const baseQueries = [
-    'bulo España', 'okupa España', 'inmigración España ayudas', 'Begoña Gómez juicio', 'Koldo mascarillas',
-    'okupa alarma', 'ayudas menas mentira', 'pensiones peligro', 'autónomos atraco'
+  const alarmWords = [
+    'alarma', 'urgente', 'vergüenza', 'escándalo', 'indignante', 
+    'censurado', 'secreto', 'ocultan', 'revelado', 'peligro', 
+    'atraco', 'robo', 'brutal', 'bulo', 'mentira'
   ];
+
+  const simplifiedTopicKeywords = [
+    'okupa', 'allanamiento', 'desahucio', 'alquiler',
+    'ayudas extranjeros', 'inmigrantes', 'menas', 'frontera',
+    'autónomos cuota', 'autónomo cuotas', 'impuestos España', 'hacienda irpf',
+    'begoña gómez', 'juicio begoña', 'koldo mascarillas', 'ábalos',
+    'pensiones', 'precios cesta compra', 'luz factura', 'gasolina precio', 'ipc'
+  ];
+
+  const generatedQueries = [];
+  simplifiedTopicKeywords.forEach(kw => {
+    const w1 = alarmWords[Math.floor(Math.random() * alarmWords.length)];
+    let w2 = alarmWords[Math.floor(Math.random() * alarmWords.length)];
+    while (w2 === w1) {
+      w2 = alarmWords[Math.floor(Math.random() * alarmWords.length)];
+    }
+    generatedQueries.push(`${kw} ${w1}`);
+    generatedQueries.push(`${kw} ${w2}`);
+  });
+
+  const baseQueries = [
+    'bulo España', 'okupa España', 'ayudas menas mentira', 'autónomos atraco'
+  ];
+
   const dynamicTrends = await getGoogleTrendsQueries();
   console.log(`[Radar Motor] Tendencias dinámicas de Google Trends cargadas: [${dynamicTrends.join(', ')}]`);
   
-  const trendQueries = dynamicTrends.flatMap(t => ['bulo', 'alarma'].map(aw => `${t} ${aw}`));
-  const combinedQueries = [...topicQueries, ...baseQueries, ...dynamicTrends.slice(0, 3), ...trendQueries.slice(0, 3)];
-  const uniqueQueries = [...new Set(combinedQueries)];
+  const trendQueries = dynamicTrends.flatMap(t => ['bulo', 'alarma', 'urgente'].map(aw => `${t} ${aw}`));
+  const combinedQueries = [...generatedQueries, ...baseQueries, ...dynamicTrends.slice(0, 3), ...trendQueries.slice(0, 3)];
+  const uniqueQueries = [...new Set(combinedQueries)].slice(0, 25);
 
-  for (const query of uniqueQueries) {
-    // Buscar en YouTube
-    const ytItems = await fetchYouTubeSearch(query);
-    allItems.push(...ytItems);
+  // 3. Cargar X, TikTok e Instagram en paralelo
+  console.log('[Radar Motor] Lanzando agentes de redes sociales (X, TikTok e Instagram) en paralelo...');
+  const [xItems, tiktokItems, instagramItems] = await Promise.all([
+    scrapeXPlaywright(xAccounts, uniqueQueries),
+    scrapeTikTokPlaywright(uniqueQueries),
+    scrapeInstagramPlaywright()
+  ]);
+  allItems.push(...xItems, ...tiktokItems, ...instagramItems);
 
-    // Buscar en X/Twitter (Nitter Search)
-    const xSearchItems = await fetchNitterSearch(query);
-    allItems.push(...xSearchItems);
+  // 3.3 Cargar búsquedas en otras plataformas en lotes paralelos con concurrencia controlada
+  console.log('[Radar Motor] Lanzando búsquedas en paralelo en YouTube y Reddit...');
+  const concurrencyLimit = 5;
+  const searchTasks = uniqueQueries.map(query => async () => {
+    const [ytItems, redditSearchItems] = await Promise.all([
+      fetchYouTubeSearch(query),
+      fetchRedditSearch(query)
+    ]);
+    return [...ytItems, ...redditSearchItems];
+  });
 
-    // Buscar en Reddit (Reddit Search API)
-    const redditSearchItems = await fetchRedditSearch(query);
-    allItems.push(...redditSearchItems);
-
-    // Buscar en Instagram (vía DDG)
-    const instaItems = await fetchDdgSocialSearch(query, 'Instagram');
-    allItems.push(...instaItems);
-
-    // Buscar en TikTok (vía DDG)
-    const tiktokItems = await fetchDdgSocialSearch(query, 'TikTok');
-    allItems.push(...tiktokItems);
-
-    // Buscar en Facebook (vía DDG)
-    const fbItems = await fetchDdgSocialSearch(query, 'Facebook');
-    allItems.push(...fbItems);
+  const searchResults = [];
+  const executing = [];
+  for (const task of searchTasks) {
+    const p = task();
+    searchResults.push(p);
+    const e = p.then(() => executing.splice(executing.indexOf(e), 1));
+    executing.push(e);
+    if (executing.length >= concurrencyLimit) {
+      await Promise.race(executing);
+    }
   }
+  const searchItemsGroups = await Promise.all(searchResults);
+  searchItemsGroups.forEach(group => allItems.push(...group));
 
   // 4. Procesar y filtrar items
   for (const item of allItems) {
@@ -798,35 +966,31 @@ async function runRadar() {
     const hasForbidden = forbiddenKeywords.some(kw => titleLower.includes(kw) || descLower.includes(kw));
     if (hasForbidden) continue;
 
-    // Filtro estricto de viralidad (mínimo alcance de 10.000 personas o equivalente)
+    // Filtro de viralidad ajustado para capturar alertas tempranas en búsquedas recientes de alarma
     let isViral = false;
     const plat = (item.platform || '').toLowerCase();
     
     if (plat === 'youtube') {
-      if ((item.views || 0) >= 10000) isViral = true;
+      if ((item.views || 0) >= 5000) isViral = true;
     } else if (plat === 'telegram') {
-      if ((item.views || 0) >= 10000) isViral = true;
+      if ((item.views || 0) >= 3000) isViral = true;
     } else if (plat === 'x' || plat === 'twitter') {
-      // En X, estimamos 1 like = 200 impresiones, de forma que >= 50 likes equivale a 10k vistas
-      if ((item.score || 0) >= 50) isViral = true;
+      // En X, >= 15 likes indica un tweet con difusión de alarma/interés en el nicho
+      if ((item.score || 0) >= 15) isViral = true;
     } else if (plat === 'reddit') {
-      // En Reddit, score >= 40 o comentarios >= 15 representa gran difusion en subreddits de Espana
-      if ((item.score || 0) >= 40 || (item.comments || 0) >= 15) isViral = true;
+      if ((item.score || 0) >= 20 || (item.comments || 0) >= 8) isViral = true;
     } else if (plat === 'tiktok') {
-      // En TikTok, >= 10k vistas o >= 1k likes
-      if ((item.views || 0) >= 10000 || (item.score || 0) >= 1000) isViral = true;
+      // En TikTok, >= 2000 vistas o >= 100 likes en búsquedas recientes de alarma
+      if ((item.views || 0) >= 2000 || (item.score || 0) >= 100) isViral = true;
     } else if (plat === 'instagram') {
-      // En Instagram, >= 10k vistas o >= 1k likes
-      if ((item.views || 0) >= 10000 || (item.score || 0) >= 1000) isViral = true;
+      // En Instagram, >= 2000 vistas o >= 100 likes
+      if ((item.views || 0) >= 2000 || (item.score || 0) >= 100) isViral = true;
     } else if (plat === 'facebook') {
-      // En Facebook, >= 10k vistas o >= 200 compartidos/reacciones
-      if ((item.views || 0) >= 10000 || (item.score || 0) >= 200) isViral = true;
+      if ((item.views || 0) >= 5000 || (item.score || 0) >= 100) isViral = true;
     } else if (plat === 'prensa' || plat === 'menéame' || plat === 'google trends') {
-      // La prensa nacional y Meneame Portada superan las 10k vistas de base
       isViral = true;
     } else {
-      // Para reportes generales o de la web
-      if ((item.views || 0) >= 10000 || (item.score || 0) >= 500) isViral = true;
+      if ((item.views || 0) >= 2000 || (item.score || 0) >= 250) isViral = true;
     }
 
     if (!isViral) {
@@ -870,6 +1034,9 @@ async function runRadar() {
       } else if (item.platform === 'YouTube') {
         const views = item.views || 0;
         viralityScore = Math.min(10.0, 4.0 + (views / 15000));
+      } else if (item.platform === 'TikTok' || item.platform === 'Instagram') {
+        const views = item.views || 0;
+        viralityScore = Math.min(10.0, 4.0 + (views / 20000));
       }
 
       // Calcular risk_score por el tipo de tema sensible

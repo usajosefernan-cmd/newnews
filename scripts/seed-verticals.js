@@ -1,16 +1,17 @@
 import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 
-const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
 console.log(`[Verticals Seeder] Conectando a la base de datos en: ${dbPath}`);
 const db = new DatabaseSync(dbPath);
 db.exec('PRAGMA foreign_keys = ON;');
 
 // 1. Asegurar la existencia de los temas necesarios
 const insertTopic = db.prepare(`
-  INSERT INTO topics (id, slug, title, description, category, confidence, verdict_summary, status, created_at, updated_at)
-  VALUES (?, ?, ?, ?, ?, ?, ?, 'activo', datetime('now'), datetime('now'))
+  INSERT INTO topics (id, theme_id, slug, title, description, category, confidence, verdict_summary, status, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'activo', datetime('now'), datetime('now'))
   ON CONFLICT(id) DO UPDATE SET
+    theme_id = excluded.theme_id,
     title = excluded.title,
     description = excluded.description,
     category = excluded.category,
@@ -23,6 +24,7 @@ const insertTopic = db.prepare(`
 const topics = [
   {
     id: 't-sanidad',
+    theme_id: 'theme-salud',
     slug: 'sanidad-publica',
     title: 'Sanidad Pública vs Privada',
     description: 'Análisis de la gestión sanitaria en España: listas de espera, derivaciones a conciertos privados, presupuestos autonómicos y derechos de acceso al sistema de salud.',
@@ -32,6 +34,7 @@ const topics = [
   },
   {
     id: 't-empleo',
+    theme_id: 'theme-dinero',
     slug: 'empleo-y-cifras-de-paro',
     title: 'Cifras de Paro y Empleo',
     description: 'Metodología oficial de cómputo del desempleo en España: fijos discontinuos, afiliación a la Seguridad Social, encuestas de la EPA y metodología del SEPE.',
@@ -41,6 +44,7 @@ const topics = [
   },
   {
     id: 't-pensiones',
+    theme_id: 'theme-dinero',
     slug: 'pensiones-y-sostenibilidad',
     title: 'Pensiones y Sostenibilidad',
     description: 'Auditoría del sistema público de reparto en España: sostenibilidad financiera, cotizaciones, hucha de las pensiones, jubilación no contributiva y pensiones especiales.',
@@ -50,6 +54,7 @@ const topics = [
   },
   {
     id: 't-salarios',
+    theme_id: 'theme-dinero',
     slug: 'salarios-smi-y-coste-laboral',
     title: 'Salarios, SMI y Mercado Laboral',
     description: 'El Salario Mínimo Interprofesional (SMI) en España, los costes salariales y la comparativa de poder adquisitivo en la Eurozona con fuentes oficiales.',
@@ -59,6 +64,7 @@ const topics = [
   },
   {
     id: 't-eta',
+    theme_id: 'theme-historia',
     slug: 'memoria-de-eta-y-terrorismo',
     title: 'Memoria de ETA y Terrorismo',
     description: 'Análisis del cumplimiento de condenas por terrorismo, subsidios penitenciarios, legislación penal, indemnizaciones y memoria histórica en España.',
@@ -70,7 +76,7 @@ const topics = [
 
 console.log('Insertando o actualizando temas/verticales...');
 for (const t of topics) {
-  insertTopic.run(t.id, t.slug, t.title, t.description, t.category, t.confidence, t.verdict_summary);
+  insertTopic.run(t.id, t.theme_id, t.slug, t.title, t.description, t.category, t.confidence, t.verdict_summary);
 }
 
 // 2. Insertar Artículos de Desmentido (Confusiones Frecuentes)

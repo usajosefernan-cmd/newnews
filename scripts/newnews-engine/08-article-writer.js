@@ -39,6 +39,7 @@ DATOS DE VERIFICACIÓN:
    - "💸 Promo encubierta"
    - "⚖️ Revisión legal"
    - "🧠 Aprende el truco"
+ 7. ETIQUETAS (tags): Proporciona entre 2 y 4 palabras clave transversales cortas (ej. "vivienda", "paro", "impuestos", "ley", "seguridad-social", "catalunya", "justicia") que describan el tema y los hechos. Deben estar normalizadas (en minúsculas, sin acentos y separadas por guiones en lugar de espacios si tienen varias palabras).
 
 Devuelve un JSON con el formato exacto:
 {
@@ -48,7 +49,8 @@ Devuelve un JSON con el formato exacto:
   "explanation": "[Cuerpo completo del artículo de verificación, estructurado formalmente en varios párrafos. Detalla la base jurídica y estadística]",
   "trick_used": "cherry-picking" | "falso dilema" | "culpa colectiva" | "dato sin base" | "vídeo recortado" | "autoridad falsa" | "miedo/urgencia" | "promoción encubierta",
   "newnews_score": [Número entre 0 y 100],
-  "emoji_tag": "[Etiqueta de la lista]"
+  "emoji_tag": "[Etiqueta de la lista]",
+  "tags": ["[etiqueta-1]", "[etiqueta-2]"]
 }
 `;
 
@@ -85,7 +87,8 @@ Devuelve un JSON con el formato exacto:
       explanation: `Las afirmaciones publicadas en torno a este tema suelen omitir matices y datos contextuales críticos. La verificación requiere del contraste minucioso de los datos oficiales emitidos por los reguladores correspondientes de la materia.`,
       trick_used: 'dato sin base',
       newnews_score: 55,
-      emoji_tag: '🧊 Falta contexto'
+      emoji_tag: '🧊 Falta contexto',
+      tags: ['contraste', 'datos-oficiales', 'general']
     };
 
     try {

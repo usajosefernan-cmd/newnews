@@ -7,18 +7,38 @@ import { topicDidacticData } from '../../data/topicDidacticData.js';
 
 const { slug } = Astro.params;
 
-const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
 const db = new DatabaseSync(dbPath);
 
-// Cargar información del tema
-const topic = db.prepare("SELECT * FROM topics WHERE slug = ?").get(slug);
+// Cargar información del tema y su sección
+const topic = db.prepare(`
+  SELECT t.*, th.slug as theme_slug, th.name as theme_name
+  FROM topics t
+  LEFT JOIN themes th ON t.theme_id = th.id
+  WHERE t.slug = ?
+`).get(slug) as any;
+
+if (!topic) {
+  db.close();
+  return Astro.redirect('/404');
+}
 
 // Cargar artículos relacionados publicados
 const articles = db.prepare(`
   SELECT * FROM articles 
   WHERE topic_id = ? AND status = 'publicado' 
   ORDER BY published_at DESC
-`).all(topic.id);
+`).all(topic.id) as any[];
+
+const articlesWithTags = articles.map(art => {
+  const tags = db.prepare(`
+    SELECT t.name, t.slug
+    FROM article_tags at
+    JOIN tags t ON at.tag_id = t.id
+    WHERE at.article_id = ?
+  `).all(art.id) as any[];
+  return { ...art, tags };
+});
 
 // Obtener propuestas políticas del área correspondiente al tema
 let areaMapping = null;
@@ -913,10 +933,28 @@ const info = infographicData[slug];
 const didactic = topicDidacticData[slug];
 const base = import.meta.env.BASE_URL;
 const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+const getLink = (p) => {
+  const pathClean = p.startsWith('/') ? p : '/' + p;
+  return `${cleanBase}${pathClean}`;
+};
 ---
 
 <Layout title={topic.title} description={topic.description}>
   <div class="container" style="padding-top: 1.5rem; padding-bottom: 3rem; max-width: 680px;">
+    
+    <!-- Breadcrumbs -->
+    <nav style="display: flex; gap: 0.5rem; align-items: center; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1.5rem; font-family: var(--font-title);">
+      <a href={getLink('/')} style="color: var(--text-muted); text-decoration: none; transition: color 0.2s;">Inicio</a>
+      <span>/</span>
+      {topic.theme_slug && (
+        <>
+          <a href={getLink(`/seccion/${topic.theme_slug}`)} style="color: var(--text-muted); text-decoration: none; transition: color 0.2s;">{topic.theme_name}</a>
+          <span>/</span>
+        </>
+      )}
+      <span style="color: var(--neon-blue); font-weight: bold;">{topic.title}</span>
+    </nav>
+
     <!-- ? HERO DEL TEMA ? -->
     <section class="topic-hero" style="margin-bottom: 2rem;">
       <div class="cyber-card" style="padding: 2.5rem 2rem; background: linear-gradient(180deg, rgba(18, 22, 41, 0.8) 0%, rgba(7, 9, 19, 0.95) 100%); overflow: hidden; border-color: rgba(0, 240, 255, 0.25);">
@@ -1203,7 +1241,7 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-          {articles.map(art => (
+          {articlesWithTags.map(art => (
             <div class={"cyber-card " + getVerdictClass(art.verdict)} style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; background: rgba(18, 22, 41, 0.45);">
               <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
                 <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
@@ -1218,17 +1256,26 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
                   </span>
                 </div>
                 <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 500;">
-                  Auditoráa: {new Date(art.published_at).toLocaleDateString('es-ES')}
+                  Auditoría: {new Date(art.published_at).toLocaleDateString('es-ES')}
                 </span>
               </div>
 
               <div>
                 <h3 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: -0.02em; line-height: 1.25;">
-                  <a href={`${cleanBase}/noticia/${art.slug}`} class="article-link">{art.title}</a>
+                  <a href={getLink(`/noticia/${art.slug}`)} class="article-link">{art.title}</a>
                 </h3>
                 <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.4; margin-bottom: 1rem;">
                   {art.subtitle}
                 </p>
+                {art.tags && art.tags.length > 0 && (
+                  <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                    {art.tags.map(tag => (
+                      <a href={getLink(`/tag/${tag.slug}`)} style="font-size: 0.65rem; color: var(--neon-blue); text-decoration: none; background: rgba(0, 240, 255, 0.05); border: 1px solid rgba(0, 240, 255, 0.15); padding: 0.15rem 0.4rem; border-radius: 4px; font-family: var(--font-title); font-weight: 700; transition: all 0.2s;" class="tag-chip">
+                        #{tag.name}
+                      </a>
+                    ))}
+                  </div>
+                )}
                 {art.multimedia_url && (
                   <div style="margin-top: 0.5rem; margin-bottom: 1rem; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); max-height: 220px; background: #000; display: flex; align-items: center; justify-content: center;">
                     <img src={art.multimedia_url} alt="Portada" style="width: 100%; height: 100%; object-fit: cover; max-height: 220px;" />
@@ -1241,7 +1288,7 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
 
               <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 1rem; font-size: 0.8rem; color: var(--text-muted);">
                 <span>Origen: <strong style="color: var(--text-main);">{art.origin_platform}</strong></span>
-                <a href={`${cleanBase}/noticia/${art.slug}`} class="cyber-btn" style="padding: 0.35rem 0.85rem; font-size: 0.7rem; border-radius: 10px; color: var(--neon-blue); border-color: rgba(0, 240, 255, 0.15); text-decoration: none;">
+                <a href={getLink(`/noticia/${art.slug}`)} class="cyber-btn" style="padding: 0.35rem 0.85rem; font-size: 0.7rem; border-radius: 10px; color: var(--neon-blue); border-color: rgba(0, 240, 255, 0.15); text-decoration: none;">
                   Auditar Datos &rarr;
                 </a>
               </div>
@@ -1444,6 +1491,11 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
   }
   .topic-tab-panel.active {
     display: block;
+  }
+  .tag-chip:hover {
+    border-color: var(--neon-blue) !important;
+    background: rgba(0, 240, 255, 0.15) !important;
+    box-shadow: 0 0 8px rgba(0, 240, 255, 0.2);
   }
   
   @keyframes tabFadeIn {

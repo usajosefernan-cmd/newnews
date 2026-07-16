@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
-const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
 
 console.log('[Seed Real Data] Población de datos reales en curso...');
 
@@ -13,25 +13,47 @@ if (!fs.existsSync(dbPath)) {
 
 const db = new DatabaseSync(dbPath);
 db.exec('PRAGMA foreign_keys = ON;');
-
 // Limpiar tablas para evitar duplicados o mezcla con mocks viejos
 db.exec(`
   DELETE FROM social_posts;
   DELETE FROM sources;
+  DELETE FROM article_tags;
+  DELETE FROM tags;
   DELETE FROM articles;
   DELETE FROM topics;
+  DELETE FROM themes;
   DELETE FROM scraped_items;
 `);
 
+// 0. Insertar Categorías Temáticas de primer nivel (Temas)
+const insertTheme = db.prepare(`
+  INSERT INTO themes (id, slug, name, orden)
+  VALUES (?, ?, ?, ?)
+`);
+
+const themesData = [
+  { id: 'theme-dinero', slug: 'tu-dinero-y-hacienda', name: 'Tu Dinero y Hacienda', orden: 1 },
+  { id: 'theme-convivencia', slug: 'convivencia-y-servicios', name: 'Convivencia y Servicios', orden: 2 },
+  { id: 'theme-salud', slug: 'salud-publica', name: 'Salud Pública', orden: 3 },
+  { id: 'theme-historia', slug: 'historia-y-territorio', name: 'Historia y Territorio', orden: 4 },
+  { id: 'theme-justicia', slug: 'justicia-y-corrupcion', name: 'Justicia y Corrupción', orden: 5 },
+  { id: 'theme-desinformacion', slug: 'desinformacion-y-bulos', name: 'Desinformación y Bulos', orden: 6 }
+];
+
+themesData.forEach(t => {
+  insertTheme.run(t.id, t.slug, t.name, t.orden);
+});
+
 // 1. Insertar Temas Reales (Verticales Educativos y Didácticos)
 const insertTopic = db.prepare(`
-  INSERT INTO topics (id, slug, title, description, category, confidence, verdict_summary, status, created_at, updated_at)
-  VALUES (?, ?, ?, ?, ?, ?, ?, 'activo', datetime('now'), datetime('now'))
+  INSERT INTO topics (id, theme_id, slug, title, description, category, confidence, verdict_summary, status, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'activo', datetime('now'), datetime('now'))
 `);
 
 const topicsData = [
   {
     id: 't-franco',
+    theme_id: 'theme-historia',
     slug: 'franquismo-y-memoria-historica',
     title: 'Mitos y Leyendas del Franquismo',
     description: 'Auditoría histórica de las afirmaciones virales sobre la dictadura: legislación laboral, creación de la Seguridad Social, pantanos y el mito de la prosperidad económica de posguerra.',
@@ -41,6 +63,7 @@ const topicsData = [
   },
   {
     id: 't-migracion',
+    theme_id: 'theme-convivencia',
     slug: 'inmigracion-y-convivencia',
     title: 'Inmigración, Delincuencia y Ayudas',
     description: 'Análisis de datos oficiales y estadísticas sobre criminalidad de menores extranjeros no acompañados (MENAS), costes reales de tutela y la falsedad de prestaciones económicas directas.',
@@ -50,6 +73,7 @@ const topicsData = [
   },
   {
     id: 't-begona',
+    theme_id: 'theme-justicia',
     slug: 'caso-begona-gomez',
     title: 'Investigación Judicial a Begoña Gómez',
     description: 'Seguimiento de la causa dirigida por el juez Juan Carlos Peinado por tráfico de influencias, corrupción en los negocios, malversación y apropiación indebida.',
@@ -59,6 +83,7 @@ const topicsData = [
   },
   {
     id: 't-koldo',
+    theme_id: 'theme-justicia',
     slug: 'corrupcion-y-promesas-politicas',
     title: 'Caso Koldo y Sentencia del Tribunal Supremo',
     description: 'Auditoría penal sobre la red de comisiones ilegales en la compra de mascarillas durante la pandemia de COVID-19, las condenas de prisión a Ábalos y Koldo, y el informe del Ministerio de Transportes.',
@@ -68,6 +93,7 @@ const topicsData = [
   },
   {
     id: 't-inflacion',
+    theme_id: 'theme-dinero',
     slug: 'inflacion-y-coste-de-vida',
     title: 'Inflación y Coste de Vida',
     description: 'Explicaciones sobre el IPC, precio de los alimentos de la cesta de la compra y estadísticas reales del INE.',
@@ -77,6 +103,7 @@ const topicsData = [
   },
   {
     id: 't-empleo',
+    theme_id: 'theme-dinero',
     slug: 'empleo-y-cifras-de-paro',
     title: 'Paro y Trabajo',
     description: 'Metodología de las cifras del paro, contratos fijos discontinuos y encuestas de la EPA del INE.',
@@ -86,6 +113,7 @@ const topicsData = [
   },
   {
     id: 't-autonomos',
+    theme_id: 'theme-dinero',
     slug: 'autonomos-y-fiscalidad',
     title: 'Autónomos y Fiscalidad',
     description: 'Análisis de la cuota de autónomos de la Seguridad Social por ingresos reales y fiscalidad general.',
@@ -95,6 +123,7 @@ const topicsData = [
   },
   {
     id: 't-eta',
+    theme_id: 'theme-historia',
     slug: 'memoria-de-eta-y-terrorismo',
     title: 'Terrorismo de ETA y Memoria Histórica',
     description: 'Análisis sobre el fin de la banda armada ETA, el debate del acercamiento de presos, las transferencias de prisiones y las pensiones oficiales a víctimas.',
@@ -104,6 +133,7 @@ const topicsData = [
   },
   {
     id: 't-salarios',
+    theme_id: 'theme-dinero',
     slug: 'salarios-smi-y-coste-laboral',
     title: 'Salarios, SMI y Mercado Laboral',
     description: 'Análisis del Salario Mínimo Interprofesional (SMI) en España, las variaciones del salario medio frente a la UE y la brecha de género con datos oficiales del INE.',
@@ -113,6 +143,7 @@ const topicsData = [
   },
   {
     id: 't-educacion',
+    theme_id: 'theme-convivencia',
     slug: 'educacion-leyes-y-rendimiento',
     title: 'Educación: Leyes, Reformas y Rendimiento',
     description: 'Evolución de las leyes de educación en España (LOMLOE), ratios de alumnos y nivel académico real comparado con el informe PISA.',
@@ -122,6 +153,7 @@ const topicsData = [
   },
   {
     id: 't-cultura',
+    theme_id: 'theme-convivencia',
     slug: 'cultura-subvenciones-y-patrimonio',
     title: 'Cultura: Subvenciones, Cine y Bono Cultural',
     description: 'Auditoría sobre ayudas al cine español, el retorno económico de subvenciones y el funcionamiento del Bono Cultural Joven oficial.',
@@ -131,6 +163,7 @@ const topicsData = [
   },
   {
     id: 't-sanidad',
+    theme_id: 'theme-salud',
     slug: 'sanidad-publica',
     title: 'Sanidad pública',
     description: 'La saturación de la atención primaria, el récord histórico de las listas de espera para operaciones y el debate sobre la derivación de fondos a conciertos con la sanidad privada centran la agenda sanitaria.',
@@ -140,6 +173,7 @@ const topicsData = [
   },
   {
     id: 't-cataluna',
+    theme_id: 'theme-historia',
     slug: 'cataluna-y-convivencia-territorial',
     title: 'Cataluña, independencia y amnistía',
     description: 'Explicación del proceso soberanista, el debate de la Ley de Amnistía y la financiación singular de Cataluña.',
@@ -149,6 +183,7 @@ const topicsData = [
   },
   {
     id: 't-seguridad-obras-publicas',
+    theme_id: 'theme-convivencia',
     slug: 'seguridad-obras-publicas',
     title: 'Seguridad en obras públicas y prevención de derrumbes',
     description: 'Análisis de la seguridad estructural en infraestructuras públicas de España, auditoría de prevención de riesgos y control de licitaciones de mantenimiento de carreteras y puentes.',
@@ -158,6 +193,7 @@ const topicsData = [
   },
   {
     id: 't-financiacion-autonomica',
+    theme_id: 'theme-dinero',
     slug: 'financiacion-autonomica-desigual',
     title: 'Financiación Autonómica Desigual',
     description: 'Análisis sobre el régimen común, los conciertos forales de País Vasco y Navarra, el cálculo de las balanzas fiscales y las demandas de reforma del sistema de financiación de las Comunidades Autónomas.',
@@ -167,9 +203,8 @@ const topicsData = [
   }
 ];
 
-
 topicsData.forEach(t => {
-  insertTopic.run(t.id, t.slug, t.title, t.description, t.category, t.confidence, t.verdict_summary);
+  insertTopic.run(t.id, t.theme_id, t.slug, t.title, t.description, t.category, t.confidence, t.verdict_summary);
 });
 
 const insertArticle = db.prepare(`
@@ -632,6 +667,15 @@ const socialData = [
 socialData.forEach(soc => {
   insertSocialPost.run(soc.id, soc.article_id, soc.platform, soc.format, soc.content);
 });
+
+// Reasignación de artículos de Jose Elías a "Tope al Alquiler (Ley de Vivienda)"
+console.log('[Seed Real Data] Reasignando artículos de Jose Elías a Tope al Alquiler (Ley de Vivienda)...');
+db.prepare(`
+  UPDATE articles 
+  SET topic_id = 'ley-de-vivienda-alquileres' 
+  WHERE topic_id = 't-autonomos' 
+    AND (title LIKE '%Jose Elías%' OR title LIKE '%Jose Elias%' OR explanation LIKE '%Jose Elías%' OR explanation LIKE '%Jose Elias%')
+`).run();
 
 console.log('[Seed Real Data] Población de datos finalizada con éxito.');
 db.close();

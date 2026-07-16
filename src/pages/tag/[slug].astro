@@ -1,31 +1,28 @@
 ---
+export const prerender = false;
 import Layout from '../../layouts/Layout.astro';
 import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 
-export async function getStaticPaths() {
-  // Retornar tags comunes e históricos basados en palabras clave del portal
-  const tags = ['bulo', 'datos', 'declaraciones', 'boe', 'patrimonio', 'cuotas', 'condena'];
-  return tags.map(tag => ({
-    params: { slug: tag },
-    props: { tagName: tag }
-  }));
-}
-
 const { slug } = Astro.params;
-const { tagName } = Astro.props;
 
-const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
 const db = new DatabaseSync(dbPath);
 
-// Buscar artículos que contengan la palabra clave en título, explicación o claim
+// Buscar el tag oficial
+const tagObj = db.prepare("SELECT * FROM tags WHERE slug = ?").get(slug) as any;
+const tagName = tagObj ? tagObj.name : slug;
+
+// Buscar artículos que tengan este tag mediante JOIN relacional
 const articles = db.prepare(`
-  SELECT a.*, t.title as topic_title, t.slug as topic_slug
+  SELECT DISTINCT a.*, t.title as topic_title, t.slug as topic_slug
   FROM articles a
   LEFT JOIN topics t ON a.topic_id = t.id
-  WHERE a.status = 'publicado' AND (a.title LIKE ? OR a.explanation LIKE ? OR a.claim LIKE ?)
+  JOIN article_tags at ON a.id = at.article_id
+  JOIN tags tag ON at.tag_id = tag.id
+  WHERE a.status = 'publicado' AND tag.slug = ?
   ORDER BY a.published_at DESC, a.created_at DESC
-`).all(`%${tagName}%`, `%${tagName}%`, `%${tagName}%`) as any[];
+`).all(slug) as any[];
 
 db.close();
 
@@ -40,14 +37,25 @@ const getVerdictClass = (verdict) => {
 
 const base = import.meta.env.BASE_URL;
 const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+
+// Función auxiliar para enlaces
+const getLink = (p) => {
+  const pathClean = p.startsWith('/') ? p : '/' + p;
+  return `${cleanBase}${pathClean}`;
+};
 ---
 
-<Layout title={`Etiqueta: #${tagName}`}>
+<Layout title={`Etiqueta: #${tagName}`} description={`Artículos y desmentidos clasificados bajo el tag #${tagName}.`}>
   <div class="container" style="padding-top: 1.5rem; padding-bottom: 5rem; max-width: 680px;">
     
+    <!-- Breadcrumbs -->
     <div style="margin-bottom: 2rem;">
-      <div style="margin-bottom: 0.5rem; font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">
-        <a href={`${cleanBase}/`} style="text-decoration: none;">Radar</a> / <a href={`${cleanBase}/actualidad`} style="text-decoration: none;">Actualidad</a> / <span style="color: var(--neon-blue);">Etiqueta</span>
+      <div style="margin-bottom: 0.5rem; font-size: 0.75rem; color: var(--text-muted); font-weight: 600; font-family: var(--font-title);">
+        <a href={getLink('/')} style="text-decoration: none; color: var(--text-muted); transition: color 0.2s;">Inicio</a>
+        <span> / </span>
+        <span style="color: var(--text-muted);">Etiquetas</span>
+        <span> / </span>
+        <span style="color: var(--neon-blue); font-weight: bold;">#{tagName}</span>
       </div>
       <h1 style="font-size: 2.2rem; margin-bottom: 0.5rem; font-family: var(--font-title); font-weight: 850; letter-spacing: -0.04em;">
         🏷️ Etiqueta: <span class="text-gradient-rose">#{tagName}</span>
@@ -67,7 +75,7 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
                 {art.verdict}
               </span>
               <a 
-                href={`${cleanBase}/categoria/${art.category.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')}`}
+                href={getLink(`/categoria/${art.category.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')}`)}
                 style="font-size: 0.7rem; font-weight: bold; color: var(--text-muted); text-decoration: none; text-transform: uppercase;"
               >
                 #{art.category}
@@ -86,7 +94,7 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
 
           <div>
             <h2 style="font-size: 1.35rem; margin-top: 0; margin-bottom: 0.35rem; font-weight: 750; font-family: var(--font-title); line-height: 1.25;">
-              <a href={`${cleanBase}/noticia/${art.slug}`} style="color: var(--text-main); text-decoration: none; transition: color 0.15s;">
+              <a href={getLink(`/noticia/${art.slug}`)} style="color: var(--text-main); text-decoration: none; transition: color 0.15s;">
                 {art.title}
               </a>
             </h2>
@@ -107,11 +115,11 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
 
           <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.75rem; font-size: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
             {art.topic_title ? (
-              <span>Expediente: <a href={`${cleanBase}/tema/${art.topic_slug}`} style="color: var(--neon-purple); text-decoration: none; font-weight: bold;">{art.topic_title}</a></span>
+              <span>Expediente: <a href={getLink(`/tema/${art.topic_slug}`)} style="color: var(--neon-purple); text-decoration: none; font-weight: bold;">{art.topic_title}</a></span>
             ) : (
               <span style="color: var(--text-muted);">Expediente general</span>
             )}
-            <a href={`${cleanBase}/noticia/${art.slug}`} style="color: var(--neon-blue); text-decoration: none; font-weight: 800; display: inline-flex; align-items: center; gap: 0.2rem;">
+            <a href={getLink(`/noticia/${art.slug}`)} style="color: var(--neon-blue); text-decoration: none; font-weight: 800; display: inline-flex; align-items: center; gap: 0.2rem;">
               Auditar hechos e informe &rarr;
             </a>
           </div>

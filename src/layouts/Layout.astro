@@ -15,7 +15,17 @@ const db = new DatabaseSync(dbPath);
 db.exec('PRAGMA busy_timeout = 5000;');
 db.exec('PRAGMA journal_mode = WAL;');
 
-const topics = db.prepare("SELECT title, slug FROM topics WHERE status = 'activo' ORDER BY title").all() as any[];
+const themes = db.prepare("SELECT * FROM themes ORDER BY orden").all() as any[];
+const topics = db.prepare("SELECT id, theme_id, title, slug FROM topics WHERE status = 'activo' ORDER BY title").all() as any[];
+
+const menuThemes = themes
+  .filter(theme => theme.slug !== 'desinformacion-y-bulos')
+  .map(theme => {
+    return {
+      ...theme,
+      topics: topics.filter(t => t.theme_id === theme.id)
+    };
+  });
 
 const rawCategories = db.prepare("SELECT DISTINCT category FROM topics WHERE status = 'activo'").all() as any[];
 const categories = rawCategories.map(c => {
@@ -54,49 +64,49 @@ const getLink = (p) => {
   </head>
   <body>
     <!-- HEADER PREMIUM GLOBAL -->
-    <header style="border-bottom: 1px solid var(--border-color); background: rgba(7, 9, 19, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 1000; transition: all 0.3s ease;">
-      <div class="container" style="display: flex; align-items: center; justify-content: space-between; height: 64px;">
+    <header style="border-bottom: 1px solid var(--border-color); background: rgba(7, 9, 19, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 1000; transition: all 0.3s ease;">
+      <div class="header-container" style="display: flex; align-items: center; justify-content: space-between; height: 64px; max-width: 1400px; margin: 0 auto; padding: 0 1.5rem; width: 100%;">
         
         <!-- Logo -->
         <a href={getLink('/')} style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
-          <span style="font-family: var(--font-title); font-weight: 900; font-size: 1.45rem; letter-spacing: -0.04em; color: #ffffff;">
+          <span style="font-family: var(--font-title); font-weight: 900; font-size: 1.55rem; letter-spacing: -0.04em; color: #ffffff;">
             NEW<span style="color: var(--neon-blue);">NEWS</span>
-          </span>
-          <span style="background: rgba(0, 240, 255, 0.12); border: 1px solid rgba(0, 240, 255, 0.25); color: var(--neon-blue); font-size: 0.55rem; font-weight: 900; text-transform: uppercase; padding: 0.12rem 0.4rem; border-radius: 4px; letter-spacing: 0.05em; font-family: var(--font-title);">
-            DEONTOLÓGICO
           </span>
         </a>
 
         <!-- Desktop Navigation -->
-        <nav style="display: flex; align-items: center; gap: 2rem;" class="desktop-nav">
+        <nav style="display: flex; align-items: center; gap: 0.9rem;" class="desktop-nav">
           
-          <!-- Dropdown Expedientes Vivos -->
-          <div class="nav-dropdown" style="position: relative; display: inline-block;">
-            <a href="#" class="nav-link dropdown-toggle" style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem; text-decoration: none; font-weight: 700; font-family: var(--font-title);">
-              Expedientes Vivos <span style="font-size: 0.6rem; transition: transform 0.25s ease; display: inline-block;">▼</span>
-            </a>
-            <div class="dropdown-menu left-align" style="opacity: 0; transform: translateY(10px); pointer-events: none; position: absolute; top: 100%; left: 0; background: rgba(7, 9, 19, 0.95); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0px 8px 32px rgba(0, 240, 255, 0.15); min-width: 250px; max-height: 400px; overflow-y: auto; z-index: 1000; padding: 0.5rem 0; margin-top: 0.5rem; backdrop-filter: blur(20px); transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);">
-              {topics.map((t) => (
-                <a href={getLink(`/tema/${t.slug}`)} style="display: flex; align-items: center; gap: 0.5rem; padding: 0.55rem 1.25rem; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600; font-family: var(--font-title); transition: all 0.2s; border-bottom: 1px solid rgba(255,255,255,0.02);" title={t.title}>
-                  <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--neon-blue); flex-shrink: 0;"></span>
-                  <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{t.title}</span>
-                </a>
-              ))}
+          <!-- 1. Última Hora (primero y en rojo) -->
+          <a href={getLink('/actualidad')} class="nav-link" style="font-size: 0.78rem; color: var(--neon-rose) !important; text-decoration: none; font-weight: 800; font-family: var(--font-title); white-space: nowrap; display: flex; align-items: center; gap: 0.35rem;">
+            <span class="pulse-icon" style="background-color: var(--neon-rose); box-shadow: 0 0 6px var(--neon-rose); margin-right: 0;"></span>
+            Última Hora
+          </a>
+
+          <!-- 2. Dropdowns dinámicos por Tema -->
+          {menuThemes.map((theme) => (
+            <div class="nav-dropdown" style="position: relative; display: inline-block;">
+              <a href={getLink(`/seccion/${theme.slug}`)} class="nav-link dropdown-toggle" style="font-size: 0.78rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem; text-decoration: none; font-weight: 700; font-family: var(--font-title); white-space: nowrap;">
+                {theme.name} <span style="font-size: 0.55rem; transition: transform 0.25s ease; display: inline-block;">▼</span>
+              </a>
+              <div class="dropdown-menu left-align" style="opacity: 0; transform: translateY(10px); pointer-events: none; position: absolute; top: 100%; left: 0; background: rgba(7, 9, 19, 0.95); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0px 8px 32px rgba(0, 240, 255, 0.15); min-width: 260px; max-height: 400px; overflow-y: auto; z-index: 1000; padding: 0.5rem 0; margin-top: 0.5rem; backdrop-filter: blur(20px); transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);">
+                {theme.topics.map((t) => (
+                  <a href={getLink(`/tema/${t.slug}`)} style="display: flex; align-items: center; gap: 0.5rem; padding: 0.55rem 1.25rem; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600; font-family: var(--font-title); transition: all 0.2s; border-bottom: 1px solid rgba(255,255,255,0.02);" title={t.title}>
+                    <span style="width: 5px; height: 5px; border-radius: 50%; background: var(--neon-blue); flex-shrink: 0;"></span>
+                    <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{t.title}</span>
+                  </a>
+                ))}
+                {theme.topics.length === 0 && (
+                  <span style="display: block; padding: 0.55rem 1.25rem; color: var(--text-muted); font-size: 0.75rem; font-style: italic;">Sin expedientes activos</span>
+                )}
+              </div>
             </div>
-          </div>
+          ))}
 
-          <a href={getLink('/interceptor')} class="nav-link" style="font-size: 0.85rem; color: var(--text-muted); text-decoration: none; font-weight: 700; font-family: var(--font-title); display: flex; align-items: center; gap: 0.25rem;">
-            Interceptor
-          </a>
-
-          <a href={getLink('/actualidad')} class="nav-link" style="font-size: 0.85rem; color: var(--text-muted); text-decoration: none; font-weight: 700; font-family: var(--font-title);">
-            Actualidad
-          </a>
-
-          <!-- Dropdown Políticos -->
+          <!-- 3. Dropdown Antes de Votar (último, formato discreto/gris atenuado) -->
           <div class="nav-dropdown" style="position: relative; display: inline-block;">
-            <a href="#" class="nav-link dropdown-toggle" style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem; text-decoration: none; font-weight: 700; font-family: var(--font-title);">
-              Políticos <span style="font-size: 0.6rem; transition: transform 0.25s ease; display: inline-block;">▼</span>
+            <a href="#" class="nav-link dropdown-toggle" style="font-size: 0.78rem; color: rgba(255, 255, 255, 0.45) !important; display: flex; align-items: center; gap: 0.25rem; text-decoration: none; font-weight: 600; font-family: var(--font-title); white-space: nowrap;">
+              Antes de Votar <span style="font-size: 0.55rem; transition: transform 0.25s ease; display: inline-block;">▼</span>
             </a>
             <div class="dropdown-menu" style="opacity: 0; transform: translateY(10px) translateX(-50%); pointer-events: none; position: absolute; top: 100%; left: 50%; background: rgba(7, 9, 19, 0.95); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0px 8px 32px rgba(0, 240, 255, 0.15); min-width: 200px; z-index: 1000; padding: 0.5rem 0; margin-top: 0.5rem; backdrop-filter: blur(20px); transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);">
               <a href={getLink('/programas-politicos')} style="display: block; padding: 0.55rem 1.25rem; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600; font-family: var(--font-title); transition: all 0.2s;">Programas Electorales</a>
@@ -105,13 +115,31 @@ const getLink = (p) => {
             </div>
           </div>
 
-          <a href={getLink('/admin')} class="nav-link" style="font-size: 0.85rem; color: var(--neon-blue); text-decoration: none; font-weight: 800; font-family: var(--font-title); border: 1px solid rgba(0, 240, 255, 0.2); padding: 0.25rem 0.6rem; border-radius: 6px; background: rgba(0, 240, 255, 0.05);">
-            ADMIN
+          <!-- Separador sutil vertical -->
+          <span style="width: 1px; height: 16px; background: rgba(255, 255, 255, 0.12); margin: 0 0.15rem;" class="nav-separator"></span>
+
+          <!-- 4. Icono Radar (Interceptor) -->
+          <a href={getLink('/interceptor')} class="radar-icon-link" style="display: flex; align-items: center; justify-content: center; text-decoration: none; transition: opacity 0.2s; padding: 0.25rem;" title="Radar Interceptor de Bulos">
+            <svg class="radar-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width: 20px; height: 20px; color: var(--neon-blue); filter: drop-shadow(0 0 4px var(--neon-blue)); transition: transform 0.2s;">
+              <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+              <circle cx="12" cy="12" r="6" stroke-opacity="0.4"></circle>
+              <circle cx="12" cy="12" r="2" stroke-opacity="0.8"></circle>
+              <line class="radar-line" x1="12" y1="12" x2="12" y2="2" style="transform-origin: 12px 12px; animation: radar-sweep 3s linear infinite;"></line>
+            </svg>
           </a>
+
+          <!-- 5. Icono Admin -->
+          <a href={getLink('/admin')} class="admin-icon-link" style="display: flex; align-items: center; justify-content: center; text-decoration: none; transition: opacity 0.2s; padding: 0.25rem;" title="Panel de Administración">
+            <svg class="admin-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px; color: var(--neon-purple); filter: drop-shadow(0 0 4px rgba(157, 78, 221, 0.4));">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path class="admin-gear" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68 1.65 1.65 0 0 0 10 3.17V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.32 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" style="transform-origin: 12px 12px; transition: transform 0.8s ease;"></path>
+            </svg>
+          </a>
+
         </nav>
 
-        <!-- Right: Search + Hamburger (mobile) -->
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <!-- Hamburguesa móvil (con Buscador) -->
+        <div style="display: flex; align-items: center; gap: 0.5rem;" class="mobile-nav-toggle">
           <a href={getLink('/buscador')} style="color: var(--text-muted); padding: 0.4rem; display: flex; align-items: center; justify-content: center;" title="Buscador">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </a>
@@ -119,7 +147,6 @@ const getLink = (p) => {
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
         </div>
-
       </div>
     </header>
 
@@ -134,51 +161,79 @@ const getLink = (p) => {
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
-      <nav class="drawer-nav">
+      <nav class="drawer-nav" style="padding-bottom: 3rem;">
         <span class="drawer-section-title">Navegación</span>
+        <a href={getLink('/actualidad')} class="drawer-link" style="color: var(--neon-rose); font-weight: 800;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color: var(--neon-rose);"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          Última Hora
+        </a>
         <a href={getLink('/')} class="drawer-link">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
           Radar
         </a>
         <a href={getLink('/interceptor')} class="drawer-link">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/><line x1="12" y1="12" x2="12" y2="2"/></svg>
           Interceptor
         </a>
-        <a href={getLink('/actualidad')} class="drawer-link">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-          Feed de Actualidad
-        </a>
-        <span class="drawer-section-title">Expedientes Vivos</span>
-        {topics.map((t) => (
-          <a href={getLink(`/tema/${t.slug}`)} class="drawer-link" style="font-size: 0.85rem; padding: 0.65rem 1.5rem;">
-            <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--neon-blue); flex-shrink: 0;"></span>
-            {t.title}
-          </a>
+
+        <!-- Secciones Temáticas Desplegables / Agrupadas -->
+        <span class="drawer-section-title">Temas y Expedientes</span>
+        {menuThemes.map((theme) => (
+          <details style="margin-bottom: 0.5rem; width: 100%;">
+            <summary style="display: flex; align-items: center; justify-content: space-between; padding: 0.65rem 1rem; color: #fff; font-size: 0.85rem; font-weight: bold; cursor: pointer; outline: none; background: rgba(255,255,255,0.02); border-radius: 6px;">
+              <span>📁 {theme.name}</span>
+              <span style="font-size: 0.6rem; color: var(--neon-blue);">▼</span>
+            </summary>
+            <div style="padding-left: 0.75rem; border-left: 1px solid var(--border-color); margin-left: 0.5rem; display: flex; flex-direction: column;">
+              {theme.topics.map((t) => (
+                <a href={getLink(`/tema/${t.slug}`)} class="drawer-link" style="font-size: 0.8rem; padding: 0.5rem 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                  <span style="width: 4px; height: 4px; border-radius: 50%; background: var(--neon-blue); flex-shrink: 0; display: inline-block; margin-right: 0.35rem;"></span>
+                  {t.title}
+                </a>
+              ))}
+              {theme.topics.length === 0 && (
+                <span style="padding: 0.5rem 1rem; color: var(--text-muted); font-size: 0.75rem; font-style: italic;">Sin expedientes activos</span>
+              )}
+            </div>
+          </details>
         ))}
 
-        <span class="drawer-section-title">Política</span>
-        <a href={getLink('/comparador-politico')} class="drawer-link">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="9"/></svg>
-          Comparador
+        <span class="drawer-section-title">Antes de Votar</span>
+        <a href={getLink('/programas-politicos')} class="drawer-link" style="color: rgba(255, 255, 255, 0.45); font-size: 0.8rem;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="opacity: 0.55;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Programas Electorales
         </a>
-        <a href={getLink('/programas-politicos')} class="drawer-link">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          Programas
+        <a href={getLink('/comparador-politico')} class="drawer-link" style="color: rgba(255, 255, 255, 0.45); font-size: 0.8rem;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="opacity: 0.55;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14l2 2 4-4"/></svg>
+          Comparador de Hechos
         </a>
-        <a href={getLink('/bienes-declarados')} class="drawer-link">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-          Bienes Declarados
+        <a href={getLink('/bienes-declarados')} class="drawer-link" style="color: rgba(255, 255, 255, 0.45); font-size: 0.8rem;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="opacity: 0.55;"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          Bienes y Patrimonios
         </a>
-        <a href={getLink('/admin')} class="drawer-link" style="margin-top: auto; border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          ADMIN
+
+        <a href={getLink('/admin')} class="drawer-link" style="color: rgba(255,255,255,0.4); font-weight: bold; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; background: rgba(255, 255, 255, 0.01); margin-top: 1.5rem;">
+          <svg class="admin-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px; color: var(--neon-purple); filter: drop-shadow(0 0 2px rgba(157, 78, 221, 0.3));">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path class="admin-gear" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68 1.65 1.65 0 0 0 10 3.17V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.32 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" style="transform-origin: 12px 12px; transition: transform 0.8s ease;"></path>
+          </svg>
+          ADMINISTRACIÓN
         </a>
       </nav>
     </div>
 
-    <!-- ? BOTTOM NAV (MVIL) ? -->
+    <!-- 📱 BOTTOM NAV (MÓVIL) 📱 -->
     <div class="bottom-nav-container">
       <nav class="bottom-nav">
+        <!-- 1. Última Hora (primero y en rojo) -->
+        <a href={getLink('/actualidad')} class={`bottom-nav-item ${currentPath.includes('/actualidad') ? 'active' : ''}`} style="color: var(--neon-rose) !important;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" style="color: var(--neon-rose);">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+          <span>Última Hora</span>
+        </a>
+
+        <!-- 2. Radar -->
         <a href={getLink('/')} class={`bottom-nav-item ${currentPath === '/' || currentPath === base ? 'active' : ''}`}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
             <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
@@ -186,12 +241,8 @@ const getLink = (p) => {
           </svg>
           <span>Radar</span>
         </a>
-        <a href={getLink('/actualidad')} class={`bottom-nav-item ${currentPath.includes('/actualidad') ? 'active' : ''}`}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
-            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-          </svg>
-          <span>Feed</span>
-        </a>
+
+        <!-- 3. Temas -->
         <a href={getLink('/temas')} class={`bottom-nav-item ${currentPath.includes('/tema') || currentPath.includes('/temas') ? 'active' : ''}`}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
             <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
@@ -199,18 +250,22 @@ const getLink = (p) => {
           </svg>
           <span>Temas</span>
         </a>
-        <a href={getLink('/comparador-politico')} class={`bottom-nav-item ${currentPath.includes('/comparador') ? 'active' : ''}`}>
+
+        <!-- 4. Votos (discreto) -->
+        <a href={getLink('/comparador-politico')} class={`bottom-nav-item ${currentPath.includes('/comparador') ? 'active' : ''}`} style="opacity: 0.65;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
             <path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="9"/>
           </svg>
           <span>Votos</span>
         </a>
-        <a href={getLink('/admin')} class={`bottom-nav-item ${currentPath.includes('/admin') ? 'active' : ''}`}>
+
+        <!-- 5. Admin (discreto) -->
+        <a href={getLink('/admin')} class={`bottom-nav-item ${currentPath.includes('/admin') ? 'active' : ''}`} style="opacity: 0.55;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
             <circle cx="12" cy="12" r="3"/>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68 1.65 1.65 0 0 0 10 3.17V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.32 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
           </svg>
-          <span>ADMIN</span>
+          <span>Admin</span>
         </a>
       </nav>
     </div>
@@ -298,6 +353,29 @@ const getLink = (p) => {
 </html>
 
 <style>
+  @keyframes radar-sweep {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .admin-icon-link:hover .admin-gear {
+    transform: rotate(180deg) !important;
+  }
+  .radar-icon-link:hover .radar-svg {
+    transform: scale(1.1);
+  }
+  
+  .mobile-nav-toggle {
+    display: none !important;
+  }
+  
+  @media (max-width: 1024px) {
+    .desktop-nav {
+      display: none !important;
+    }
+    .mobile-nav-toggle {
+      display: flex !important;
+    }
+  }
   .nav-link {
     font-family: var(--font-title);
     font-weight: 600;

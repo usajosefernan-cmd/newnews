@@ -2,6 +2,31 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
 import { DatabaseSync } from 'node:sqlite';
+import { fileURLToPath } from 'node:url';
+
+// Cargar variables de entorno del archivo .env de forma manual y robusta si existe
+try {
+  const currentDir = path.dirname(path.dirname(path.dirname(fileURLToPath(import.meta.url))));
+  const envPath = path.join(currentDir, '.env');
+  if (fs.existsSync(envPath)) {
+    const envConfig = fs.readFileSync(envPath, 'utf-8');
+    for (const line of envConfig.split('\n')) {
+      const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+      if (match) {
+        const key = match[1];
+        let val = match[2] || '';
+        // Quitar comillas si las tiene
+        if (val.startsWith('"') && val.endsWith('"')) val = val.slice(1, -1);
+        if (val.startsWith("'") && val.endsWith("'")) val = val.slice(1, -1);
+        if (!process.env[key]) {
+          process.env[key] = val.trim();
+        }
+      }
+    }
+  }
+} catch (e) {
+  console.error('[Config] Error cargando .env local:', e.message);
+}
 
 // Redirigir consola a un archivo de log unificado para el panel de administración
 const logFile = path.resolve('data/logs/pipeline.log');
@@ -116,79 +141,136 @@ export function extractJson(text) {
 export async function callGemini(promptText, phaseId = null) {
   const config = getPipelineConfig();
   
-  // Determinar modelo, proveedor y temperatura según la fase o los parámetros globales
-  let provider = 'gemini';
-  let model = 'gemini-2.5-flash';
+  let model = 'google/gemini-2.5-flash';
   let temperature = 0.2;
-  let timeoutMs = 180000;
   
   if (config) {
-    if (config.global) {
-      provider = config.global.default_provider || provider;
-      timeoutMs = config.global.timeout_ms || timeoutMs;
-    }
     if (phaseId && config.phases && config.phases[phaseId]) {
       const phaseConf = config.phases[phaseId];
-      provider = phaseConf.provider || provider;
-      model = phaseConf.model || model;
+      const m = phaseConf.model || 'gemini-2.5-flash';
+      model = m.includes('/') ? m : `google/${m}`;
       temperature = phaseConf.temperature !== undefined ? phaseConf.temperature : temperature;
     }
   }
 
-  try {
-    console.log(`[Hermes Delegation] Inferencia Fase [${phaseId || 'Global'}] -> Proveedor: ${provider.toUpperCase()}, Modelo: ${model}, Temp: ${temperature}`);
-    
-    // Serializar el prompt de forma ultra-segura para pasarlo como argumento de línea de comandos en bash/powershell
-    const promptEscaped = JSON.stringify(promptText);
-    
-    // Construir el comando nativo de Hermes Agent con su modelo y proveedor dinámicos
-    let commandStr = `hermes -z ${promptEscaped} -m "${model}" --provider ${provider}`;
-    
-    const stdout = execSync(commandStr, { 
-      encoding: 'utf8', 
-      timeout: timeoutMs
-    });
-    
-    const rawText = stdout.trim();
-    const extracted = extractJson(rawText);
-    if (extracted) {
-      return JSON.parse(extracted);
+  // 1. Intentar usar OpenRouter (Proveedor preferido para evitar límites)
+  const openRouterKey = process.env.OPENROUTER_API_KEY;
+  if (openRouterKey) {
+    const modelsToTry = [model];
+    if (!model.endsWith(':free')) {
+      modelsToTry.push('openrouter/free');
     }
     
-    // Fallback de parseo clásico si el extractor balanceado falla
-    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-    throw new Error('No se pudo encontrar un JSON estructurado válido en la salida.');
-  } catch (err) {
-    console.error('[Hermes Delegation] Error crítico en inferencia nativa de Hermes:', err.message);
-    
-    // Intento de fallback de seguridad llamando al modelo de respaldo configurado en el JSON
-    let fallbackProvider = config?.global?.fallback_provider || 'nous';
-    let fallbackModel = config?.global?.fallback_model || 'stepfun/step-3.7-flash:free';
-    
-    try {
-      console.log(`[Hermes Delegation] Fallback de seguridad -> Proveedor: ${fallbackProvider.toUpperCase()}, Modelo: ${fallbackModel}`);
-      const promptEscaped = JSON.stringify(promptText);
-      const stdout = execSync(`hermes -z ${promptEscaped} -m "${fallbackModel}" --provider ${fallbackProvider}`, { 
-        encoding: 'utf8', 
-        timeout: 120000 
-      });
-      const rawText = stdout.trim();
-      const extracted = extractJson(rawText);
-      if (extracted) {
-        return JSON.parse(extracted);
+    for (const mToTry of modelsToTry) {
+      console.log(`[OpenRouter API] Inferencia Fase [${phaseId || 'Global'}] -> Modelo: ${mToTry}, Temp: ${temperature}`);
+      try {
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${openRouterKey}`,
+            'HTTP-Referer': 'https://newnews.es',
+            'X-Title': 'NewNews Engine'
+          },
+          body: JSON.stringify({
+            model: mToTry,
+            messages: [{ role: 'user', content: promptText }],
+            temperature: temperature,
+            response_format: { type: 'json_object' }
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const rawText = data?.choices?.[0]?.message?.content || '';
+          const cleanText = rawText.trim();
+          const extracted = extractJson(cleanText);
+          if (extracted) return JSON.parse(extracted);
+          const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+          if (jsonMatch) return JSON.parse(jsonMatch[0]);
+        } else {
+          const errText = await response.text();
+          console.warn(`[OpenRouter API] ⚠️ HTTP ${response.status} al llamar a ${mToTry}. Error: ${errText.substring(0, 150)}`);
+          if (response.status === 402 && mToTry !== modelsToTry[modelsToTry.length - 1]) {
+            console.log(`[OpenRouter API] Intentando con el modelo gratuito de OpenRouter de respaldo...`);
+            continue;
+          }
+        }
+      } catch (err) {
+        console.warn(`[OpenRouter API] ⚠️ Error al conectar: ${err.message}`);
       }
-      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
-      }
-      throw new Error('No se pudo encontrar un JSON estructurado válido en el fallback.');
-    } catch (retryErr) {
-      console.error('[Hermes Delegation] Falló también el reintento de fallback:', retryErr.message);
     }
-    
-    throw err;
   }
+
+  // 2. Fallback de Groq (Ultra-rápido y con grandes límites)
+  const groqKey = process.env.GROQ_API_KEY;
+  if (groqKey) {
+    const groqModel = 'llama-3.3-70b-specdec';
+    console.log(`[Groq API Fallback] Inferencia Fase [${phaseId || 'Global'}] -> Modelo: ${groqModel}, Temp: ${temperature}`);
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${groqKey}`
+        },
+        body: JSON.stringify({
+          model: groqModel,
+          messages: [{ role: 'user', content: promptText }],
+          temperature: temperature,
+          response_format: { type: 'json_object' }
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const rawText = data?.choices?.[0]?.message?.content || '';
+        const cleanText = rawText.trim();
+        const extracted = extractJson(cleanText);
+        if (extracted) return JSON.parse(extracted);
+        const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) return JSON.parse(jsonMatch[0]);
+      } else {
+        const errText = await response.text();
+        console.warn(`[Groq API Fallback] ⚠️ HTTP ${response.status}. Error: ${errText.substring(0, 150)}`);
+      }
+    } catch (err) {
+      console.warn(`[Groq API Fallback] ⚠️ Error en Groq: ${err.message}`);
+    }
+  }
+
+  // 3. Fallback de API de Gemini directa de Google
+  const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  if (geminiKey) {
+    const cleanModel = model.includes('/') ? model.split('/').pop() : model;
+    console.log(`[Gemini API Fallback] Inferencia Fase [${phaseId || 'Global'}] -> Modelo: ${cleanModel}, Temp: ${temperature}`);
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${cleanModel}:generateContent?key=${geminiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: promptText }] }],
+          generationConfig: { temperature: temperature, responseMimeType: 'application/json' }
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const cleanText = rawText.trim();
+        const extracted = extractJson(cleanText);
+        if (extracted) return JSON.parse(extracted);
+        const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) return JSON.parse(jsonMatch[0]);
+      } else {
+        const errBody = await response.text();
+        throw new Error(`Gemini Fallback HTTP ${response.status} - ${errBody}`);
+      }
+    } catch (err) {
+      console.error(`[Gemini API Fallback] ❌ Error en Gemini Directo: ${err.message}`);
+      throw err;
+    }
+  }
+
+  throw new Error('Todos los proveedores de inferencia (OpenRouter, Groq, Gemini) han fallado o no tienen API Key.');
 }

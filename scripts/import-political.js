@@ -27,12 +27,20 @@ try {
   // 1. Inserción de topics
   if (seedData.topics && seedData.topics.length > 0) {
     const insertTopic = db.prepare(`
-      INSERT OR REPLACE INTO topics (id, slug, title, description, category, header_summary, verdict_summary, confidence, status, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+      INSERT OR REPLACE INTO topics (id, theme_id, slug, title, description, category, header_summary, verdict_summary, confidence, status, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
     `);
     
     seedData.topics.forEach(t => {
-      insertTopic.run(t.id, t.slug, t.title, t.description, t.category, t.header_summary, t.verdict_summary, t.confidence, t.status || 'activo');
+      let themeId = t.theme_id || null;
+      if (!themeId) {
+        const tid = t.id;
+        if (tid === 't-menas') themeId = 'theme-convivencia';
+        else if (tid === 't-vivienda') themeId = 'theme-dinero';
+        else if (tid === 't-economia') themeId = 'theme-dinero';
+        else if (tid === 't-impuestos') themeId = 'theme-dinero';
+      }
+      insertTopic.run(t.id, themeId, t.slug, t.title, t.description, t.category, t.header_summary, t.verdict_summary, t.confidence, t.status || 'activo');
     });
     console.log(`  -> ${seedData.topics.length} temas importados.`);
   }

@@ -2,7 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 import fs from 'node:fs';
 
-const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
 console.log(`[Seed] Conectando para sembrar los 4 nuevos temas elaborados en: ${dbPath}`);
 
 if (!fs.existsSync(dbPath)) {
@@ -17,6 +17,7 @@ db.exec('PRAGMA foreign_keys = ON;');
 const topics = [
   {
     id: 'reforma-ley-extranjeria-menores',
+    theme_id: 'theme-convivencia',
     slug: 'reforma-ley-extranjeria-menores',
     title: 'Reforma de Ley de Extranjería (Reparto de Menores)',
     description: 'Debate de actualidad sobre la derivación obligatoria de menores migrantes y la reforma del artículo 35 de la Ley de Extranjería.',
@@ -27,6 +28,7 @@ const topics = [
   },
   {
     id: 'concierto-economico-catalunya',
+    theme_id: 'theme-historia',
     slug: 'concierto-economico-catalunya',
     title: 'Concierto Económico de Cataluña',
     description: 'Análisis institucional del acuerdo de financiación singular, la recaudación del 100% de tributos y el principio de ordinalidad.',
@@ -37,6 +39,7 @@ const topics = [
   },
   {
     id: 'reduccion-jornada-laboral',
+    theme_id: 'theme-dinero',
     slug: 'reduccion-jornada-laboral',
     title: 'Reducción de Jornada Laboral a 37.5h',
     description: 'Explicación del proyecto de reducción de la jornada laboral sin bajada de sueldos y su impacto en el Estatuto de los Trabajadores.',
@@ -47,6 +50,7 @@ const topics = [
   },
   {
     id: 'ley-de-vivienda-alquileres',
+    theme_id: 'theme-dinero',
     slug: 'ley-de-vivienda-alquileres',
     title: 'Tope al Alquiler (Ley de Vivienda)',
     description: 'Normas reales sobre zonas tensionadas, límites para grandes tenedores e incremento del alquiler de temporada.',
@@ -58,12 +62,12 @@ const topics = [
 ];
 
 const insertTopic = db.prepare(`
-  INSERT OR REPLACE INTO topics (id, slug, title, description, category, header_summary, verdict_summary, confidence, status, created_at, updated_at)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'activo', datetime('now'), datetime('now'))
+  INSERT OR REPLACE INTO topics (id, theme_id, slug, title, description, category, header_summary, verdict_summary, confidence, status, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo', datetime('now'), datetime('now'))
 `);
 
 for (const t of topics) {
-  insertTopic.run(t.id, t.slug, t.title, t.description, t.category, t.header_summary, t.verdict_summary, t.confidence);
+  insertTopic.run(t.id, t.theme_id, t.slug, t.title, t.description, t.category, t.header_summary, t.verdict_summary, t.confidence);
   console.log(`✓ Tema "${t.title}" insertado.`);
 }
 

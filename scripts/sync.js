@@ -27,7 +27,11 @@ function runCommand(command, description) {
 console.log(`\n🔹 [PROCESO] Reconstruyendo Portal Estático (Astro Build Atómico)...`);
 let buildSuccess = false;
 try {
-  execSync('npx astro build --outDir dist_temp', { stdio: 'inherit', env: process.env });
+  const buildEnv = { ...process.env };
+  if (process.platform === 'linux') {
+    buildEnv.SQLITE_DB_PATH = '/home/ubuntu/db/newnews/newnews.db';
+  }
+  execSync('npx astro build --outDir dist_temp', { stdio: 'inherit', env: buildEnv });
   
   const distPath = path.resolve('dist');
   const tempPath = path.resolve('dist_temp');

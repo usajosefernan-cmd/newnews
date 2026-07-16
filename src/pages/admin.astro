@@ -76,6 +76,7 @@ if (Astro.request.method === 'POST') {
       const trickUsed = data.get('trick_used')?.toString() || 'dato sin base';
       const newnewsScore = parseInt(data.get('newnews_score')?.toString() || '50', 10);
       const emojiTag = data.get('emoji_tag')?.toString() || '🧊 Falta contexto';
+      const tagsStr = data.get('tags')?.toString() || '';
 
       const originDate = data.get('origin_date')?.toString() || new Date().toISOString();
       
@@ -97,6 +98,26 @@ if (Astro.request.method === 'POST') {
               topic_id = ?, status = ?, origin_date = ?, trick_used = ?, newnews_score = ?, emoji_tag = ?, updated_at = datetime('now')
           WHERE id = ?
         `).run(title, subtitle, verdict, explanation, whatIsTrue, whatIsFalse, whatLacksContext, whatIsNotProven, topicId, status, originDate, trickUsed, newnewsScore, emojiTag, articleId);
+      }
+
+      // Actualizar tags asociados
+      db.prepare("DELETE FROM article_tags WHERE article_id = ?").run(articleId);
+      if (tagsStr.trim()) {
+        const tags = tagsStr.split(',').map(t => t.trim()).filter(Boolean);
+        const insertTag = db.prepare("INSERT OR IGNORE INTO tags (id, slug, name) VALUES (?, ?, ?)");
+        const insertArticleTag = db.prepare("INSERT OR IGNORE INTO article_tags (article_id, tag_id) VALUES (?, ?)");
+        tags.forEach(t => {
+          const slug = t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+          let existing = db.prepare("SELECT id FROM tags WHERE slug = ?").get(slug) as any;
+          let tagId;
+          if (existing) {
+            tagId = existing.id;
+          } else {
+            tagId = `tag-manual-${Date.now()}-${Math.floor(Math.random() * 100)}`;
+            insertTag.run(tagId, slug, t);
+          }
+          insertArticleTag.run(articleId, tagId);
+        });
       }
 
       message = `✓ Artículo "${title.substring(0, 45)}..." actualizado correctamente.`;
@@ -164,6 +185,7 @@ if (Astro.request.method === 'POST') {
       const trickUsed = data.get('trick_used')?.toString() || 'dato sin base';
       const newnewsScore = parseInt(data.get('newnews_score')?.toString() || '50', 10);
       const emojiTag = data.get('emoji_tag')?.toString() || '🧊 Falta contexto';
+      const tagsStr = data.get('tags')?.toString() || '';
 
       if (title.trim()) {
         const id = `art-manual-${Date.now()}`;
@@ -182,6 +204,25 @@ if (Astro.request.method === 'POST') {
           status, status === 'publicado' ? new Date().toISOString() : null, originDate,
           trickUsed, newnewsScore, emojiTag
         );
+
+        // Insertar tags asociados
+        if (tagsStr.trim()) {
+          const tags = tagsStr.split(',').map(t => t.trim()).filter(Boolean);
+          const insertTag = db.prepare("INSERT OR IGNORE INTO tags (id, slug, name) VALUES (?, ?, ?)");
+          const insertArticleTag = db.prepare("INSERT OR IGNORE INTO article_tags (article_id, tag_id) VALUES (?, ?)");
+          tags.forEach(t => {
+            const slug = t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+            let existing = db.prepare("SELECT id FROM tags WHERE slug = ?").get(slug) as any;
+            let tagId;
+            if (existing) {
+              tagId = existing.id;
+            } else {
+              tagId = `tag-manual-${Date.now()}-${Math.floor(Math.random() * 100)}`;
+              insertTag.run(tagId, slug, t);
+            }
+            insertArticleTag.run(id, tagId);
+          });
+        }
 
         message = `✓ Nuevo análisis de desmentido "${title}" guardado correctamente en la base de datos.`;
         messageType = 'success';
@@ -673,7 +714,8 @@ const draftArticles = db.prepare(`
 const draftsWithDetails = draftArticles.map(art => {
   const sources = db.prepare("SELECT * FROM sources WHERE article_id = ?").all(art.id) as any[];
   const socialPosts = db.prepare("SELECT * FROM social_posts WHERE article_id = ?").all(art.id) as any[];
-  return { ...art, sources, socialPosts };
+  const tags = db.prepare("SELECT t.name FROM tags t JOIN article_tags at ON t.id = at.tag_id WHERE at.article_id = ?").all(art.id).map((r: any) => r.name) as string[];
+  return { ...art, sources, socialPosts, tags };
 });
 
 // 2. Artículos en estado publicado
@@ -688,7 +730,8 @@ const publishedArticles = db.prepare(`
 const publishedWithDetails = publishedArticles.map(art => {
   const sources = db.prepare("SELECT * FROM sources WHERE article_id = ?").all(art.id) as any[];
   const socialPosts = db.prepare("SELECT * FROM social_posts WHERE article_id = ?").all(art.id) as any[];
-  return { ...art, sources, socialPosts };
+  const tags = db.prepare("SELECT t.name FROM tags t JOIN article_tags at ON t.id = at.tag_id WHERE at.article_id = ?").all(art.id).map((r: any) => r.name) as string[];
+  return { ...art, sources, socialPosts, tags };
 });
 
 // 3. Elementos del radar pendientes
@@ -1708,40 +1751,48 @@ const getVerdictClass = (verdict) => {
       const termBody = document.getElementById('live-terminal-body');
       if (!termBody) return;
       
+      function renderLogs(logs) {
+        const isAtBottom = termBody.scrollHeight - termBody.clientHeight <= termBody.scrollTop + 50;
+        termBody.innerHTML = '';
+        logs.forEach(line => {
+          const row = document.createElement('div');
+          row.style.wordBreak = 'break-all';
+          row.style.marginBottom = '0.2rem';
+          
+          if (line.includes('[ERROR]')) {
+            row.style.color = '#ff3366';
+          } else if (line.includes('[WARN]')) {
+            row.style.color = '#ffb020';
+          } else if (line.includes('[PASO]') || line.includes('Completado:')) {
+            row.style.color = '#00ffc4';
+          } else if (line.includes('Inferencia') || line.includes('callGemini')) {
+            row.style.color = '#00f0ff';
+          } else {
+            row.style.color = '#a9b2c3';
+          }
+          
+          row.innerText = line;
+          termBody.appendChild(row);
+        });
+        
+        if (isAtBottom) {
+          termBody.scrollTop = termBody.scrollHeight;
+        }
+      }
+
       async function fetchLogs() {
         try {
-          const response = await fetch(`${cleanBase}/api/admin/pipeline-logs`);
+          let response = await fetch(`${cleanBase}/api/admin/pipeline-logs/`);
+          if (!response.ok && !cleanBase) {
+            const alternativeResponse = await fetch(`/pro/newnews/api/admin/pipeline-logs/`);
+            if (alternativeResponse.ok) {
+              response = alternativeResponse;
+            }
+          }
           if (!response.ok) return;
           const data = await response.json();
-          
           if (data.logs && Array.isArray(data.logs)) {
-            const isAtBottom = termBody.scrollHeight - termBody.clientHeight <= termBody.scrollTop + 50;
-            
-            termBody.innerHTML = '';
-            data.logs.forEach(line => {
-              const row = document.createElement('div');
-              row.style.wordBreak = 'break-all';
-              row.style.marginBottom = '0.2rem';
-              
-              if (line.includes('[ERROR]')) {
-                row.style.color = '#ff3366';
-              } else if (line.includes('[WARN]')) {
-                row.style.color = '#ffb020';
-              } else if (line.includes('[PASO]') || line.includes('Completado:')) {
-                row.style.color = '#00ffc4';
-              } else if (line.includes('Inferencia') || line.includes('callGemini')) {
-                row.style.color = '#00f0ff';
-              } else {
-                row.style.color = '#a9b2c3';
-              }
-              
-              row.innerText = line;
-              termBody.appendChild(row);
-            });
-            
-            if (isAtBottom) {
-              termBody.scrollTop = termBody.scrollHeight;
-            }
+            renderLogs(data.logs);
           }
         } catch (err) {
           console.error('Error fetching pipeline logs:', err);
@@ -1928,13 +1979,27 @@ const getVerdictClass = (verdict) => {
     terminal.innerHTML = '<div style="color: var(--neon-blue);">> Conectando con el motor de la VPS y preparando flujo...</div>';
     
     try {
-      const response = await fetch(`${cleanBase}/api/run-job`, {
+      let response = await fetch(`${cleanBase}/api/run-job/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ job: jobName })
       });
+      
+      // Fallback si no hereda base path
+      if (!response.ok && !cleanBase) {
+        const altResponse = await fetch(`/pro/newnews/api/run-job/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ job: jobName })
+        });
+        if (altResponse.ok) {
+          response = altResponse;
+        }
+      }
       
       if (!response.body) {
         terminal.innerHTML += '<div style="color: var(--neon-rose);">> Error: El servidor no devolvió un flujo de datos.</div>';

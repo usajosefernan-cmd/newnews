@@ -15,10 +15,21 @@ const db = new DatabaseSync(dbPath);
 // Habilitar claves foráneas
 db.exec('PRAGMA foreign_keys = ON;');
 
-// Tabla topics (Cabeceras de Temas)
+// Tabla themes (NUEVA: Categorías temáticas de primer nivel)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS themes (
+    id TEXT PRIMARY KEY,
+    slug TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    orden INTEGER DEFAULT 0
+  );
+`);
+
+// Tabla topics (Cabeceras de Temas / Expedientes)
 db.exec(`
   CREATE TABLE IF NOT EXISTS topics (
     id TEXT PRIMARY KEY,
+    theme_id TEXT,
     slug TEXT UNIQUE NOT NULL,
     title TEXT NOT NULL,
     description TEXT,
@@ -28,7 +39,8 @@ db.exec(`
     confidence TEXT,
     status TEXT DEFAULT 'activo',
     created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY(theme_id) REFERENCES themes(id) ON DELETE SET NULL
   );
 `);
 
@@ -88,6 +100,9 @@ try {
 } catch (e) {}
 try {
   db.exec("ALTER TABLE articles ADD COLUMN infographic_svg TEXT;");
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE topics ADD COLUMN theme_id TEXT;");
 } catch (e) {}
 
 // Tabla sources (Fuentes originales de los desmentidos)
@@ -351,6 +366,46 @@ db.exec(`
     FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE
   );
 `);
+
+// Tabla tags (NUEVA: Etiquetas dinámicas transversales)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS tags (
+    id TEXT PRIMARY KEY,
+    slug TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL
+  );
+`);
+
+// Tabla article_tags (NUEVA: Relación N:M artículo <-> tag)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS article_tags (
+    article_id TEXT NOT NULL,
+    tag_id TEXT NOT NULL,
+    PRIMARY KEY (article_id, tag_id),
+    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE,
+    FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+  );
+`);
+
+// Sembrar los 6 temas principales (Categorías de primer nivel)
+console.log('[Migration] Sembrando temas principales...');
+const insertTheme = db.prepare(`
+  INSERT OR IGNORE INTO themes (id, slug, name, orden)
+  VALUES (?, ?, ?, ?)
+`);
+
+const initialThemes = [
+  { id: 'theme-dinero', slug: 'tu-dinero-y-hacienda', name: 'Tu Dinero y Hacienda', orden: 1 },
+  { id: 'theme-convivencia', slug: 'convivencia-y-servicios', name: 'Convivencia y Servicios', orden: 2 },
+  { id: 'theme-salud', slug: 'salud-publica', name: 'Salud Pública', orden: 3 },
+  { id: 'theme-historia', slug: 'historia-y-territorio', name: 'Historia y Territorio', orden: 4 },
+  { id: 'theme-justicia', slug: 'justicia-y-corrupcion', name: 'Justicia y Corrupción', orden: 5 },
+  { id: 'theme-desinformacion', slug: 'desinformacion-y-bulos', name: 'Desinformación y Bulos', orden: 6 }
+];
+
+for (const th of initialThemes) {
+  insertTheme.run(th.id, th.slug, th.name, th.orden);
+}
 
 // Sembrar fuentes del radar iniciales si no hay ninguna o añadir las que falten
 console.log('[Migration] Sembrando y actualizando fuentes del radar (RSS, Reddit, Telegram)...');

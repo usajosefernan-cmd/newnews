@@ -4,7 +4,7 @@ import Layout from '../layouts/Layout.astro';
 import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 
-const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
 const db = new DatabaseSync(dbPath);
 
 // Cargar todos los artículos publicados
@@ -63,15 +63,15 @@ const base = import.meta.env.BASE_URL;
 const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
 ---
 
-<Layout title="Feed de Actualidad" description="Informes cronológicos de contrastación y verificación de bulos en España.">
+<Layout title="Última Hora" description="Informes cronológicos de contrastación y verificación de bulos en España.">
   <div class="container" style="padding-top: 1.5rem; padding-bottom: 5rem; max-width: 680px;">
     
     <div style="margin-bottom: 2rem;">
       <h1 class="text-gradient-rose" style="font-size: 2.2rem; font-weight: 850; font-family: var(--font-title); letter-spacing: -0.04em; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-        Feed de Actualidad
+        Última Hora
       </h1>
       <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0; line-height: 1.4;">
-        Todos los bulos y claims analizados por el cortafuegos, ordenados de forma cronológica.
+        Todos los bulos y afirmaciones virales analizados por el cortafuegos, ordenados de forma cronológica.
       </p>
     </div>
 
