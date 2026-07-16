@@ -92,7 +92,7 @@ Devuelve un JSON con la estructura exacta:
     console.warn('[Semantic Router] Fallo en clasificación IA. Usando emparejamiento por keywords de fallback.');
     // Heurística local de fallback similar a ai-pipeline
     const lower = claimText.toLowerCase();
-    let topicId = 't-economia';
+    let topicId = 't-autonomos';
     let reason = 'Emparejamiento heurístico local de fallback por coincidencia de palabras clave.';
 
     if (lower.includes('franco') || lower.includes('memoria histórica')) {

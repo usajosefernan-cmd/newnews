@@ -167,3 +167,53 @@ No usar patrones cerrados. Detectar familias semánticas:
 /admin/politica
 /admin/judicial
 ```
+
+
+# MÓDULO NEWNEWS LIVE AGENTIC
+
+NEWNEWS incorpora una sala web en tiempo real:
+
+```text
+escucha autorizada
+→ transcripción streaming
+→ detección de claims
+→ paneles vivos
+→ fuentes y preguntas
+→ alertas
+→ voz solo cuando se activa
+→ envío opcional a revisión
+```
+
+No es una extensión de navegador.
+
+Rutas previstas:
+
+```text
+/live
+/live/new
+/live/session/[id]
+/live/video
+/live/meeting
+/live/advisor
+/admin/live
+```
+
+Modos:
+
+```text
+silent
+wake_only
+alerts
+full_assistant
+```
+
+La arquitectura completa y sus fases están en:
+
+```text
+guia/19_MASTER_NEWNEWS_LIVE_AGENTIC.md
+guia/20_FASE_13_LIVE_TEXTO_EVENTOS.md
+guia/21_FASE_14_LIVE_MICROFONO_STREAMING.md
+guia/22_FASE_15_LIVE_VIDEO_SUBTITULOS.md
+guia/23_FASE_16_LIVE_REALTIME_VOZ_PROVEEDORES.md
+guia/24_FASE_17_LIVE_INTEGRACION_ADMIN_PRIVACIDAD.md
+```

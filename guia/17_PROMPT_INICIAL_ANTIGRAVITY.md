@@ -15,6 +15,7 @@ Primero lee:
 
 Contexto:
 NEWNEWS debe evolucionar sin romper la web actual.
+La carpeta también contiene NEWNEWS Live Agentic, pero NO debe implementarse durante la Fase 0.
 No quiero un megaprompt ejecutado de golpe.
 Quiero fases cerradas con STOP GATES.
 

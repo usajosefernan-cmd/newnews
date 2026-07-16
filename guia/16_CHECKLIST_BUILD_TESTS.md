@@ -93,3 +93,38 @@ La fase solo está aceptada si:
 - se puede revertir mentalmente por archivos tocados,
 - respeta STOP gate.
 ```
+
+
+## Checklist adicional Live
+
+Cuando la fase sea Live, comprobar también:
+
+```text
+- LIVE_ENABLED=false salvo activación aprobada.
+- Micrófono solo tras gesto y consentimiento.
+- Indicador visible de escucha.
+- Stop corta el stream.
+- Audio no persistido por defecto.
+- Transcript no persistido sin consentimiento.
+- No hay claves en el bundle.
+- Partial y final no se confunden.
+- Eventos tienen secuencia e idempotencia.
+- Un agente caído no bloquea la sesión.
+- Hay timeout, cancelación y backpressure.
+- Wake-only no habla sin invocación.
+- Silent no sintetiza voz.
+- El límite de coste funciona.
+- Un claim Live no se publica.
+- Borrar sesión elimina lo definido por la política.
+- El transcript se trata como contenido no confiable.
+```
+
+Pruebas orientativas:
+
+```bash
+npm run build
+npm run test
+npm run lint
+# usar scripts reales definidos por Antigravity según el framework
+# ejecutar simulador Live y prueba end-to-end en modo local
+```

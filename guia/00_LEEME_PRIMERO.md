@@ -36,7 +36,12 @@ Fase 8  — Política en claro.
 Fase 9  — JudicialCheck.
 Fase 10 — Justicia en datos y corrupción.
 Fase 11 — UX pública juvenil y home.
-Fase 12 — Crons Hermes y documentación final.
+Fase 12 — Crons Hermes y documentación operativa del motor normal.
+Fase 13 — Live: texto, sesiones y bus de eventos.
+Fase 14 — Live: micrófono y transcripción streaming.
+Fase 15 — Live: vídeo, subtítulos y sincronización.
+Fase 16 — Live: proveedores realtime y voz wake-only.
+Fase 17 — Live: integración, admin, privacidad y endurecimiento.
 ```
 
 ## Qué debe entregar Antigravity al final de cada fase
@@ -71,3 +76,14 @@ Fase 12 — Crons Hermes y documentación final.
 ```text
 No quiero patrones cerrados. Quiero un router dinámico con caché semántica: si algo se repite, reutiliza estrategia; si es nuevo, planifica fuentes; si no tiene relevancia social, no gasta tokens.
 ```
+
+
+## Módulo adicional: NEWNEWS Live Agentic
+
+Antes de empezar la Fase 13, leer:
+
+```text
+guia/19_MASTER_NEWNEWS_LIVE_AGENTIC.md
+```
+
+Live es un módulo separado. No sustituye el motor normal, no depende de una extensión y no publica automáticamente.

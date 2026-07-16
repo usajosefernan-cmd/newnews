@@ -33,7 +33,7 @@ console.error = function(...args) {
   appendToLogFile('ERROR', args);
 };
 
-const dbPath = process.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
+import { dbPath } from './newnews-engine/config.js';
 
 // Función de similitud Jaccard para deduplicación léxica de claims
 function getJaccardSimilarity(str1, str2) {
@@ -493,7 +493,8 @@ async function scrapeTikTokPlaywright(queries) {
             const linkMatch = link.match(/\/video\/(\d+)/);
             if (linkMatch) {
               const videoId = linkMatch[1];
-              const cleanAuthor = author.startsWith('@') ? author : '@' + author;
+              const saneAuthor = author.replace(/\s+/g, '').replace(/Seguir/g, '').replace(/[^a-zA-Z0-9_@]/g, '');
+              const cleanAuthor = saneAuthor.startsWith('@') ? saneAuthor : '@' + saneAuthor;
               cleanLink = `https://www.tiktok.com/${cleanAuthor}/video/${videoId}`;
             }
             
@@ -502,7 +503,7 @@ async function scrapeTikTokPlaywright(queries) {
               link: cleanLink,
               description: description || `Post de TikTok sobre "${q}"`,
               platform: 'TikTok',
-              author: author.startsWith('@') ? author : '@' + author,
+              author: cleanAuthor,
               score: 0,
               comments: 0,
               views: views,
@@ -530,10 +531,11 @@ async function scrapeTikTokPlaywright(queries) {
               }
               
               let cleanLink = href;
+              const saneAuthor = author.replace(/\s+/g, '').replace(/Seguir/g, '').replace(/[^a-zA-Z0-9_@]/g, '');
+              const cleanAuthor = saneAuthor.startsWith('@') ? saneAuthor : '@' + saneAuthor;
               const linkMatch = href.match(/\/video\/(\d+)/);
               if (linkMatch) {
                 const videoId = linkMatch[1];
-                const cleanAuthor = author.startsWith('@') ? author : '@' + author;
                 cleanLink = `https://www.tiktok.com/${cleanAuthor}/video/${videoId}`;
               }
               
@@ -542,7 +544,7 @@ async function scrapeTikTokPlaywright(queries) {
                 link: cleanLink,
                 description: `Post de TikTok detectado.`,
                 platform: 'TikTok',
-                author,
+                author: cleanAuthor,
                 score: 0,
                 comments: 0,
                 views: 0,
@@ -592,12 +594,12 @@ async function scrapeInstagramPlaywright() {
     });
 
     const page = await browserContext.newPage();
-    const hashtags = ['bulo', 'okupa', 'inmigracionEspana'];
+    const queries = ['okupas impunes', 'inquiokupas', 'paguita extranjeros', 'sablazo autonomos', 'delincuencia importada', 'ayuda alquiler okupa'];
 
-    for (const tag of hashtags) {
+    for (const q of queries) {
       try {
-        const url = `https://www.instagram.com/explore/tags/${tag}/`;
-        console.log(`[Radar Motor] Scrapeando Instagram hashtag: #${tag}...`);
+        const url = `https://www.instagram.com/explore/search/keyword/?q=${encodeURIComponent(q)}`;
+        console.log(`[Radar Motor] Buscando semánticamente en Instagram: "${q}"...`);
         await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 20000 });
         await page.waitForTimeout(4000);
 
@@ -605,22 +607,27 @@ async function scrapeInstagramPlaywright() {
         await page.evaluate(() => window.scrollBy(0, 600));
         await page.waitForTimeout(2000);
 
-        const posts = await page.evaluate((tag_name) => {
+        const posts = await page.evaluate((q_name) => {
           const results = [];
           const links = document.querySelectorAll('a[href*="/p/"]');
           for (const a of links) {
             const href = a.href;
-            if (results.some(r => r.link === href)) continue;
+            const match = href.match(/\/p\/([a-zA-Z0-9_-]+)/);
+            if (!match) continue;
+            
+            const shortcode = match[1];
+            const cleanLink = `https://www.instagram.com/p/${shortcode}/`;
+            if (results.some(r => r.link === cleanLink)) continue;
 
             const img = a.querySelector('img');
             const imageUrl = img ? img.src : null;
             const alt = img ? img.alt || '' : '';
-            const title = alt.split('\n')[0] || `Publicación sobre #${tag_name}`;
+            const title = alt.split('\n')[0] || `Publicación sobre ${q_name}`;
 
             results.push({
               title: title.substring(0, 180),
-              link: href,
-              description: alt || `Post de Instagram sobre #${tag_name}`,
+              link: cleanLink,
+              description: alt || `Post de Instagram sobre "${q_name}"`,
               platform: 'Instagram',
               author: 'Instagram Creator',
               score: 0,
@@ -631,12 +638,12 @@ async function scrapeInstagramPlaywright() {
             });
           }
           return results;
-        }, tag);
+        }, q);
 
         items.push(...posts);
-        console.log(`[Radar Motor] -> Instagram #${tag}: Encontrados ${posts.length} posts.`);
+        console.log(`[Radar Motor] -> Instagram "${q}": Encontrados ${posts.length} posts.`);
       } catch (err) {
-        console.log(`[Radar Motor] Error buscando en Instagram #${tag}:`, err.message);
+        console.log(`[Radar Motor] Error buscando en Instagram "${q}":`, err.message);
       }
     }
   } catch (err) {

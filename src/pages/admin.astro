@@ -781,7 +781,30 @@ const userSubmissions = db.prepare("SELECT * FROM user_submissions ORDER BY crea
 const topicCaches = db.prepare("SELECT * FROM topic_cache").all() as any[];
 const claimCaches = db.prepare("SELECT * FROM claim_cache ORDER BY last_seen DESC LIMIT 50").all() as any[];
 
+let pipelineRuns = [];
+try {
+  pipelineRuns = db.prepare("SELECT * FROM pipeline_runs ORDER BY started_at DESC LIMIT 15").all() as any[];
+} catch (e: any) {
+  console.warn('[Admin] Tabla pipeline_runs no lista:', e.message);
+}
+
 db.close();
+
+// Cargar claves de FreeLLMAPI
+const freeLlmDbPath = process.platform === 'win32'
+  ? path.join(process.env.APPDATA, 'FreeLLMAPI', 'freeapi.db')
+  : '/home/ubuntu/freellmapi/server/data/freeapi.db';
+
+let freeLlmKeys = [];
+try {
+  if (fs.existsSync(freeLlmDbPath)) {
+    const freeDb = new DatabaseSync(freeLlmDbPath);
+    freeLlmKeys = freeDb.prepare("SELECT platform, label, enabled, status, base_url, last_checked_at FROM api_keys ORDER BY platform, label").all() as any[];
+    freeDb.close();
+  }
+} catch (e: any) {
+  console.error('[Admin] Error leyendo DB de FreeLLMAPI:', e.message);
+}
 
 // Cargar la configuración de pipeline_config.json
 const pipelineConfigPath = path.resolve('pipeline_config.json');
@@ -887,7 +910,7 @@ const getVerdictClass = (verdict) => {
 
       <!-- PESTAÑA: MOTOR NEWNEWS (MONITOREO DE FASES Y CACHÉ) -->
       <div id="pane-motor" class="admin-tab-panel">
-        <MotorPanel draftsWithDetails={draftsWithDetails} topicCaches={topicCaches} claimCaches={claimCaches} pipelineConfigJson={pipelineConfigJson} />
+        <MotorPanel draftsWithDetails={draftsWithDetails} topicCaches={topicCaches} claimCaches={claimCaches} pipelineConfigJson={pipelineConfigJson} freeLlmKeys={freeLlmKeys} pipelineRuns={pipelineRuns} />
       </div>
 
       <!-- PESTAÑA: LOGS EN VIVO (MONITOREO DE HERMES Y CRONS EN TIEMPO REAL) -->

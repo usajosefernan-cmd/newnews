@@ -139,30 +139,185 @@ export function extractJson(text) {
 }
 
 export async function callGemini(promptText, phaseId = null) {
+  const tStartCall = Date.now();
   const config = getPipelineConfig();
   
-  let model = 'google/gemini-2.5-flash';
+  let provider = 'freellmapi';
+  let model = 'auto';
   let temperature = 0.2;
   
   if (config) {
     if (phaseId && config.phases && config.phases[phaseId]) {
       const phaseConf = config.phases[phaseId];
-      const m = phaseConf.model || 'gemini-2.5-flash';
-      model = m.includes('/') ? m : `google/${m}`;
+      provider = phaseConf.provider || config.global.default_provider || 'freellmapi';
+      model = phaseConf.model || 'auto';
       temperature = phaseConf.temperature !== undefined ? phaseConf.temperature : temperature;
+    } else {
+      provider = config.global.default_provider || 'freellmapi';
+      model = 'auto';
     }
   }
 
-  // 1. Intentar usar OpenRouter (Proveedor preferido para evitar límites)
+  // Traducción de alias a modelos físicos para los proveedores de fallback
+  const FALLBACK_MODELS = {
+    gemini: {
+      'auto:fast': 'gemini-1.5-flash',
+      'auto:balanced': 'gemini-2.5-flash',
+      'auto:smart': 'gemini-2.5-flash',
+      'auto:reliable': 'gemini-2.5-flash',
+      'auto': 'gemini-2.5-flash'
+    },
+    openrouter: {
+      'auto:fast': 'google/gemini-1.5-flash',
+      'auto:balanced': 'google/gemini-2.5-flash',
+      'auto:smart': 'google/gemini-2.5-flash',
+      'auto:reliable': 'google/gemini-2.5-flash',
+      'auto': 'google/gemini-2.5-flash'
+    },
+    groq: {
+      'auto:fast': 'llama-3.1-8b-instant',
+      'auto:balanced': 'llama-3.3-70b-specdec',
+      'auto:smart': 'llama-3.3-70b-specdec',
+      'auto:reliable': 'llama-3.3-70b-specdec',
+      'auto': 'llama-3.3-70b-specdec'
+    }
+  };
+
+  const getFallbackModel = (prov, alias) => {
+    if (alias.startsWith('auto') && FALLBACK_MODELS[prov] && FALLBACK_MODELS[prov][alias]) {
+      return FALLBACK_MODELS[prov][alias];
+    }
+    // Si ya era un modelo específico (ej. gemini-2.5-flash), limpiarlo de prefijos de proveedor
+    return alias.includes('/') ? alias.split('/').pop() : alias;
+  };
+
+  // 0. Intentar usar FreeLLMAPI local si el proveedor es freellmapi
+  const freeLlmApiKey = process.env.FREELLMAPI_API_KEY;
+  const freeLlmBaseUrl = process.env.FREELLMAPI_BASE_URL || 'http://localhost:3001/v1';
+  if (provider === 'freellmapi' && freeLlmApiKey) {
+    console.log(`[FreeLLMAPI] ⚡ [Fase ${phaseId || 'Global'}] Despachando inferencia (Modelo: ${model} | Temp: ${temperature})`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 90000); // 90s timeout
+    try {
+      let response = await fetch(`${freeLlmBaseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${freeLlmApiKey}`
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: [{ role: 'user', content: promptText }],
+          temperature: temperature,
+          response_format: { type: 'json_object' }
+        }),
+        signal: controller.signal
+      });
+
+      if (!response.ok && (response.status === 429 || response.status === 404)) {
+        const errText = await response.text();
+        console.warn(`[FreeLLMAPI] ⚠️ Error ${response.status} llamando a ${model}. Reintentando con enrutamiento 'auto'...`);
+        response = await fetch(`${freeLlmBaseUrl}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${freeLlmApiKey}`
+          },
+          body: JSON.stringify({
+            model: 'auto',
+            messages: [{ role: 'user', content: promptText }],
+            temperature: temperature,
+            response_format: { type: 'json_object' }
+          }),
+          signal: controller.signal
+        });
+      }
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        const data = await response.json();
+        const resolvedModelName = data?._routed_via ? `${data._routed_via.platform}/${data._routed_via.model}` : model;
+        console.log(`[FreeLLMAPI] ✨ [Fase ${phaseId || 'Global'}] Completado con éxito ➔ Enrutado vía: ${resolvedModelName}`);
+        
+        global.lastInferenceTelemetry = {
+          provider: 'freellmapi',
+          model: resolvedModelName,
+          durationMs: Date.now() - tStartCall
+        };
+
+        const rawText = data?.choices?.[0]?.message?.content || '';
+        const cleanText = rawText.trim();
+        const extracted = extractJson(cleanText);
+        if (extracted) return JSON.parse(extracted);
+        const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) return JSON.parse(jsonMatch[0]);
+      } else {
+        const errBody = await response.text();
+        console.warn(`[FreeLLMAPI] ⚠️ HTTP ${response.status} - ${errBody.substring(0, 150)}`);
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+      console.error(`[FreeLLMAPI] ❌ Error o Timeout en FreeLLMAPI: ${err.message}`);
+    }
+  }
+
+  // 1. Intentar usar la API de Gemini directa de Google (Fallback 1)
+  const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  if (geminiKey) {
+    const physicalModel = getFallbackModel('gemini', model);
+    console.log(`[Gemini API] ⚠️ [Fase ${phaseId || 'Global'}] Fallback a Gemini Directo (Modelo: ${physicalModel})`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${physicalModel}:generateContent?key=${geminiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: promptText }] }],
+          generationConfig: { temperature: temperature, responseMimeType: 'application/json' }
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        global.lastInferenceTelemetry = {
+          provider: 'gemini',
+          model: physicalModel,
+          durationMs: Date.now() - tStartCall
+        };
+
+        const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const cleanText = rawText.trim();
+        const extracted = extractJson(cleanText);
+        if (extracted) return JSON.parse(extracted);
+        const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) return JSON.parse(jsonMatch[0]);
+      } else {
+        const errBody = await response.text();
+        console.warn(`[Gemini API] ⚠️ HTTP ${response.status} - ${errBody.substring(0, 150)}`);
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+      console.error(`[Gemini API] ❌ Error en Gemini Directo: ${err.message}`);
+    }
+  }
+
+  // 2. Fallback de OpenRouter
   const openRouterKey = process.env.OPENROUTER_API_KEY;
   if (openRouterKey) {
-    const modelsToTry = [model];
-    if (!model.endsWith(':free')) {
-      modelsToTry.push('openrouter/free');
+    const physicalOpenRouterModel = getFallbackModel('openrouter', model);
+    const modelsToTry = [physicalOpenRouterModel];
+    if (!physicalOpenRouterModel.endsWith(':free')) {
+      modelsToTry.push('meta-llama/llama-3-8b-instruct:free');
     }
     
     for (const mToTry of modelsToTry) {
-      console.log(`[OpenRouter API] Inferencia Fase [${phaseId || 'Global'}] -> Modelo: ${mToTry}, Temp: ${temperature}`);
+      console.log(`[OpenRouter API] ⚠️ [Fase ${phaseId || 'Global'}] Fallback a OpenRouter (Modelo: ${mToTry})`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
       try {
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
@@ -177,11 +332,21 @@ export async function callGemini(promptText, phaseId = null) {
             messages: [{ role: 'user', content: promptText }],
             temperature: temperature,
             response_format: { type: 'json_object' }
-          })
+          }),
+          signal: controller.signal
         });
+        await new Promise(r => setTimeout(r, 100)); // gap para evitar rate-limits de ráfaga
+        clearTimeout(timeoutId);
 
         if (response.ok) {
           const data = await response.json();
+          
+          global.lastInferenceTelemetry = {
+            provider: 'openrouter',
+            model: mToTry,
+            durationMs: Date.now() - tStartCall
+          };
+
           const rawText = data?.choices?.[0]?.message?.content || '';
           const cleanText = rawText.trim();
           const extracted = extractJson(cleanText);
@@ -190,23 +355,26 @@ export async function callGemini(promptText, phaseId = null) {
           if (jsonMatch) return JSON.parse(jsonMatch[0]);
         } else {
           const errText = await response.text();
-          console.warn(`[OpenRouter API] ⚠️ HTTP ${response.status} al llamar a ${mToTry}. Error: ${errText.substring(0, 150)}`);
+          console.warn(`[OpenRouter API Fallback] ⚠️ HTTP ${response.status} al llamar a ${mToTry}. Error: ${errText.substring(0, 150)}`);
           if (response.status === 402 && mToTry !== modelsToTry[modelsToTry.length - 1]) {
-            console.log(`[OpenRouter API] Intentando con el modelo gratuito de OpenRouter de respaldo...`);
+            console.log(`[OpenRouter API Fallback] Intentando con el modelo gratuito de OpenRouter de respaldo...`);
             continue;
           }
         }
       } catch (err) {
-        console.warn(`[OpenRouter API] ⚠️ Error al conectar: ${err.message}`);
+        clearTimeout(timeoutId);
+        console.warn(`[OpenRouter API Fallback] ⚠️ Error al conectar: ${err.message}`);
       }
     }
   }
 
-  // 2. Fallback de Groq (Ultra-rápido y con grandes límites)
+  // 3. Fallback de Groq
   const groqKey = process.env.GROQ_API_KEY;
   if (groqKey) {
-    const groqModel = 'llama-3.3-70b-specdec';
-    console.log(`[Groq API Fallback] Inferencia Fase [${phaseId || 'Global'}] -> Modelo: ${groqModel}, Temp: ${temperature}`);
+    const groqModel = getFallbackModel('groq', model);
+    console.log(`[Groq API] ⚠️ [Fase ${phaseId || 'Global'}] Fallback a Groq (Modelo: ${groqModel})`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
     try {
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
@@ -219,11 +387,20 @@ export async function callGemini(promptText, phaseId = null) {
           messages: [{ role: 'user', content: promptText }],
           temperature: temperature,
           response_format: { type: 'json_object' }
-        })
+        }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         const data = await response.json();
+        
+        global.lastInferenceTelemetry = {
+          provider: 'groq',
+          model: groqModel,
+          durationMs: Date.now() - tStartCall
+        };
+
         const rawText = data?.choices?.[0]?.message?.content || '';
         const cleanText = rawText.trim();
         const extracted = extractJson(cleanText);
@@ -235,42 +412,11 @@ export async function callGemini(promptText, phaseId = null) {
         console.warn(`[Groq API Fallback] ⚠️ HTTP ${response.status}. Error: ${errText.substring(0, 150)}`);
       }
     } catch (err) {
+      clearTimeout(timeoutId);
       console.warn(`[Groq API Fallback] ⚠️ Error en Groq: ${err.message}`);
     }
   }
 
-  // 3. Fallback de API de Gemini directa de Google
-  const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-  if (geminiKey) {
-    const cleanModel = model.includes('/') ? model.split('/').pop() : model;
-    console.log(`[Gemini API Fallback] Inferencia Fase [${phaseId || 'Global'}] -> Modelo: ${cleanModel}, Temp: ${temperature}`);
-    try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${cleanModel}:generateContent?key=${geminiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: promptText }] }],
-          generationConfig: { temperature: temperature, responseMimeType: 'application/json' }
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        const cleanText = rawText.trim();
-        const extracted = extractJson(cleanText);
-        if (extracted) return JSON.parse(extracted);
-        const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) return JSON.parse(jsonMatch[0]);
-      } else {
-        const errBody = await response.text();
-        throw new Error(`Gemini Fallback HTTP ${response.status} - ${errBody}`);
-      }
-    } catch (err) {
-      console.error(`[Gemini API Fallback] ❌ Error en Gemini Directo: ${err.message}`);
-      throw err;
-    }
-  }
-
-  throw new Error('Todos los proveedores de inferencia (OpenRouter, Groq, Gemini) han fallado o no tienen API Key.');
+  global.lastInferenceTelemetry = null;
+  throw new Error('Todos los proveedores de inferencia (Gemini, OpenRouter, Groq) han fallado o no tienen API Key.');
 }

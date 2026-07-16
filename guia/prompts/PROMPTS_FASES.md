@@ -146,3 +146,63 @@ Dry-run obligatorio.
 Build/informe.
 STOP.
 ```
+
+
+# FASES NEWNEWS LIVE AGENTIC
+
+## Fase 13
+
+```text
+Lee guia/19_MASTER_NEWNEWS_LIVE_AGENTIC.md y guia/20_FASE_13_LIVE_TEXTO_EVENTOS.md.
+Ejecuta SOLO la Fase 13.
+Implementa texto, sesiones y eventos. Sin audio real.
+LIVE_ENABLED=false.
+Build/tests/informe.
+STOP.
+```
+
+## Fase 14
+
+```text
+Lee guia/21_FASE_14_LIVE_MICROFONO_STREAMING.md.
+Ejecuta SOLO la Fase 14.
+Añade micrófono autorizado y transcript streaming.
+No voz del asistente.
+No guardar audio por defecto.
+Build/tests/informe.
+STOP.
+```
+
+## Fase 15
+
+```text
+Lee guia/22_FASE_15_LIVE_VIDEO_SUBTITULOS.md.
+Ejecuta SOLO la Fase 15.
+Añade vídeo y sincronización con fallbacks permitidos.
+No saltar restricciones de plataformas.
+Build/tests/informe.
+STOP.
+```
+
+## Fase 16
+
+```text
+Lee guia/23_FASE_16_LIVE_REALTIME_VOZ_PROVEEDORES.md.
+Ejecuta SOLO la Fase 16.
+Añade adaptadores realtime, token efímero, fallback y voz wake_only.
+No exponer secretos ni activar producción.
+Build/tests/informe.
+STOP.
+```
+
+## Fase 17
+
+```text
+Lee guia/24_FASE_17_LIVE_INTEGRACION_ADMIN_PRIVACIDAD.md.
+Ejecuta SOLO la Fase 17.
+Integra cola, admin, privacidad, retención, borrado y seguridad.
+No publicar automáticamente.
+LIVE_ENABLED=false hasta aprobación.
+End-to-end/build/tests/informe.
+STOP.
+```

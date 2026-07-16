@@ -115,3 +115,128 @@
   "human_review_required": true
 }
 ```
+
+
+# CONTRATOS NEWNEWS LIVE
+
+## Live session
+
+```json
+{
+  "id": "",
+  "mode": "direct|meeting|bank|insurance|legal|commercial|custom",
+  "voice_mode": "silent|wake_only|alerts|full_assistant",
+  "status": "created|ready|running|paused|stopped|error|deleted",
+  "source_type": "text|microphone|tab_capture|captions|embed|manual",
+  "source_url": "",
+  "provider": "",
+  "model": "",
+  "save_audio": false,
+  "save_transcript": false,
+  "consent_id": "",
+  "cost_estimate": 0,
+  "created_at": "",
+  "ended_at": ""
+}
+```
+
+## Live event envelope
+
+```json
+{
+  "event_id": "",
+  "type": "transcript.final",
+  "session_id": "",
+  "sequence": 1,
+  "occurred_at": "",
+  "source": "",
+  "schema_version": "1",
+  "correlation_id": "",
+  "payload": {}
+}
+```
+
+## Transcript segment
+
+```json
+{
+  "segment_id": "",
+  "session_id": "",
+  "kind": "partial|final",
+  "start_time": 0,
+  "end_time": 0,
+  "media_time": 0,
+  "speaker_label": "",
+  "text": "",
+  "confidence": null,
+  "language": "",
+  "revision_of": null
+}
+```
+
+## Live claim
+
+```json
+{
+  "claim_id": "",
+  "session_id": "",
+  "source_segment_ids": [],
+  "claim_text": "",
+  "normalized_claim": "",
+  "category": "",
+  "risk_score": 0,
+  "relevance_score": 0,
+  "cache_status": "unknown|hit|miss",
+  "verification_status": "detected|cached|requires_source|pending|sent_to_review|discarded",
+  "timestamp": 0
+}
+```
+
+## Live card
+
+```json
+{
+  "card_id": "",
+  "session_id": "",
+  "claim_id": "",
+  "card_type": "claim|context|source|question|risk|cache|summary",
+  "title": "",
+  "content": "",
+  "severity": "info|low|medium|high|critical",
+  "labels": [],
+  "provisional": true,
+  "created_at": ""
+}
+```
+
+## Voice response decision
+
+```json
+{
+  "session_id": "",
+  "trigger_event_id": "",
+  "mode": "wake_only",
+  "response_text": "",
+  "should_speak": true,
+  "reason": "",
+  "expires_at": ""
+}
+```
+
+## Send to review
+
+```json
+{
+  "session_id": "",
+  "claim_id": "",
+  "timestamp": 0,
+  "source_url": "",
+  "claim_text": "",
+  "context_window": "",
+  "risk_score": 0,
+  "suggested_sources": [],
+  "cards": [],
+  "requested_by": "",
+  "publish": false
+}
+```

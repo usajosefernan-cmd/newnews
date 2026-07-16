@@ -84,7 +84,7 @@ Devuelve un JSON con el formato exacto:
       title: `Contraste de datos sobre: ${claimText.substring(0, 50)}...`,
       subtitle: `Evaluamos la realidad legislativa y los datos oficiales en España ante el debate en redes sociales.`,
       summary: `El análisis del claim revela la necesidad de contextualizar la normativa para evitar malas interpretaciones de la opinión pública.`,
-      explanation: `Las afirmaciones publicadas en torno a este tema suelen omitir matices y datos contextuales críticos. La verificación requiere del contraste minucioso de los datos oficiales emitidos por los reguladores correspondientes de la materia.`,
+      explanation: `Las afirmaciones publicadas en torno a este tema suelen omitir matices jurídicos y datos contextuales de carácter crítico. La verificación de estos hechos requiere necesariamente del análisis y contraste minucioso de los textos legales publicados en el Boletín Oficial del Estado (BOE), así como de las series estadísticas y metodologías oficiales emitidas de forma regular por el Instituto Nacional de Estadística (INE) u otros reguladores públicos competentes de la materia para evitar interpretaciones erróneas o alarmistas.`,
       trick_used: 'dato sin base',
       newnews_score: 55,
       emoji_tag: '🧊 Falta contexto',

@@ -102,6 +102,9 @@ try {
   db.exec("ALTER TABLE articles ADD COLUMN infographic_svg TEXT;");
 } catch (e) {}
 try {
+  db.exec("ALTER TABLE articles ADD COLUMN infographic_parts TEXT;");
+} catch (e) {}
+try {
   db.exec("ALTER TABLE topics ADD COLUMN theme_id TEXT;");
 } catch (e) {}
 
@@ -172,6 +175,19 @@ db.exec(`
     notes TEXT,
     created_at TEXT NOT NULL,
     FOREIGN KEY(article_id) REFERENCES articles(id) ON DELETE CASCADE
+  );
+`);
+
+// Tabla pipeline_runs (Historial de ejecuciones y telemetría de Hermes)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS pipeline_runs (
+    id TEXT PRIMARY KEY,
+    started_at TEXT NOT NULL,
+    duration_sec REAL NOT NULL,
+    claims_scraped INTEGER NOT NULL,
+    claims_processed INTEGER NOT NULL,
+    articles_published INTEGER NOT NULL,
+    telemetry_json TEXT NOT NULL
   );
 `);
 

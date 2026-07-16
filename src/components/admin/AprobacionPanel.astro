@@ -19,6 +19,70 @@ const { draftsWithDetails, activeTopics, getVerdictClass } = Astro.props;
         <span style="font-size: 0.8rem; color: var(--text-muted);">Confianza: {art.confidence || 'Media'}</span>
       </div>
       
+      {/* Diagnóstico Rápido de Contenido para Moderadores */}
+      {(() => {
+        const hasImage = art.multimedia_url && !art.multimedia_url.includes('unsplash.com/photo-1541872703-74c5e44368f9') && !art.multimedia_url.includes('placeholder');
+        const hasOriginUrl = !!art.origin_url;
+        const hasSources = art.sources && art.sources.length > 0;
+        const hasData = (art.what_is_true && art.what_is_true.trim().length > 15) || (art.what_is_false && art.what_is_false.trim().length > 15);
+        const isExplanationGood = art.explanation && art.explanation.trim().length > 350;
+        const hasVideo = art.origin_url && (art.origin_url.includes('youtube.com') || art.origin_url.includes('youtu.be') || art.origin_url.includes('tiktok.com'));
+
+        return (
+          <div class="quality-diagnostics" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.25rem; padding: 0.6rem; border-radius: 8px; background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.03);">
+            <span style="font-size: 0.65rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; align-self: center; margin-right: 0.25rem; font-family: monospace;">Salud:</span>
+            
+            {/* 1. Enlace Original */}
+            <span 
+              title={hasOriginUrl ? "Enlace de origen correcto" : "Falta el enlace de origen original"}
+              style={`font-size: 0.7rem; font-family: monospace; font-weight: bold; padding: 0.25rem 0.5rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.3rem; ${hasOriginUrl ? 'background: rgba(57, 255, 20, 0.08); border: 1px solid rgba(57, 255, 20, 0.25); color: #39ff14;' : 'background: rgba(220, 39, 67, 0.08); border: 1px solid rgba(220, 39, 67, 0.25); color: #ff3366;'}`}
+            >
+              {hasOriginUrl ? '🟢' : '🔴'} 🚨 original
+            </span>
+
+            {/* 2. Imagen de Evidencia */}
+            <span 
+              title={hasImage ? "Imagen del bulo correctamente incrustada" : "Falta la imagen del artículo"}
+              style={`font-size: 0.7rem; font-family: monospace; font-weight: bold; padding: 0.25rem 0.5rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.3rem; ${hasImage ? 'background: rgba(57, 255, 20, 0.08); border: 1px solid rgba(57, 255, 20, 0.25); color: #39ff14;' : 'background: rgba(220, 39, 67, 0.08); border: 1px solid rgba(220, 39, 67, 0.25); color: #ff3366;'}`}
+            >
+              {hasImage ? '🟢' : '🔴'} 📷 imagen
+            </span>
+
+            {/* 3. Vídeo */}
+            <span 
+              title={hasVideo ? "Contiene enlace de vídeo (YouTube o TikTok)" : "No se ha detectado vídeo original"}
+              style={`font-size: 0.7rem; font-family: monospace; font-weight: bold; padding: 0.25rem 0.5rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.3rem; ${hasVideo ? 'background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.25); color: #00f0ff;' : 'background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); color: var(--text-muted);'}`}
+            >
+              {hasVideo ? '🟢' : '⚪'} 🎥 vídeo
+            </span>
+
+            {/* 4. Enlaces / Fuentes */}
+            <span 
+              title={hasSources ? `Contiene ${art.sources.length} fuentes de evidencia oficiales` : "Falta aportar fuentes de evidencia para el desmentido"}
+              style={`font-size: 0.7rem; font-family: monospace; font-weight: bold; padding: 0.25rem 0.5rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.3rem; ${hasSources ? 'background: rgba(57, 255, 20, 0.08); border: 1px solid rgba(57, 255, 20, 0.25); color: #39ff14;' : 'background: rgba(220, 39, 67, 0.08); border: 1px solid rgba(220, 39, 67, 0.25); color: #ff3366;'}`}
+            >
+              {hasSources ? '🟢' : '🔴'} 🔗 fuentes ({art.sources?.length || 0})
+            </span>
+
+            {/* 5. Cifras y Datos */}
+            <span 
+              title={hasData ? "Contiene cifras y contraste en 'Qué es Verdad' y 'Qué es Mentira'" : "Falta rellenar datos y cifras de contraste"}
+              style={`font-size: 0.7rem; font-family: monospace; font-weight: bold; padding: 0.25rem 0.5rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.3rem; ${hasData ? 'background: rgba(57, 255, 20, 0.08); border: 1px solid rgba(57, 255, 20, 0.25); color: #39ff14;' : 'background: rgba(220, 39, 67, 0.08); border: 1px solid rgba(220, 39, 67, 0.25); color: #ff3366;'}`}
+            >
+              {hasData ? '🟢' : '🔴'} 📊 datos
+            </span>
+
+            {/* 6. Calidad de Redacción */}
+            <span 
+              title={isExplanationGood ? "Redacción detallada y explicativa" : "La explicación es demasiado corta y vaga, requiere ampliarse"}
+              style={`font-size: 0.7rem; font-family: monospace; font-weight: bold; padding: 0.25rem 0.5rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.3rem; ${isExplanationGood ? 'background: rgba(57, 255, 20, 0.08); border: 1px solid rgba(57, 255, 20, 0.25); color: #39ff14;' : 'background: rgba(255, 183, 3, 0.08); border: 1px solid rgba(255, 183, 3, 0.25); color: #ffb703;'}`}
+            >
+              {isExplanationGood ? '🟢' : '🟡'} ✍️ redacción
+            </span>
+          </div>
+        );
+      })()}
+      
       <div class="card-content" style="margin-bottom: 1rem;">
         <h3 class="article-title" style="font-size: 1.2rem; margin: 0 0 0.5rem 0; color: #fff;">{art.title}</h3>
         <p class="article-subtitle" style="font-size: 0.85rem; color: var(--text-muted); margin: 0 0 1rem 0;">{art.subtitle}</p>
