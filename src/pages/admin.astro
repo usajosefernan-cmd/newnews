@@ -12,7 +12,7 @@ import TriagePanel from '../components/admin/TriagePanel.astro';
 import MotorPanel from '../components/admin/MotorPanel.astro';
 import RedactorPanel from '../components/admin/RedactorPanel.astro';
 
-const baseRoute = Astro.url.pathname.includes('/pro/newnews') ? '/pro/newnews' : '/';
+const baseRoute = Astro.url.pathname.includes('/pro/matiza') ? '/pro/matiza' : '/';
 const cleanBase = baseRoute.endsWith('/') ? baseRoute.slice(0, -1) : baseRoute;
 
 let message = '';
@@ -29,38 +29,38 @@ if (Astro.request.method === 'POST') {
     const data = await Astro.request.formData();
     const action = data.get('action')?.toString() || '';
 
-    const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
+    const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/matiza.db');
     const db = new DatabaseSync(dbPath);
     db.exec('PRAGMA foreign_keys = ON;');
 
     if (action === 'approve') {
       const articleId = data.get('article_id')?.toString() || '';
-      
+
       // Actualizar artículo a publicado
       db.prepare(`
-        UPDATE articles 
-        SET status = 'publicado', published_at = datetime('now'), human_review_required = 0 
+        UPDATE articles
+        SET status = 'publicado', published_at = datetime('now'), human_review_required = 0
         WHERE id = ?
       `).run(articleId);
 
       // Actualizar posts sociales asociados a programado
       db.prepare(`
-        UPDATE social_posts 
-        SET status = 'programado', scheduled_at = datetime('now') 
+        UPDATE social_posts
+        SET status = 'programado', scheduled_at = datetime('now')
         WHERE article_id = ?
       `).run(articleId);
 
       message = `✓ Artículo aprobado y publicado exitosamente en el feed de noticias.`;
       messageType = 'success';
-    } 
+    }
     else if (action === 'reject') {
       const articleId = data.get('article_id')?.toString() || '';
-      
+
       db.prepare("UPDATE articles SET status = 'rechazado' WHERE id = ?").run(articleId);
-      
+
       message = `✗ Artículo rechazado y movido a la papelera.`;
       messageType = 'error';
-    } 
+    }
     else if (action === 'edit_article') {
       const articleId = data.get('article_id')?.toString() || '';
       const title = data.get('title')?.toString() || '';
@@ -74,30 +74,30 @@ if (Astro.request.method === 'POST') {
       const topicId = data.get('topic_id')?.toString() || '';
       const status = data.get('status')?.toString() || 'borrador';
       const trickUsed = data.get('trick_used')?.toString() || 'dato sin base';
-      const newnewsScore = parseInt(data.get('newnews_score')?.toString() || '50', 10);
+      const matizaScore = parseInt(data.get('matiza_score')?.toString() || '50', 10);
       const emojiTag = data.get('emoji_tag')?.toString() || '🧊 Falta contexto';
       const tagsStr = data.get('tags')?.toString() || '';
 
       const originDate = data.get('origin_date')?.toString() || new Date().toISOString();
-      
+
       // Si el estado cambia a publicado, forzar published_at y apagar human_review_required
       if (status === 'publicado') {
         db.prepare(`
-          UPDATE articles 
-          SET title = ?, subtitle = ?, verdict = ?, explanation = ?, 
+          UPDATE articles
+          SET title = ?, subtitle = ?, verdict = ?, explanation = ?,
               what_is_true = ?, what_is_false = ?, what_lacks_context = ?, what_is_not_proven = ?,
-              topic_id = ?, status = ?, published_at = COALESCE(published_at, datetime('now')), human_review_required = 0, 
-              origin_date = ?, trick_used = ?, newnews_score = ?, emoji_tag = ?, updated_at = datetime('now')
+              topic_id = ?, status = ?, published_at = COALESCE(published_at, datetime('now')), human_review_required = 0,
+              origin_date = ?, trick_used = ?, matiza_score = ?, emoji_tag = ?, updated_at = datetime('now')
           WHERE id = ?
-        `).run(title, subtitle, verdict, explanation, whatIsTrue, whatIsFalse, whatLacksContext, whatIsNotProven, topicId, status, originDate, trickUsed, newnewsScore, emojiTag, articleId);
+        `).run(title, subtitle, verdict, explanation, whatIsTrue, whatIsFalse, whatLacksContext, whatIsNotProven, topicId, status, originDate, trickUsed, matizaScore, emojiTag, articleId);
       } else {
         db.prepare(`
-          UPDATE articles 
-          SET title = ?, subtitle = ?, verdict = ?, explanation = ?, 
+          UPDATE articles
+          SET title = ?, subtitle = ?, verdict = ?, explanation = ?,
               what_is_true = ?, what_is_false = ?, what_lacks_context = ?, what_is_not_proven = ?,
-              topic_id = ?, status = ?, origin_date = ?, trick_used = ?, newnews_score = ?, emoji_tag = ?, updated_at = datetime('now')
+              topic_id = ?, status = ?, origin_date = ?, trick_used = ?, matiza_score = ?, emoji_tag = ?, updated_at = datetime('now')
           WHERE id = ?
-        `).run(title, subtitle, verdict, explanation, whatIsTrue, whatIsFalse, whatLacksContext, whatIsNotProven, topicId, status, originDate, trickUsed, newnewsScore, emojiTag, articleId);
+        `).run(title, subtitle, verdict, explanation, whatIsTrue, whatIsFalse, whatLacksContext, whatIsNotProven, topicId, status, originDate, trickUsed, matizaScore, emojiTag, articleId);
       }
 
       // Actualizar tags asociados
@@ -132,7 +132,7 @@ if (Astro.request.method === 'POST') {
             currentConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
           } catch (e) {}
         }
-        
+
         // Actualizar parámetros globales
         currentConfig.global = {
           default_provider: data.get('global_provider')?.toString() || 'gemini',
@@ -147,7 +147,7 @@ if (Astro.request.method === 'POST') {
         phasesList.forEach(ph => {
           if (!currentConfig.phases) currentConfig.phases = {};
           if (!currentConfig.phases[ph]) currentConfig.phases[ph] = {};
-          
+
           currentConfig.phases[ph].provider = data.get(`phase_${ph}_provider`)?.toString() || 'gemini';
           currentConfig.phases[ph].model = data.get(`phase_${ph}_model`)?.toString() || 'gemini-2.5-flash';
           currentConfig.phases[ph].temperature = parseFloat(data.get(`phase_${ph}_temp`)?.toString() || '0.2');
@@ -183,26 +183,40 @@ if (Astro.request.method === 'POST') {
       const originPlatform = data.get('origin_platform')?.toString() || 'Manual';
       const originUrl = data.get('origin_url')?.toString() || '';
       const trickUsed = data.get('trick_used')?.toString() || 'dato sin base';
-      const newnewsScore = parseInt(data.get('newnews_score')?.toString() || '50', 10);
+      const matizaScore = parseInt(data.get('matiza_score')?.toString() || '50', 10);
       const emojiTag = data.get('emoji_tag')?.toString() || '🧊 Falta contexto';
       const tagsStr = data.get('tags')?.toString() || '';
 
       if (title.trim()) {
         const id = `art-manual-${Date.now()}`;
-        const slug = title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').substring(0, 60);
-        const category = topicId 
+        let baseSlug = title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').substring(0, 60);
+        baseSlug = baseSlug.replace(/-+$/, '').replace(/^-+/, '');
+        if (!baseSlug) {
+          baseSlug = 'articulo';
+        }
+        let slug = baseSlug;
+        let counter = 1;
+        while (true) {
+          const row = db.prepare("SELECT id FROM articles WHERE slug = ?").get(slug);
+          if (!row) {
+            break;
+          }
+          counter++;
+          slug = `${baseSlug}-${counter}`;
+        }
+        const category = topicId
           ? (db.prepare("SELECT category FROM topics WHERE id = ?").get(topicId)?.category || 'General')
           : 'General';
 
         const originDate = data.get('origin_date')?.toString() || new Date().toISOString();
         db.prepare(`
-          INSERT INTO articles (id, topic_id, slug, title, subtitle, claim, origin_platform, origin_url, origin_summary, category, verdict, confidence, summary, explanation, what_is_true, what_is_false, what_lacks_context, what_is_not_proven, status, human_review_required, published_at, origin_date, trick_used, newnews_score, emoji_tag, created_at, updated_at)
+          INSERT INTO articles (id, topic_id, slug, title, subtitle, claim, origin_platform, origin_url, origin_summary, category, verdict, confidence, summary, explanation, what_is_true, what_is_false, what_lacks_context, what_is_not_proven, status, human_review_required, published_at, origin_date, trick_used, matiza_score, emoji_tag, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, '', ?, ?, 'Alta', ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
         `).run(
           id, topicId || null, slug, title, subtitle, claim, originPlatform, originUrl,
           category, verdict, subtitle, explanation, whatIsTrue, whatIsFalse, whatLacksContext, whatIsNotProven,
           status, status === 'publicado' ? new Date().toISOString() : null, originDate,
-          trickUsed, newnewsScore, emojiTag
+          trickUsed, matizaScore, emojiTag
         );
 
         // Insertar tags asociados
@@ -259,7 +273,7 @@ if (Astro.request.method === 'POST') {
 
       if (topicId && title.trim()) {
         db.prepare(`
-          UPDATE topics 
+          UPDATE topics
           SET title = ?, category = ?, description = ?, verdict_summary = ?, status = ?, confidence = ?, updated_at = datetime('now')
           WHERE id = ?
         `).run(title, category, description, verdictSummary, status, confidence, topicId);
@@ -340,7 +354,7 @@ if (Astro.request.method === 'POST') {
 
       if (url.trim().length > 5) {
         const id = `manual-url-${Date.now()}`;
-        const topicTitle = topicId 
+        const topicTitle = topicId
           ? (db.prepare("SELECT title FROM topics WHERE id = ?").get(topicId)?.title || 'General')
           : 'General';
 
@@ -421,7 +435,7 @@ if (Astro.request.method === 'POST') {
     else if (action === 'discard_submission') {
       const submissionId = data.get('submission_id')?.toString() || '';
       const reason = data.get('reason')?.toString() || 'Baja relevancia sociopolítica.';
-      
+
       db.prepare("UPDATE user_submissions SET status = 'descartado_por_baja_relevancia', reason = ? WHERE id = ?").run(reason, submissionId);
       message = `✓ Envío descartado por baja relevancia.`;
       messageType = 'error';
@@ -433,7 +447,7 @@ if (Astro.request.method === 'POST') {
         db.prepare("UPDATE scraped_items SET status = 'procesando' WHERE id = ?").run(itemId);
         message = `✓ Procesamiento de IA iniciado para este claim. Los borradores estarán listos en unos instantes.`;
         messageType = 'success';
-        
+
         exec('node scripts/ai-pipeline.js && node scripts/sync.js', (err) => {
           if (err) {
             console.error('Error procesando item de radar con IA:', err.message);
@@ -459,7 +473,7 @@ if (Astro.request.method === 'POST') {
           const art = db.prepare("SELECT * FROM articles WHERE id = ?").get(articleId) as any;
           if (art) {
             if (phase === '08-article-writer') {
-              const { writeArticle } = await import('../../scripts/newnews-engine/08-article-writer.js' as any);
+              const { writeArticle } = await import('../../scripts/matiza-engine/08-article-writer.js' as any);
               const sources = db.prepare("SELECT * FROM sources WHERE article_id = ?").all(articleId) as any[];
               const updated = await writeArticle(art.claim, {
                 verdict: art.verdict,
@@ -471,16 +485,16 @@ if (Astro.request.method === 'POST') {
               }, sources);
 
               db.prepare(`
-                UPDATE articles 
+                UPDATE articles
                 SET title = ?, subtitle = ?, summary = ?, explanation = ?, updated_at = datetime('now')
                 WHERE id = ?
               `).run(updated.title, updated.subtitle, updated.summary, updated.explanation, articleId);
               message = `✓ Fase 08 (Redacción) reprocesada correctamente para este artículo.`;
               messageType = 'success';
-            } else if (phase === '11-social-writer') {
-              const { writeSocialPosts } = await import('../../scripts/newnews-engine/11-social-writer.js' as any);
+              } else if (phase === '11-social-writer') {
+              const { writeSocialPosts } = await import('../../scripts/matiza-engine/11-social-writer.js' as any);
               const posts = await writeSocialPosts(art.title, art.subtitle, art.verdict, art.claim);
-              
+
               db.prepare("DELETE FROM social_posts WHERE article_id = ?").run(articleId);
               const insertSocialPost = db.prepare(`
                 INSERT OR REPLACE INTO social_posts (id, article_id, platform, format, content, status, scheduled_at, published_at)
@@ -531,7 +545,7 @@ if (Astro.request.method === 'POST') {
 
       if (partyId && name.trim()) {
         db.prepare(`
-          UPDATE parties 
+          UPDATE parties
           SET name = ?, current_leader = ?, official_website = ?, ideology_summary = ?, updated_at = datetime('now')
           WHERE id = ?
         `).run(name, leader, website, ideology, partyId);
@@ -588,7 +602,7 @@ if (Astro.request.method === 'POST') {
 
       if (measureId && title.trim() && summary.trim()) {
         db.prepare(`
-          UPDATE policy_measures 
+          UPDATE policy_measures
           SET area = ?, title = ?, original_text = ?, plain_language_summary = ?, possible_impact = ?, target_groups = ?
           WHERE id = ?
         `).run(area, title, originalText, summary, impact, targets, measureId);
@@ -633,7 +647,7 @@ if (Astro.request.method === 'POST') {
 
       if (promiseId && text.trim()) {
         db.prepare(`
-          UPDATE promise_tracking 
+          UPDATE promise_tracking
           SET promise_text = ?, government_level = ?, status = ?, action_taken = ?, evidence_url = ?, evidence_summary = ?, updated_at = datetime('now')
           WHERE id = ?
         `).run(text, govLevel, status, actionTaken, evidenceUrl, evidenceSummary, promiseId);
@@ -675,7 +689,7 @@ if (Astro.request.method === 'POST') {
 
       if (declarationId && personName.trim() && role.trim()) {
         db.prepare(`
-          UPDATE asset_declarations 
+          UPDATE asset_declarations
           SET person_name = ?, role = ?, source_url = ?, declared_assets_summary = ?, declared_debts_summary = ?
           WHERE id = ?
         `).run(personName, role, sourceUrl, assets, debts, declarationId);
@@ -699,7 +713,7 @@ if (Astro.request.method === 'POST') {
 }
 
 // Cargar datos para la vista
-const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/matiza.db');
 const db = new DatabaseSync(dbPath);
 
 // 1. Artículos en estado borrador (Cola de Aprobación)
@@ -736,7 +750,7 @@ const publishedWithDetails = publishedArticles.map(art => {
 
 // 3. Elementos del radar pendientes
 const pendingRadarItems = db.prepare(`
-  SELECT * FROM scraped_items 
+  SELECT * FROM scraped_items
   WHERE status = 'pendiente'
   ORDER BY created_at DESC
 `).all() as any[];
@@ -753,7 +767,7 @@ const activeTopics = allTopics.filter(t => t.status === 'activo');
 // 7. Cargar Partidos, Propuestas, Promesas y Declaraciones de Bienes para Auditoría Política
 const allParties = db.prepare("SELECT * FROM parties ORDER BY name").all() as any[];
 const allMeasures = db.prepare(`
-  SELECT pm.*, p.name as party_name 
+  SELECT pm.*, p.name as party_name
   FROM policy_measures pm
   LEFT JOIN parties p ON pm.party_id = p.id
   ORDER BY p.name, pm.area
@@ -825,14 +839,14 @@ const getVerdictClass = (verdict) => {
 
 <Layout title="Panel de Control Editorial y Radar">
   <div class="admin-container">
-    
+
     <!-- CABECERA PREMIUM NEÓN -->
     <header class="admin-header">
       <div class="header-main">
         <h1> Portal <span class="text-gradient-blue">Control Center</span></h1>
         <p>Consola de verificación, editor de desmentidos y control del radar inteligente de IA.</p>
       </div>
-      
+
       <!-- KPIs interactivas que actúan como pestañas de navegación principales -->
       <div class="dashboard-kpis">
         <div class="kpi-card gold" data-tab="pane-dashboard">
@@ -861,7 +875,7 @@ const getVerdictClass = (verdict) => {
         </div>
         <div class="kpi-card cyan" data-tab="pane-motor">
           <span class="kpi-val">⚙️</span>
-          <span class="kpi-label">Motor NEWNEWS</span>
+          <span class="kpi-label">Motor MATIZA</span>
         </div>
         <div class="kpi-card yellow" data-tab="pane-politica">
           <span class="kpi-val">🛡️</span>
@@ -908,7 +922,7 @@ const getVerdictClass = (verdict) => {
         <TriagePanel userSubmissions={userSubmissions} activeTopics={activeTopics} />
       </div>
 
-      <!-- PESTAÑA: MOTOR NEWNEWS (MONITOREO DE FASES Y CACHÉ) -->
+      <!-- PESTAÑA: MOTOR MATIZA (MONITOREO DE FASES Y CACHÉ) -->
       <div id="pane-motor" class="admin-tab-panel">
         <MotorPanel draftsWithDetails={draftsWithDetails} topicCaches={topicCaches} claimCaches={claimCaches} pipelineConfigJson={pipelineConfigJson} freeLlmKeys={freeLlmKeys} pipelineRuns={pipelineRuns} />
       </div>
@@ -919,7 +933,7 @@ const getVerdictClass = (verdict) => {
         <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem; margin-top: 0;">
           Seguimiento en tiempo real de las ejecuciones del cron, del radar de scrapers y del pipeline de inteligencia artificial.
         </p>
-        
+
         <div class="terminal-cyberpunk" style="border: 1px solid rgba(0, 255, 196, 0.3); border-radius: 12px; overflow: hidden; background: #070913; box-shadow: 0 0 15px rgba(0, 255, 196, 0.1);">
           <div class="terminal-header" style="display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 1.25rem; background: rgba(0, 255, 196, 0.03); border-bottom: 1px solid rgba(0, 255, 196, 0.2);">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -947,7 +961,7 @@ const getVerdictClass = (verdict) => {
                 <span style="font-size: 0.8rem;">Dossier: <strong>{art.topic_title || 'General'}</strong></span>
                 <span style="font-size: 0.8rem; color: var(--text-muted);">Publicado: {new Date(art.published_at || art.created_at).toLocaleDateString('es-ES')}</span>
               </div>
-              
+
               <div class="card-content">
                 <h3 class="article-title">{art.title}</h3>
                 <p class="article-subtitle">{art.subtitle}</p>
@@ -959,7 +973,7 @@ const getVerdictClass = (verdict) => {
                   <form method="POST" class="edit-form" style="margin-top: 1rem;">
                     <input type="hidden" name="action" value="edit_article" />
                     <input type="hidden" name="article_id" value={art.id} />
-                    
+
                     <div class="form-grid">
                       <div class="form-group">
                         <label>Título:</label>
@@ -1049,7 +1063,7 @@ const getVerdictClass = (verdict) => {
       <!-- PESTAÑA 5: EXPEDIENTES TEMÁTICOS (DOSSIERS) -->
       <div id="pane-temas" class="admin-tab-panel">
         <h2 class="section-title">📁 Gestión de Expedientes Temáticos (Dossiers)</h2>
-        
+
 
 
         <!-- Listado de temas -->
@@ -1062,13 +1076,13 @@ const getVerdictClass = (verdict) => {
                 <span style="font-size: 0.75rem; color: var(--text-muted);">Estado: {topic.status}</span>
               </div>
               <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin: 0.5rem 0;">{topic.description}</p>
-              
+
               <details class="accordion-edit">
                 <summary>✏️ Editar Expediente</summary>
                 <form method="POST" class="edit-form" style="margin-top: 1rem;">
                   <input type="hidden" name="action" value="edit_topic" />
                   <input type="hidden" name="topic_id" value={topic.id} />
-                  
+
                   <div class="form-grid">
                     <div class="form-group">
                       <label>Título:</label>
@@ -1120,11 +1134,11 @@ const getVerdictClass = (verdict) => {
       <!-- PESTAÑA 6: AUDITORÍA POLÍTICA -->
       <div id="pane-politica" class="admin-tab-panel">
         <h2 class="section-title"> Auditoría Política: Partidos, Propuestas y Bienes</h2>
-        
+
         <!-- Partidos -->
         <div class="cyber-card" style="padding: 1.5rem; margin-bottom: 2rem;">
           <h3 class="card-title"> Partidos Registrados ({allParties.length})</h3>
-          
+
 
 
           <div class="table-container">
@@ -1146,7 +1160,7 @@ const getVerdictClass = (verdict) => {
         <!-- Propuestas y Medidas -->
         <div class="cyber-card" style="padding: 1.5rem; margin-bottom: 2rem;">
           <h3 class="card-title"> Medidas de Programas Electorales ({allMeasures.length})</h3>
-          
+
 
 
           <div class="scroller-list" style="max-height: 250px; overflow-y: auto;">
@@ -1176,12 +1190,12 @@ const getVerdictClass = (verdict) => {
       <!-- PESTAÑA 7: RADAR & SCRAPERS -->
       <div id="pane-radar" class="admin-tab-panel">
         <h2 class="section-title"> Radar & Scrapers de Monitoreo</h2>
-        
+
         <div class="radar-split">
-          
+
           <!-- Columna Izquierda: Comprobador de URL y Cola del Radar -->
           <div class="radar-col">
-            
+
 
 
             <!-- Cola de radar items -->
@@ -1195,17 +1209,17 @@ const getVerdictClass = (verdict) => {
                       <span style="color: var(--neon-rose); font-weight: bold;">Viralidad: {item.virality_score}/10</span>
                     </div>
                     <p style="font-size: 0.8rem; line-height: 1.35; color: #fff; margin: 0;">"{item.detected_claim || item.text.substring(0, 90)}..."</p>
-                    
+
                     <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; border-top: 1px solid rgba(255,255,255,0.03); padding-top: 0.5rem; margin-top: 0.2rem;">
                       <a href={item.url} target="_blank" style="font-size: 0.7rem; color: var(--neon-blue); text-decoration: none;">Ver origen 🔗</a>
-                      
+
                       <div style="display: flex; gap: 0.35rem;">
                         <form method="POST" style="margin: 0;">
                           <input type="hidden" name="action" value="process_radar_item" />
                           <input type="hidden" name="item_id" value={item.id} />
                           <button type="submit" class="cyber-btn accent" style="padding: 0.2rem 0.5rem; font-size: 0.65rem; border-radius: 4px; cursor: pointer;">🤖 IA</button>
                         </form>
-                        
+
                         <form method="POST" style="margin: 0;">
                           <input type="hidden" name="action" value="discard_radar_item" />
                           <input type="hidden" name="item_id" value={item.id} />
@@ -1224,11 +1238,11 @@ const getVerdictClass = (verdict) => {
 
           <!-- Columna Derecha: Fuentes Registradas y Glosario del Radar -->
           <div class="radar-col">
-            
+
             <!-- Fuentes Registradas -->
             <div class="cyber-card" style="padding: 1.5rem;">
               <h3 class="card-title"> Fuentes de Monitorización</h3>
-              
+
 
 
               <div class="scroller-list" style="max-height: 200px;">
@@ -1252,7 +1266,7 @@ const getVerdictClass = (verdict) => {
             <!-- Glosario de Palabras Clave y Reglas de Negocio -->
             <div class="cyber-card" style="padding: 1.5rem; background: rgba(0, 240, 255, 0.01); border-color: rgba(0, 240, 255, 0.15);">
               <h3 class="card-title"> Reglas de Negocio y Clasificación</h3>
-              
+
               <div class="rule-block">
                 <strong>🕒 Temporalidad Estricta:</strong>
                 <ul>
@@ -1347,7 +1361,7 @@ const getVerdictClass = (verdict) => {
       padding: 2rem 1.5rem 5rem 1.5rem;
     }
   }
-  
+
   .admin-header {
     display: flex;
     justify-content: space-between;
@@ -1358,7 +1372,7 @@ const getVerdictClass = (verdict) => {
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 1.5rem;
   }
-  
+
   .header-main h1 {
     font-size: 2.2rem;
     margin: 0 0 0.35rem 0;
@@ -1370,7 +1384,7 @@ const getVerdictClass = (verdict) => {
     font-size: 0.9rem;
     margin: 0;
   }
-  
+
   .dashboard-kpis {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
@@ -1420,7 +1434,7 @@ const getVerdictClass = (verdict) => {
   .kpi-card.active .kpi-val {
     text-shadow: 0 0 8px currentColor;
   }
-  
+
   .kpi-val {
     font-size: 1.3rem;
     font-weight: 800;
@@ -1434,7 +1448,7 @@ const getVerdictClass = (verdict) => {
     text-transform: uppercase;
     margin-top: 0.15rem;
   }
-  
+
   /* Tabs Navigation */
   .admin-tabs-nav {
     display: flex;
@@ -1489,12 +1503,12 @@ const getVerdictClass = (verdict) => {
     display: block;
     animation: fadeIn 0.2s ease-out;
   }
-  
+
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(4px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  
+
   /* Dashboard specific styles */
   .dashboard-grid {
     display: grid;
@@ -1505,14 +1519,14 @@ const getVerdictClass = (verdict) => {
   @media(max-width: 768px) {
     .dashboard-grid { grid-template-columns: 1fr; }
   }
-  
+
   .console-actions {
     display: flex;
     gap: 0.75rem;
     flex-wrap: wrap;
   }
   .console-actions form { margin: 0; }
-  
+
   .info-list {
     display: flex;
     flex-direction: column;
@@ -1526,7 +1540,7 @@ const getVerdictClass = (verdict) => {
     border-bottom: 1px solid rgba(255,255,255,0.03);
     padding-bottom: 0.5rem;
   }
-  
+
   /* Terminal Styles */
   .terminal-cyberpunk {
     background: rgba(7, 9, 19, 0.98);
@@ -1592,7 +1606,7 @@ const getVerdictClass = (verdict) => {
   @media(max-width: 768px) {
     .form-grid, .form-grid-4 { grid-template-columns: 1fr; }
   }
-  
+
   .form-group {
     display: flex;
     flex-direction: column;
@@ -1605,7 +1619,7 @@ const getVerdictClass = (verdict) => {
     text-transform: uppercase;
     letter-spacing: 0.02em;
   }
-  
+
   .edit-input {
     background: var(--bg-dark);
     border: 1px solid var(--border-color);
@@ -1619,7 +1633,7 @@ const getVerdictClass = (verdict) => {
   .edit-input:focus {
     border-color: var(--neon-blue);
   }
-  
+
   /* Accordion styles */
   .accordion-edit {
     border-top: 1px dashed var(--border-color);
@@ -1649,7 +1663,7 @@ const getVerdictClass = (verdict) => {
     border-radius: 4px;
     font-size: 0.85rem;
   }
-  
+
   /* Radar specific split layout */
   .radar-split {
     display: grid;
@@ -1691,7 +1705,7 @@ const getVerdictClass = (verdict) => {
     border-radius: 50%;
     background: currentColor;
   }
-  
+
   /* Rules and Info */
   .rule-block {
     background: rgba(0,0,0,0.15);
@@ -1702,7 +1716,7 @@ const getVerdictClass = (verdict) => {
   }
   .rule-block strong { display: block; margin-bottom: 0.35rem; color: var(--text-main); }
   .rule-block ul { margin: 0; padding-left: 1.25rem; line-height: 1.4; color: var(--text-muted); }
-  
+
   .keywords-bag {
     display: flex;
     flex-wrap: wrap;
@@ -1716,7 +1730,7 @@ const getVerdictClass = (verdict) => {
     color: var(--text-muted);
     border: 1px solid rgba(255,255,255,0.05);
   }
-  
+
   .template-instructions {
     background: rgba(0, 240, 255, 0.02);
     border: 1px dashed rgba(0, 240, 255, 0.2);
@@ -1726,7 +1740,7 @@ const getVerdictClass = (verdict) => {
     margin-bottom: 1rem;
   }
   .template-instructions p { margin: 0.25rem 0 0 0; color: var(--text-muted); }
-  
+
   .section-title {
     font-size: 1.4rem;
     font-family: var(--font-title);
@@ -1749,7 +1763,7 @@ const getVerdictClass = (verdict) => {
     margin: 1.5rem 0 0.75rem 0;
     letter-spacing: 0.05em;
   }
-  
+
   .empty-state {
     color: var(--text-muted);
     font-size: 0.85rem;
@@ -1768,12 +1782,12 @@ const getVerdictClass = (verdict) => {
     const kpiCards = document.querySelectorAll('.kpi-card');
 
     let logInterval = null;
-  
+
     function startLiveLogPolling() {
-      const cleanBase = window.location.pathname.includes('/pro/newnews') ? '/pro/newnews' : '';
+      const cleanBase = window.location.pathname.includes('/pro/matiza') ? '/pro/matiza' : '';
       const termBody = document.getElementById('live-terminal-body');
       if (!termBody) return;
-      
+
       function renderLogs(logs) {
         const isAtBottom = termBody.scrollHeight - termBody.clientHeight <= termBody.scrollTop + 50;
         termBody.innerHTML = '';
@@ -1781,7 +1795,7 @@ const getVerdictClass = (verdict) => {
           const row = document.createElement('div');
           row.style.wordBreak = 'break-all';
           row.style.marginBottom = '0.2rem';
-          
+
           if (line.includes('[ERROR]')) {
             row.style.color = '#ff3366';
           } else if (line.includes('[WARN]')) {
@@ -1793,11 +1807,11 @@ const getVerdictClass = (verdict) => {
           } else {
             row.style.color = '#a9b2c3';
           }
-          
+
           row.innerText = line;
           termBody.appendChild(row);
         });
-        
+
         if (isAtBottom) {
           termBody.scrollTop = termBody.scrollHeight;
         }
@@ -1807,7 +1821,7 @@ const getVerdictClass = (verdict) => {
         try {
           let response = await fetch(`${cleanBase}/api/admin/pipeline-logs/`);
           if (!response.ok && !cleanBase) {
-            const alternativeResponse = await fetch(`/pro/newnews/api/admin/pipeline-logs/`);
+            const alternativeResponse = await fetch(`/pro/matiza/api/admin/pipeline-logs/`);
             if (alternativeResponse.ok) {
               response = alternativeResponse;
             }
@@ -1821,12 +1835,12 @@ const getVerdictClass = (verdict) => {
           console.error('Error fetching pipeline logs:', err);
         }
       }
-      
+
       fetchLogs();
       if (logInterval) clearInterval(logInterval);
       logInterval = setInterval(fetchLogs, 2500);
     }
-    
+
     function stopLiveLogPolling() {
       if (logInterval) {
         clearInterval(logInterval);
@@ -1852,14 +1866,14 @@ const getVerdictClass = (verdict) => {
           panel.classList.remove('active');
         }
       });
-      
+
       // Iniciar o detener polling de logs continuos
       if (targetId === 'pane-terminal-logs') {
         startLiveLogPolling();
       } else {
         stopLiveLogPolling();
       }
-      
+
       // Actualizar parámetro en la URL sin recargar para persistencia
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.set('tab', targetId.replace('pane-', ''));
@@ -1919,7 +1933,7 @@ const getVerdictClass = (verdict) => {
       if (prevSubtitle && inpSubtitle) prevSubtitle.innerText = inpSubtitle.value || '[Subtítulo explicativo del análisis]';
       if (prevEmbedClaim && inpClaim) prevEmbedClaim.innerText = inpClaim.value ? '"' + inpClaim.value + '"' : '"[Texto de la afirmación viral]"';
       if (prevEmbedPlatform && inpPlatform) prevEmbedPlatform.innerText = inpPlatform.value || 'Red Social';
-      
+
       if (prevDetailTrue && inpTrue) prevDetailTrue.innerText = inpTrue.value || '[Escribe datos que sean correctos]';
       if (prevDetailFalse && inpFalse) prevDetailFalse.innerText = inpFalse.value || '[Escribe datos falsificados desmentidos]';
       if (prevDetailLacks && inpLacks) prevDetailLacks.innerText = inpLacks.value || '[Contexto legal omitido]';
@@ -1929,7 +1943,7 @@ const getVerdictClass = (verdict) => {
         const val = inpVerdict.value;
         prevVerdictBadge.innerText = val;
         prevVerdictBadge.className = 'verdict-badge ' + val.toLowerCase().replace(' ', '-');
-        
+
         // Quitar clases previas del box
         prevVerdictBox.className = 'cyber-card';
         if (val === 'Falso') {
@@ -1964,12 +1978,12 @@ const getVerdictClass = (verdict) => {
   function triggerBuild() {
     const box = document.getElementById('build-status-box');
     const btn = document.getElementById('build-btn');
-    
+
     if (box && btn) {
       box.style.display = 'block';
       btn.innerText = 'Compilando...';
       btn.disabled = true;
-      
+
       // Simular retraso de build
       setTimeout(() => {
         btn.innerText = '¡Compilado! ✓';
@@ -1986,21 +2000,21 @@ const getVerdictClass = (verdict) => {
     const terminal = document.getElementById('admin-terminal-body');
     const termTitle = document.getElementById('terminal-job-title');
     const termStatus = document.getElementById('terminal-status');
-    
+
     if (!terminal || !termTitle || !termStatus) return;
-    
-    const cleanBase = window.location.pathname.includes('/pro/newnews') ? '/pro/newnews' : '';
-    
+
+    const cleanBase = window.location.pathname.includes('/pro/matiza') ? '/pro/matiza' : '';
+
     // Bloquear todos los botones de la consola para evitar solapamientos
     const allButtons = document.querySelectorAll('button.cyber-btn');
     allButtons.forEach(btn => { if (btn) btn.disabled = true; });
-    
-    termTitle.innerText = `TERMINAL@NEWNEWS:~$ running ${jobName.toUpperCase()}...`;
+
+    termTitle.innerText = `TERMINAL@MATIZA:~$ running ${jobName.toUpperCase()}...`;
     termStatus.innerText = 'EJECUTANDO';
     termStatus.style.color = 'var(--neon-amber)';
-    
+
     terminal.innerHTML = '<div style="color: var(--neon-blue);">> Conectando con el motor de la VPS y preparando flujo...</div>';
-    
+
     try {
       let response = await fetch(`${cleanBase}/api/run-job/`, {
         method: 'POST',
@@ -2009,10 +2023,10 @@ const getVerdictClass = (verdict) => {
         },
         body: JSON.stringify({ job: jobName })
       });
-      
+
       // Fallback si no hereda base path
       if (!response.ok && !cleanBase) {
-        const altResponse = await fetch(`/pro/newnews/api/run-job/`, {
+        const altResponse = await fetch(`/pro/matiza/api/run-job/`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -2023,31 +2037,31 @@ const getVerdictClass = (verdict) => {
           response = altResponse;
         }
       }
-      
+
       if (!response.body) {
         terminal.innerHTML += '<div style="color: var(--neon-rose);">> Error: El servidor no devolvió un flujo de datos.</div>';
         return;
       }
-      
+
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
-      
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        
+
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
         buffer = lines.pop();
-        
+
         for (const line of lines) {
           if (line.trim()) {
             try {
               const data = JSON.parse(line);
               const row = document.createElement('div');
               row.style.wordBreak = 'break-all';
-              
+
               if (data.status === 'success') {
                 row.style.color = '#00ffc4'; // neon green
                 termStatus.innerText = 'ÉXITO';
@@ -2061,7 +2075,7 @@ const getVerdictClass = (verdict) => {
               } else {
                 row.style.color = '#a9b2c3';
               }
-              
+
               row.innerText = `> ${data.message}`;
               terminal.appendChild(row);
               terminal.scrollTop = terminal.scrollHeight;

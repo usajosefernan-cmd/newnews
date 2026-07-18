@@ -1,0 +1,116 @@
+[
+  {
+    "topic_id": "t-fiscalidad-autonomos-clase-media",
+    "slug": "fiscalidad-autonomos-clase-media",
+    "title": "Fiscalidad, autónomos y presión sobre la clase media",
+    "public_concern_summary": "La suma del discurso de Jose Elías sobre la dificultad de emprender por burocracia, impuestos y vivienda, el bulo viral del 70% de impuestos fijos para autónomos, las quejas públicas de figuras como Sonsoles Ónega y el claim sobre España como quinto peor sistema fiscal de la OCDE ha elevado la percepción de asfixia tributaria. El colectivo de autónomos (3,3M) vive con ansiedad el sistema de tramos por rendimientos netos y la ciudadanía generalizada cree que el sistema es confiscatorio.",
+    "why_it_matters": "Impacto directo en la viabilidad de pequeños negocios, la capacidad de ahorro, la decisión de emprender y la competitividad del país. Los errores en la comunicación fiscal alimentan la desconfianza en las instituciones y la creencia en bulos de alta viralidad.",
+    "main_confusions": [
+      "El bulo viral del 70% de impuestos fijos obligatorios para autónomos desde la primera cuota.",
+      "La diferencia entre la subida del SMI y la caída real del poder adquisitivo y la contratación.",
+      "La interpretación del ranking de la OCDE: ¿España tiene el quinto peor sistema fiscal?"
+    ],
+    "source_map_status": "BOE (Ley de autónomos y tramos fiscales), INE (IPC oficial 3,2% en junio 2026), OCDE (reportes de competitividad fiscal), Hacienda (tablas de tramos IRPF/autónomos), ministerios de Economía y Hacienda.",
+    "priority_score": 9.0,
+    "social_heat_score": 8.5,
+    "risk_score": 7.5,
+    "evergreen_score": 8.0,
+    "needs_new_vertical": false,
+    "merge_with_existing_topic": "t-autonomos"
+  },
+  {
+    "topic_id": "t-migracion-delincuencia-mena",
+    "slug": "migracion-delincuencia-mena",
+    "title": "Inmigración, menores tutelados (MENA) y seguridad ciudadana",
+    "public_concern_summary": "La viralización de un vídeo de seguridad sobre un menor marroquí reincidente que presuntamente agrede a ancianos en Madrid y la tensión en municipios como Torre Pacheco un año después de los disturbios reactivan el debate sobre la protección de menores, la gestión autonómica y la convivencia. El riesgo es la generalización xenófoba frente a casos puntuales.",
+    "why_it_matters": "Afecta a la convivencia vecinal, la gestión de menores tutelados, la seguridad ciudadana y el riesgo de estigmatización de colectivos migratorios. El clima de miedo en pueblos pequeños puede derivar en violencia y el debate político instrumentaliza casos aislados.",
+    "main_confusions": [
+      "Generalizar la delincuencia de un menor a todo el colectivo de MENAS.",
+      "Confundir la derogación de la doctrina Parot con la situación actual de delincuencia migratoria.",
+      "La relación real entre ayudas sociales a extranjeros y delincuencia juvenil."
+    ],
+    "source_map_status": "Ministerio del Interior (estadísticas de criminalidad), Fiscalía de Menores, BOE (reforma Ley de Extranjería art. 35 sobre menores), delegaciones de Gobierno, informes de seguridad municipal.",
+    "priority_score": 8.0,
+    "social_heat_score": 6.5,
+    "risk_score": 8.5,
+    "evergreen_score": 7.5,
+    "needs_new_vertical": false,
+    "merge_with_existing_topic": "t-migracion"
+  },
+  {
+    "topic_id": "t-vivienda-acceso-y-ocupacion",
+    "slug": "vivienda-acceso-y-ocupacion",
+    "title": "Vivienda, alquiler, okupación y acceso a la propiedad",
+    "public_concern_summary": "El precio disparado de la vivienda, las ayudas como los 10.000 euros para menores de 40 años en Baleares, la Ley 12/2023 de Vivienda y casos extremos de propietarios atrapados por inquilinos okupas se han convertido en un eje central del malestar social. Se suma la percepción de que las políticas públicas no resuelven el problema de acceso para jóvenes.",
+    "why_it_matters": "Impacto directo en el proyecto de vida de jóvenes, derechos de propiedad, estabilidad familiar y riesgo de burbuja inmobiliaria. La regulación del alquiler, la okupación y las ayudas públicas son factores de tensión electoral y social.",
+    "main_confusions": [
+      "Efecto real de la Ley de Vivienda en zonas tensionadas vs mercados libres.",
+      "Diferenciar entre okupación pacífica de viviendas vacías y usurpación con delito.",
+      "El papel del alquiler turístico en la reducción de oferta residencial."
+    ],
+    "source_map_status": "BOE (Ley 12/2023 de Vivienda, Ley de Propiedad Horizontal art. 7.2), INE (precios de alquiler y compraventa), Ministerio de Vivienda, informes judiciales sobre desahucios y okupación.",
+    "priority_score": 8.0,
+    "social_heat_score": 6.0,
+    "risk_score": 6.5,
+    "evergreen_score": 9.0,
+    "needs_new_vertical": false,
+    "merge_with_existing_topic": "t-ley-de-vivienda-alquileres"
+  },
+  {
+    "topic_id": "t-corrupcion-institucional-entorno-gobierno",
+    "slug": "corrupcion-institucional-entorno-gobierno",
+    "title": "Corrupción institucional y nepotismo en el entorno del presidente",
+    "public_concern_summary": "La condena e inhabilitación de David Sánchez, la investigación judicial en curso contra Begoña Gómez, el encausamiento del número dos de la Fiscalía por reuniones con la cloaca del PSOE y denuncias como el supuesto cargo creado para el hermano del presidente alimentan una narrativa de domino de corrupción. La cobertura mediática y las campañas en redes amplifican la percepción de impunidad.",
+    "why_it_matters": "La percepción de impunidad y uso privado de recursos públicos daña la legitimidad democrática, alimenta el escepticismo hacia la justicia y refuerza narrativas de descrédito institucional que son explotadas por la desinformación.",
+    "main_confusions": [
+      "Diferenciar entre fase de instrucción y sentencia firme en casos judiciales mediáticos.",
+      "El papel real del fiscal general y su número dos en las reuniones con ex policías (cloaca).",
+      "La distinción entre investigación judicial por corrupción y linchamiento político sin pruebas."
+    ],
+    "source_map_status": "Audiencia Nacional, Tribunal Supremo, Consejo General del Poder Judicial, Fiscalía General del Estado, BOE (normativa sobre incompatibilidades y malversación), fuentes judiciales oficiales.",
+    "priority_score": 8.5,
+    "social_heat_score": 6.5,
+    "risk_score": 6.0,
+    "evergreen_score": 7.0,
+    "needs_new_vertical": false,
+    "merge_with_existing_topic": "t-corrupcion-entorno-sanchez"
+  },
+  {
+    "topic_id": "t-inflacion-coste-de-vida",
+    "slug": "inflacion-coste-de-vida",
+    "title": "Inflación y coste de la vida",
+    "public_concern_summary": "El IPC se mantuvo en junio en el 3,2% con inflación subyacente moderada al 2,9%, pero persiste una amplia brecha entre los índices oficiales y la experiencia real de los ciudadanos en alimentos, energía y servicios básicos. Esta desconfianza en el INE se combina con sensación de estancamiento salarial y precariedad laboral.",
+    "why_it_matters": "La credibilidad de las fuentes oficiales determina la gobernanza económica. Si los ciudadanos creen que los índices oficiales no recogen su realidad, aumentan el escepticismo hacia cualquier política económica posterior.",
+    "main_confusions": [
+      "Diferencia entre IPC, inflación subyacente y cesta de la compra doméstica.",
+      "Factores estructurales versus coyunturales en alimentos y energía.",
+      "Relación entre maquillaje estadístico y metodología oficial del INE."
+    ],
+    "source_map_status": "Requiere INE, Ministerio de Economía, Banco de España, Eurostat e informes de consumo/consumidores.",
+    "priority_score": 8.0,
+    "social_heat_score": 7.0,
+    "risk_score": 6.0,
+    "evergreen_score": 8.0,
+    "needs_new_vertical": false,
+    "merge_with_existing_topic": "t-inflacion"
+  },
+  {
+    "topic_id": "t-percepcion-declive-narrativa-oficial",
+    "slug": "percepcion-declive-narrativa-oficial",
+    "title": "Brecha entre narrativa oficial y percepción ciudadana de declive",
+    "public_concern_summary": "La confluencia de inflación real, precariedad laboral, presión fiscal, escándalos de corrupción en el entorno presidencial y sensación de impunidad genera una narrativa de España va mal que se separa de los datos oficiales. El malestar actúa como meta-narrativa transversal que aglutina múltiples frustraciones sectoriales y alimenta el rechazo institucional.",
+    "why_it_matters": "Esta grieta entre percepción y datos oficiales erosiona la legitimidad de las fuentes estadísticas y alimenta la polarización política, generando un caldo de cultivo para bulos y extremismo.",
+    "main_confusions": [
+      "La discrepancia entre el IPC oficial (3,2%) y la experiencia real de precios.",
+      "La relación entre maquillaje estadístico del paro y realidad del empleo precario.",
+      "La instrumentalización política de la percepción de crisis por parte de bloques opuestos."
+    ],
+    "source_map_status": "INE (IPC, EPA, paro registrado), OCDE (empleo, competitividad fiscal), Eurostat, CIS (barómetros de confianza institucional), Ministerio de Economía.",
+    "priority_score": 8.5,
+    "social_heat_score": 7.5,
+    "risk_score": 7.0,
+    "evergreen_score": 8.5,
+    "needs_new_vertical": false,
+    "merge_with_existing_topic": "t-percepcion-estado-nacion"
+  }
+]

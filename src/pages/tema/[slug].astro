@@ -7,7 +7,7 @@ import { topicDidacticData } from '../../data/topicDidacticData.js';
 
 const { slug } = Astro.params;
 
-const dbPath = process.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || path.resolve('data/matiza.db');
 const db = new DatabaseSync(dbPath);
 
 // Cargar información del tema y su sección
@@ -1252,7 +1252,7 @@ const getLink = (p) => {
                     {art.emoji_tag || ' Falta contexto'}
                   </span>
                   <span style="font-family: monospace; color: var(--neon-amber); font-weight: 700; font-size: 0.7rem;">
-                     {art.newnews_score || 50}%
+                     {art.matiza_score || 50}%
                   </span>
                 </div>
                 <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 500;">

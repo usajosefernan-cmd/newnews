@@ -6,7 +6,7 @@ import path from 'node:path';
 
 const { slug } = Astro.params;
 
-const dbPath = process.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || process.env.MATIZA_DB_PATH || process.env.MATIZA_DB_PATH || path.resolve('data/matiza.db');
 const db = new DatabaseSync(dbPath);
 
 // Buscar el tag oficial
@@ -47,7 +47,7 @@ const getLink = (p) => {
 
 <Layout title={`Etiqueta: #${tagName}`} description={`Artículos y desmentidos clasificados bajo el tag #${tagName}.`}>
   <div class="container" style="padding-top: 1.5rem; padding-bottom: 5rem; max-width: 680px;">
-    
+
     <!-- Breadcrumbs -->
     <div style="margin-bottom: 2rem;">
       <div style="margin-bottom: 0.5rem; font-size: 0.75rem; color: var(--text-muted); font-weight: 600; font-family: var(--font-title);">
@@ -74,7 +74,7 @@ const getLink = (p) => {
               <span class={`verdict-badge ${art.verdict.toLowerCase().replace(' ', '-')}`} style="font-size: 0.65rem; padding: 0.15rem 0.4rem;">
                 {art.verdict}
               </span>
-              <a 
+              <a
                 href={getLink(`/categoria/${art.category.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')}`)}
                 style="font-size: 0.7rem; font-weight: bold; color: var(--text-muted); text-decoration: none; text-transform: uppercase;"
               >

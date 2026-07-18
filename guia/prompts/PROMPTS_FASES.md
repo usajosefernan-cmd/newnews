@@ -7,7 +7,7 @@ Usa estos prompts después de que Antigravity complete y tú apruebes la fase an
 ```text
 Lee guia/04_FASE_1_ESTRUCTURA_SEGURA.md.
 Ejecuta SOLO la Fase 1.
-Crea estructura segura aislada para NewNews Engine.
+Crea estructura segura aislada para Matiza Engine.
 No conectes nada a la web.
 No actives crons.
 No llames IA real.
@@ -148,12 +148,12 @@ STOP.
 ```
 
 
-# FASES NEWNEWS LIVE AGENTIC
+# FASES MATIZA LIVE AGENTIC
 
 ## Fase 13
 
 ```text
-Lee guia/19_MASTER_NEWNEWS_LIVE_AGENTIC.md y guia/20_FASE_13_LIVE_TEXTO_EVENTOS.md.
+Lee guia/19_MASTER_MATIZA_LIVE_AGENTIC.md y guia/20_FASE_13_LIVE_TEXTO_EVENTOS.md.
 Ejecuta SOLO la Fase 13.
 Implementa texto, sesiones y eventos. Sin audio real.
 LIVE_ENABLED=false.

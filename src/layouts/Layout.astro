@@ -4,13 +4,13 @@ import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 
 const { 
-  title, 
-  description = "NEWNEWS - Web de noticias, desmentidos y contrastación con fuentes oficiales de España.",
+  title = "MATIZA — Contexto para decidir", 
+  description = "Analiza noticias, vídeos y conversaciones. MATIZA detecta afirmaciones, compara fuentes y te ayuda a entender qué sabemos, qué falta y qué conviene preguntar.",
   category,
   activeNav = ''
 } = Astro.props;
 
-const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
+const dbPath = process.env.MATIZA_DB_PATH || process.env.SQLITE_DB_PATH || process.env.NEWNEWS_DB_PATH || path.resolve('data/matiza.db');
 const db = new DatabaseSync(dbPath);
 db.exec('PRAGMA busy_timeout = 5000;');
 db.exec('PRAGMA journal_mode = WAL;');
@@ -53,13 +53,13 @@ const getLink = (p) => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href={getLink('/favicon.svg')} />
     <meta name="generator" content={Astro.generator} />
-    <title>{title} | NEWNEWS</title>
+    <title>{title === "MATIZA — Contexto para decidir" ? title : `${title} | MATIZA`}</title>
     <meta name="description" content={description} />
-    <meta property="og:title" content={`${title} | NEWNEWS`} />
+    <meta property="og:title" content={title === "MATIZA — Contexto para decidir" ? "MATIZA | Entiende lo que te están contando." : `${title} | MATIZA`} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={`${title} | NEWNEWS`} />
+    <meta name="twitter:title" content={title === "MATIZA — Contexto para decidir" ? "MATIZA | Entiende lo que te están contando." : `${title} | MATIZA`} />
     <meta name="twitter:description" content={description} />
   </head>
   <body>
@@ -69,8 +69,8 @@ const getLink = (p) => {
         
         <!-- Logo -->
         <a href={getLink('/')} style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
-          <span style="font-family: var(--font-title); font-weight: 900; font-size: 1.55rem; letter-spacing: -0.04em; color: #ffffff;">
-            NEW<span style="color: var(--neon-blue);">NEWS</span>
+          <span style="font-family: var(--font-title); font-weight: 900; font-size: 1.55rem; letter-spacing: -0.04em; color: #ffffff; text-transform: uppercase;">
+            MATIZA
           </span>
         </a>
 
@@ -154,8 +154,8 @@ const getLink = (p) => {
     <div class="drawer-overlay" id="drawer-overlay"></div>
     <div class="drawer-panel" id="drawer-panel">
       <div class="drawer-header">
-        <span style="font-family: var(--font-title); font-weight: 800; font-size: 1.2rem;">
-          NEW<span style="color: var(--neon-blue);">NEWS</span>
+        <span style="font-family: var(--font-title); font-weight: 800; font-size: 1.2rem; text-transform: uppercase; color: #ffffff;">
+          MATIZA
         </span>
         <button class="drawer-close" id="drawer-close-btn" aria-label="Cerrar menú">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -275,32 +275,50 @@ const getLink = (p) => {
     </main>
 
     <!-- FOOTER PREMIUM AMPLIADO -->
-    <footer style="border-top: 1px solid var(--border-color); background: rgba(7, 9, 19, 0.8); backdrop-filter: blur(12px); padding: 4rem 0; font-size: 0.85rem; color: var(--text-muted);">
-      <div class="container" style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 4rem; max-width: 1000px;">
+    <footer style="border-top: 1px solid var(--border-color); background: rgba(7, 9, 19, 0.85); backdrop-filter: blur(20px); padding: 4rem 0 3rem 0; font-size: 0.8rem; color: var(--text-muted);">
+      <div class="container" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 2.5rem; max-width: 1000px;">
         
         <div>
-          <h3 style="color: var(--text-main); font-size: 1.25rem; margin-bottom: 0.75rem; letter-spacing: -0.03em;">NEW<span style="color: var(--neon-blue);">NEWS</span></h3>
-          <p style="margin-bottom: 1.5rem; max-width: 400px; font-size: 0.9rem; line-height: 1.5;">
-            Iniciativa neutral para analizar bulos virales, contrastar promesas políticas y explicar la actualidad de España con datos oficiales.
+          <h3 style="color: var(--text-main); font-size: 1.25rem; margin-bottom: 0.75rem; letter-spacing: -0.03em; text-transform: uppercase; font-family: var(--font-title); font-weight: 900;">
+            MATIZA
+          </h3>
+          <p style="margin-bottom: 1.25rem; font-size: 0.85rem; font-weight: 700; color: #ffffff; line-height: 1.4;">
+            Contexto para decidir.
           </p>
-          <p style="font-size: 0.8rem;">© {new Date().getFullYear()} NEWNEWS.</p>
+          <p style="font-size: 0.72rem; line-height: 1.45; margin-bottom: 1.5rem; max-width: 320px; color: var(--text-muted);">
+            MATIZA utiliza inteligencia artificial y fuentes externas para ayudar a analizar información. Sus resultados pueden contener errores y no sustituyen asesoramiento profesional, jurídico, médico o financiero.
+          </p>
+          <p style="font-size: 0.7rem; color: var(--text-muted);">© {new Date().getFullYear()} Matiza Labs. Todos los derechos reservados.</p>
         </div>
 
         <div>
-          <h4 style="color: var(--text-main); font-size: 1rem; margin-bottom: 1rem; font-family: var(--font-title);">Metodología</h4>
-          <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem;" class="footer-links">
-            <li><a href={getLink('/temas')}>Expedientes Vivos</a></li>
-            <li><a href={getLink('/programas-politicos')}>Programas Electorales</a></li>
-            <li><a href={getLink('/comparador-politico')}>Comparador de Hechos</a></li>
+          <h4 style="color: var(--text-main); font-size: 0.85rem; margin-bottom: 1rem; font-family: var(--font-title); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">Plataforma</h4>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.6rem; padding: 0;" class="footer-links">
+            <li><a href={getLink('/')}>Radar</a></li>
+            <li><a href={getLink('/#live')}>Live</a></li>
+            <li><a href={getLink('/temas')}>Explora</a></li>
+            <li><a href={getLink('/pro')}>MATIZA Pro</a></li>
           </ul>
         </div>
 
         <div>
-          <h4 style="color: var(--text-main); font-size: 1rem; margin-bottom: 1rem; font-family: var(--font-title);">Fuentes Oficiales</h4>
-          <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem;">
-            <li><a href="https://www.ine.es" target="_blank" rel="noopener noreferrer">INE (Estadísticas)</a></li>
-            <li><a href="https://www.boe.es" target="_blank" rel="noopener noreferrer">BOE (Leyes y Normas)</a></li>
-            <li><a href="https://www.congreso.es" target="_blank" rel="noopener noreferrer">Congreso de los Diputados</a></li>
+          <h4 style="color: var(--text-main); font-size: 0.85rem; margin-bottom: 1rem; font-family: var(--font-title); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">Especiales</h4>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.6rem; padding: 0;" class="footer-links">
+            <li><a href={getLink('/comparador-politico')}>Política</a></li>
+            <li><a href={getLink('/justicia')}>Justicia</a></li>
+            <li><a href={getLink('/consumo')}>Consumo</a></li>
+            <li><a href={getLink('/metodologia')}>Metodología</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style="color: var(--text-main); font-size: 0.85rem; margin-bottom: 1rem; font-family: var(--font-title); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">Transparencia y Legal</h4>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.6rem; padding: 0;" class="footer-links">
+            <li><a href={getLink('/fuentes')}>Fuentes</a></li>
+            <li><a href={getLink('/correcciones')}>Correcciones</a></li>
+            <li><a href={getLink('/privacidad')}>Privacidad</a></li>
+            <li><a href={getLink('/terminos')}>Términos</a></li>
+            <li><a href={getLink('/contacto')}>Contacto</a></li>
           </ul>
         </div>
 

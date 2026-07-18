@@ -12,7 +12,7 @@ interface Props {
 
 const { title, activeTab, message, messageType } = Astro.props;
 
-const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/matiza.db');
 const db = new DatabaseSync(dbPath);
 db.exec('PRAGMA busy_timeout = 5000;');
 
@@ -25,7 +25,7 @@ const userSubCount = db.prepare("SELECT COUNT(*) as c FROM user_submissions WHER
 
 db.close();
 
-const baseRoute = Astro.url.pathname.includes('/pro/newnews') ? '/pro/newnews' : '';
+const baseRoute = Astro.url.pathname.includes('/pro/matiza') ? '/pro/matiza' : '';
 const cleanBase = baseRoute;
 ---
 
@@ -77,7 +77,7 @@ const cleanBase = baseRoute;
       <a href={`${cleanBase}/admin/dashboard`} class={`admin-tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`}> Dashboard</a>
       <a href={`${cleanBase}/admin/aprobacion`} class={`admin-tab-btn ${activeTab === 'aprobacion' ? 'active' : ''}`}> Cola Moderación ({draftsCount.c})</a>
       <a href={`${cleanBase}/admin/triage`} class={`admin-tab-btn ${activeTab === 'triage' ? 'active' : ''}`}>📩 Triage Usuarios ({userSubCount.c})</a>
-      <a href={`${cleanBase}/admin/motor`} class={`admin-tab-btn ${activeTab === 'motor' ? 'active' : ''}`}> Motor NEWNEWS</a>
+      <a href={`${cleanBase}/admin/motor`} class={`admin-tab-btn ${activeTab === 'motor' ? 'active' : ''}`}> Motor MATIZA</a>
       <a href={`${cleanBase}/admin/redactor`} class={`admin-tab-btn ${activeTab === 'redactor' ? 'active' : ''}`}>✍️ Plantilla Redactor</a>
       <a href={`${cleanBase}/admin/publicados`} class={`admin-tab-btn ${activeTab === 'publicados' ? 'active' : ''}`}>📰 Publicados ({publishedCount.c})</a>
       <a href={`${cleanBase}/admin/expedientes`} class={`admin-tab-btn ${activeTab === 'expedientes' ? 'active' : ''}`}>📁 Expedientes</a>

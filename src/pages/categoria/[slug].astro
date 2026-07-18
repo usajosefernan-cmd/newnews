@@ -4,7 +4,7 @@ import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 
 export async function getStaticPaths() {
-  const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
+  const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/matiza.db');
   const db = new DatabaseSync(dbPath);
   db.exec('PRAGMA journal_mode = WAL;');
   const rawArticles = db.prepare("SELECT category FROM articles WHERE status = 'publicado'").all() as any[];
@@ -28,7 +28,7 @@ export async function getStaticPaths() {
 const { slug } = Astro.params;
 const { categoryName } = Astro.props;
 
-const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/matiza.db');
 const db = new DatabaseSync(dbPath);
 db.exec('PRAGMA journal_mode = WAL;');
 
@@ -145,7 +145,7 @@ const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
     <!-- Cabecera Premium -->
     <div style="margin-bottom: 2rem; border-bottom: 2px solid var(--border-color); padding-bottom: 1.5rem;">
       <div style="margin-bottom: 0.5rem; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
-        <a href={`${cleanBase}/`} style="text-decoration: none; color: var(--text-muted);">NEWNEWS</a> / <a href={`${cleanBase}/temas`} style="text-decoration: none; color: var(--text-muted);">Verticales</a> / <span style="color: var(--neon-blue);">{categoryName}</span>
+        <a href={`${cleanBase}/`} style="text-decoration: none; color: var(--text-muted);">MATIZA</a> / <a href={`${cleanBase}/temas`} style="text-decoration: none; color: var(--text-muted);">Verticales</a> / <span style="color: var(--neon-blue);">{categoryName}</span>
       </div>
       <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
         <span style="font-size: 2.2rem;"></span>

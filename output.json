@@ -1,0 +1,19 @@
+{
+  "source_strategy": {
+    "required_source_types": ["Legislativa / BOE", "Datos de Seguridad Social / Agencia Tributaria"],
+    "preferred_authority_level": "Máxima",
+    "minimum_sources": 2,
+    "needs_original_source": true,
+    "needs_context_source": true,
+    "needs_counter_source": true,
+    "manual_check_required": true
+  },
+  "search_queries": [
+    "cuotas autónomos España ley",
+    "IRPF autónomos porcentajes",
+    "Boletín Oficial del Estado autónomos seguridad social",
+    "fiscalidad autónomos España 70%"
+  ],
+  "reuse_from_cache": false,
+  "reason": "Para verificar o desmentir de forma irrebatible un claim sobre impuestos fijos y porcentajes para autónomos, es imprescindible acudir a las fuentes legislativas primarias (BOE) que establecen las obligaciones, así como a los organismos oficiales (Seguridad Social, Agencia Tributaria) que publican las cuotas y tramos impositivos aplicables. Esto asegura la máxima autoridad y precisión."
+}

@@ -7,7 +7,7 @@ import path from 'node:path';
 
 const { slug } = Astro.params;
 
-const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || process.env.MATIZA_DB_PATH || process.env.MATIZA_DB_PATH || path.resolve('data/matiza.db');
 const db = new DatabaseSync(dbPath);
 db.exec('PRAGMA busy_timeout = 5000;');
 db.exec('PRAGMA journal_mode = WAL;');
@@ -29,12 +29,12 @@ if (!article) {
 let articleTopics = [] as any[];
 if (article) {
   articleTopics = db.prepare(`
-    SELECT t.title, t.slug 
+    SELECT t.title, t.slug
     FROM article_topics at
     JOIN topics t ON at.topic_id = t.id
     WHERE at.article_id = ? AND t.status = 'activo'
   `).all(article.id) as any[];
-  
+
   if (articleTopics.length === 0 && article.topic_title) {
     articleTopics.push({ title: article.topic_title, slug: article.topic_slug });
   }
@@ -48,7 +48,7 @@ const socialPosts = article ? db.prepare("SELECT * FROM social_posts WHERE artic
 
 // Cargar tags reales asociados
 const tags = article ? db.prepare(`
-  SELECT t.name, t.slug 
+  SELECT t.name, t.slug
   FROM tags t
   JOIN article_tags at ON t.id = at.tag_id
   WHERE at.article_id = ?
@@ -56,17 +56,17 @@ const tags = article ? db.prepare(`
 
 // Cargar artículos relacionados (mismo tema)
 const relatedSameTopic = db.prepare(`
-  SELECT * FROM articles 
-  WHERE topic_id = ? AND id != ? AND status = 'publicado' 
-  ORDER BY published_at DESC 
+  SELECT * FROM articles
+  WHERE topic_id = ? AND id != ? AND status = 'publicado'
+  ORDER BY published_at DESC
   LIMIT 2
 `).all(article.topic_id, article.id) as any[];
 
 // Cargar artículos relacionados (otros temas)
 const relatedOtherTopics = db.prepare(`
-  SELECT * FROM articles 
-  WHERE topic_id != ? AND status = 'publicado' 
-  ORDER BY published_at DESC 
+  SELECT * FROM articles
+  WHERE topic_id != ? AND status = 'publicado'
+  ORDER BY published_at DESC
   LIMIT 2
 `).all(article.topic_id) as any[];
 
@@ -109,12 +109,21 @@ if (scrapedItem && scrapedItem.metrics_json) {
 }
 
 const getVerdictClass = (verdict) => {
-  const v = verdict.toLowerCase();
+  const v = (verdict || '').toLowerCase();
   if (v.includes('verdadero')) return 'green';
   if (v.includes('falso')) return 'rose';
   if (v.includes('engañoso') || v.includes('contexto')) return 'amber';
   return 'purple';
 };
+
+const verdictClass = getVerdictClass(article.verdict);
+const bannerColors = {
+  green: { bg: 'rgba(0, 245, 160, 0.15)', border: 'var(--neon-green)' },
+  rose: { bg: 'rgba(220, 39, 67, 0.15)', border: 'var(--neon-rose)' },
+  amber: { bg: 'rgba(255, 183, 3, 0.15)', border: 'var(--neon-amber)' },
+  purple: { bg: 'rgba(157, 78, 221, 0.15)', border: 'var(--neon-purple)' }
+};
+const bannerColor = bannerColors[verdictClass] || bannerColors.purple;
 
 function getRelativeTime(dateString) {
   if (!dateString) return 'hace un momento';
@@ -136,9 +145,9 @@ function formatOriginalDate(dateString) {
   if (!dateString) return 'Reciente';
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return dateString;
-  return date.toLocaleDateString('es-ES', { 
-    day: '2-digit', 
-    month: '2-digit', 
+  return date.toLocaleDateString('es-ES', {
+    day: '2-digit',
+    month: '2-digit',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit'
@@ -175,7 +184,7 @@ function renderMarkdown(md) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
-    
+
   // Convertir cabeceras
   html = html.replace(/^### (.*?)$/gm, '<h3 style="font-size: 1.15rem; font-weight: 800; color: #ffffff; margin-top: 1.5rem; margin-bottom: 0.5rem; font-family: var(--font-title); letter-spacing: -0.02em;">$1</h3>');
   html = html.replace(/^#### (.*?)$/gm, '<h4 style="font-size: 1.0rem; font-weight: 800; color: var(--neon-blue); margin-top: 1.25rem; margin-bottom: 0.5rem; font-family: var(--font-title);">$1</h4>');
@@ -188,7 +197,7 @@ function renderMarkdown(md) {
 
   // Convertir listas con guiones
   html = html.replace(/^- (.*?)$/gm, '<li style="margin-left: 1.25rem; list-style-type: square; margin-bottom: 0.35rem; color: var(--text-muted);">$1</li>');
-  
+
   // Convertir saltos de línea dobles en párrafos
   const paragraphs = html.split(/\n\s*\n/);
   html = paragraphs.map(p => {
@@ -206,7 +215,7 @@ function renderMarkdown(md) {
 
 <Layout title={article.title} description={article.subtitle} category={article.category}>
   <div class="container" style="padding-top: 1.5rem; padding-bottom: 5rem; max-width: 680px; margin: 0 auto;">
-    
+
     <!-- Migas de pan cyberpunk -->
     <div style="margin-bottom: 1.5rem; font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
       <a href="/" style="text-decoration: none; color: var(--text-muted); transition: color 0.2s;" class="nav-link">Radar</a>
@@ -222,19 +231,19 @@ function renderMarkdown(md) {
     </div>
 
     <!-- Título principal elegante (Igual que la Web) -->
-    <header style="margin-bottom: 2rem; text-align: center;">
-      <h1 style="font-size: 2.2rem; line-height: 1.2; font-weight: 900; color: #ffffff; font-family: var(--font-title); margin-bottom: 0.5rem; letter-spacing: -0.03em;">
+    <header style="margin-bottom: 2.5rem; text-align: center; position: relative;">
+      <h1 style="font-size: 2.5rem; line-height: 1.15; font-weight: 900; background: linear-gradient(135deg, #ffffff 40%, #a5b4fc 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-family: 'Outfit', var(--font-title); margin-bottom: 0.75rem; letter-spacing: -0.03em;">
         {article.title}
       </h1>
-      <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted); font-weight: bold; margin-top: 0.75rem;">
-        {article.category.toUpperCase()} • IMPACTO SOCIAL VERIFICADO
+      <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--neon-blue); font-weight: 800; margin-top: 0.5rem; font-family: monospace;">
+        {article.category.toUpperCase()} • EXPEDIENTE DE AUDITORÍA ACTIVO
       </div>
-      
+
       <!-- Tags Cyberpunk en Cabecera -->
       {tags.length > 0 && (
-        <div style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+        <div style="margin-top: 1.25rem; display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
           {tags.map(t => (
-            <a href={`/tag/${t.slug}`} style="text-decoration: none; font-size: 0.7rem; font-family: monospace; font-weight: 800; color: var(--neon-blue); background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.2); padding: 0.2rem 0.55rem; border-radius: 4px; transition: all 0.2s;" class="hover-link">
+            <a href={`/tag/${t.slug}`} style="text-decoration: none; font-size: 0.7rem; font-family: monospace; font-weight: 800; color: var(--neon-blue); background: rgba(0, 240, 255, 0.05); border: 1px solid rgba(0, 240, 255, 0.15); padding: 0.25rem 0.65rem; border-radius: 6px; transition: all 0.3s ease; box-shadow: 0 0 10px rgba(0, 240, 255, 0.02);" class="hover-link tag-badge">
               #{t.name}
             </a>
           ))}
@@ -244,77 +253,126 @@ function renderMarkdown(md) {
 
     <!-- Caja de Origen de la Publicación y Captura Real -->
     {article.origin_url && (
-      <div class="cyber-card" style="padding: 1.2rem; background: rgba(18, 22, 41, 0.35); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px; margin-bottom: 2rem; display: grid; grid-template-columns: 1fr auto; gap: 1.5rem; align-items: center;">
-        <div style="text-align: left;">
-          <span style="font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--neon-rose); display: block; margin-bottom: 0.4rem; letter-spacing: 0.08em; font-family: monospace;">
-            🚨 ORIGEN DE LA DECLARACIÓN DETECTADA:
+      <div class="cyber-card origin-card-premium" style="padding: 1.5rem; background: rgba(15, 23, 42, 0.45); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; margin-bottom: 2.5rem; position: relative; overflow: hidden; box-shadow: inset 0 0 20px rgba(255,255,255,0.01);">
+        <div style="position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: linear-gradient(to bottom, var(--neon-rose), transparent);"></div>
+        <div style="text-align: left; margin-bottom: 1.5rem;">
+          <span style="font-size: 0.7rem; font-weight: 900; text-transform: uppercase; color: var(--neon-rose); display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem; letter-spacing: 0.1em; font-family: monospace;">
+            <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: var(--neon-rose); animation: pulse-red 1.5s infinite;"></span>
+            DECLARACIÓN DETECTADA EN REDES:
           </span>
-          <p style="font-size: 0.88rem; margin: 0 0 0.75rem 0; line-height: 1.5; color: var(--text-muted); font-style: italic;">
+          <p style="font-size: 1.05rem; margin: 0 0 1rem 0; line-height: 1.5; color: #f1f5f9; font-weight: 500; font-style: italic;">
             "{article.claim || 'Publicación en redes sociales.'}"
           </p>
-          <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-            <span>Plataforma: <strong style="color: #fff;">{article.origin_platform || 'Instagram'}</strong></span>
+          
+          <div style="font-size: 0.82rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            <span>Plataforma: <strong style="color: #fff; font-family: monospace;">{article.origin_platform || 'Instagram'}</strong></span>
             <span style="color: rgba(255,255,255,0.15);">|</span>
-            <a href={article.origin_url} target="_blank" rel="noopener noreferrer" style="color: var(--neon-blue); text-decoration: underline; font-weight: 800; display: inline-flex; align-items: center; gap: 0.25rem;" class="hover-link">
-              Ver post original en {article.origin_platform || 'Instagram'} 
+            <a href={article.origin_url} target="_blank" rel="noopener noreferrer" style="color: var(--neon-blue); text-decoration: none; font-weight: 800; display: inline-flex; align-items: center; gap: 0.25rem; border-bottom: 1px dashed var(--neon-blue); padding-bottom: 2px; transition: all 0.2s;" class="hover-link">
+              Navegar al post original
               <svg style="width: 12px; height: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
               </svg>
             </a>
           </div>
         </div>
+
+        <!-- Métrica de Impacto Viral Real de Redes -->
+        {(realMetrics.likes || realMetrics.views || realMetrics.comments) && (
+          <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255, 255, 255, 0.03); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1.5rem; display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: space-around;">
+            {realMetrics.views && (
+              <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted);">
+                <svg style="width: 14px; height: 14px; color: var(--neon-blue);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                <span><strong>{Number(realMetrics.views).toLocaleString('es-ES')}</strong> visualizaciones</span>
+              </div>
+            )}
+            {realMetrics.likes && (
+              <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted);">
+                <svg style="width: 14px; height: 14px; color: var(--neon-rose);" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path></svg>
+                <span><strong>{Number(realMetrics.likes).toLocaleString('es-ES')}</strong> likes</span>
+              </div>
+            )}
+            {realMetrics.comments && (
+              <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted);">
+                <svg style="width: 14px; height: 14px; color: var(--neon-amber);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                <span><strong>{Number(realMetrics.comments).toLocaleString('es-ES')}</strong> comentarios</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        <!-- Captura Headless de Playwright (Estilo Ventana de Navegador) -->
         {article.multimedia_url && !article.multimedia_url.includes('unsplash.com/photo-1541872703-74c5e44368f9') && (
-          <div style="width: 80px; height: 80px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); overflow: hidden; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-            <img src={article.multimedia_url} alt="Captura original" style="max-width: 100%; max-height: 100%; object-fit: cover;" />
+          <div style="display: flex; flex-direction: column; width: 100%;">
+            <span style="font-size: 0.65rem; font-weight: 800; color: var(--text-muted); font-family: monospace; display: block; margin-bottom: 0.5rem;">
+              📸 CAPTURA DE PANTALLA DE LA EVIDENCIA (PLAYWRIGHT HEADLESS):
+            </span>
+            <div class="browser-frame" style="border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; overflow: hidden; background: #0b0f19; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6); position: relative;">
+              <!-- Cabecera del navegador -->
+              <div style="background: rgba(255, 255, 255, 0.03); border-bottom: 1px solid rgba(255, 255, 255, 0.06); padding: 0.6rem 1rem; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; gap: 0.35rem;">
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: #ef4444; display: inline-block;"></span>
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: #eab308; display: inline-block;"></span>
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: #22c55e; display: inline-block;"></span>
+                </div>
+                <div style="background: rgba(0, 0, 0, 0.3); border-radius: 6px; padding: 0.15rem 2.5rem; font-size: 0.65rem; color: var(--text-muted); font-family: monospace; border: 1px solid rgba(255,255,255,0.02); max-width: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                  {article.origin_url}
+                </div>
+                <div style="width: 30px;"></div>
+              </div>
+              <!-- Imagen capturada -->
+              <div class="evidence-screenshot-container" style="position: relative; overflow: hidden; max-height: 420px; display: flex; align-items: flex-start; justify-content: center; cursor: zoom-in;">
+                <img src={article.multimedia_url} alt="Captura de pantalla oficial del post original tomada por Playwright" style="width: 100%; height: auto; max-height: 100%; object-fit: contain; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);" class="scraped-image" />
+                <div class="zoom-overlay" style="position: absolute; inset: 0; background: rgba(0,0,0,0.3); opacity: 0; display: flex; align-items: center; justify-content: center; transition: opacity 0.3s ease;">
+                  <span style="background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.72rem; font-weight: 800; color: #fff; font-family: monospace; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 0.4rem;">
+                    <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"></path></svg>
+                    AMPLIAR EVIDENCIA
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
     )}
 
-    <!-- Portada Multimedia / Captura de Vídeo del Artículo -->
-    {article.multimedia_url && !article.multimedia_url.includes('unsplash.com/photo-1541872703-74c5e44368f9') && (
-      <div style="margin-bottom: 2rem; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); background: #000; box-shadow: 0 8px 30px rgba(0,0,0,0.5);">
-        <img src={article.multimedia_url} alt="Evidencia o captura original del debate" style="width: 100%; height: auto; max-height: 380px; object-fit: cover; display: block;" />
-      </div>
-    )}
-
     <!-- Gran Banner de Veredicto Sólido -->
-    <div style="margin-bottom: 1.5rem; text-align: center;">
-      <div class={`verdict-banner ${article.verdict.toLowerCase().replace(' ', '-')}`} style={`display: inline-block; width: 100%; padding: 1.2rem; border-radius: 12px; font-size: 1.7rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--font-title); text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); color: #ffffff; background: ${article.verdict.toLowerCase().includes('verdadero') ? 'rgba(0, 245, 160, 0.15)' : article.verdict.toLowerCase().includes('falso') ? 'rgba(220, 39, 67, 0.15)' : 'rgba(255, 183, 3, 0.15)'}; border: 2px solid ${article.verdict.toLowerCase().includes('verdadero') ? 'var(--neon-green)' : article.verdict.toLowerCase().includes('falso') ? 'var(--neon-rose)' : 'var(--neon-amber)'};`}>
+    <div style="margin-bottom: 2rem; text-align: center; position: relative;">
+      <div class={`verdict-banner-premium ${article.verdict.toLowerCase().replace(' ', '-')}`} style={`display: block; width: 100%; padding: 1.5rem; border-radius: 16px; font-size: 2rem; font-weight: 950; text-transform: uppercase; letter-spacing: 0.08em; font-family: 'Outfit', var(--font-title); text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.4); color: #ffffff; background: ${bannerColor.bg}; border: 2px solid ${bannerColor.border}; position: relative; overflow: hidden;`}>
+        <div class="laser-scanner" style={`position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: ${bannerColor.border}; box-shadow: 0 0 15px ${bannerColor.border}; opacity: 0.8;`}></div>
         {article.verdict}
       </div>
     </div>
 
     <!-- Barra de Compartir Tras Veredicto (Inline) -->
-    <div style="margin-bottom: 2rem;">
-      <ShareBar 
-        title={article.title} 
-        text={`NEWNEWS califica de ${article.verdict.toLowerCase()} la declaración: "${article.claim}"`} 
+    <div style="margin-bottom: 2.5rem;">
+      <ShareBar
+        title={article.title}
+        text={`MATIZA califica de ${article.verdict.toLowerCase()} la declaración: "${article.claim}"`}
         variant="inline"
         label="Compartir este desmentido"
       />
     </div>
 
     <!-- Panel: Conclusión de la Auditoría -->
-    <div class="cyber-card" style="padding: 1.5rem; background: rgba(18, 22, 41, 0.35); border-color: rgba(255,255,255,0.06); border-radius: 12px; margin-bottom: 1.5rem;">
+    <div class="cyber-card" style="padding: 1.5rem; background: rgba(18, 22, 41, 0.35); border-color: rgba(255,255,255,0.06); border-radius: 12px; margin-bottom: 1.5rem; position: relative;">
       <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; color: #ffffff; font-family: var(--font-title); font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
         <svg style="width: 18px; height: 18px; color: var(--neon-blue);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
         </svg>
         <span>Conclusión de la Auditoría</span>
       </div>
-      <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; margin: 0; font-weight: 500;">
+      <p style="font-size: 0.98rem; color: #e2e8f0; line-height: 1.65; margin: 0; font-weight: 500;">
         {article.summary || article.explanation.substring(0, 200) + '...'}
       </p>
     </div>
 
     <!-- Panel: El Truco -->
-    <div class="cyber-card" style="padding: 1.5rem; background: rgba(18, 22, 41, 0.35); border-color: rgba(255,255,255,0.06); border-radius: 12px; margin-bottom: 2rem;">
+    <div class="cyber-card" style="padding: 1.5rem; background: rgba(18, 22, 41, 0.35); border-color: rgba(255,255,255,0.06); border-radius: 12px; margin-bottom: 2.5rem;">
       <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; color: #ffffff; font-family: var(--font-title); font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
         <svg style="width: 18px; height: 18px; color: var(--neon-purple);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
         </svg>
-        <span>El Truco</span>
+        <span>El Truco Empleado</span>
       </div>
       <span style="background: rgba(157, 78, 221, 0.12); color: var(--neon-purple); border: 1px solid rgba(157, 78, 221, 0.25); font-size: 0.65rem; font-weight: 800; padding: 0.2rem 0.5rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; font-family: monospace; display: inline-block; margin-bottom: 0.75rem;">
         {article.trick_used ? article.trick_used.toUpperCase() : 'SESGO DE DATOS'}
@@ -325,29 +383,31 @@ function renderMarkdown(md) {
     </div>
 
     <!-- PANELES COMPARATIVOS DIRECTOS: EL MITO vs EL HECHO REAL -->
-    <div style="display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 2.5rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
       <!-- EL MITO (Borde Rojo / Rosa) -->
-      <div class="cyber-card" style="padding: 1.5rem; border: 1px solid rgba(220, 39, 67, 0.25); background: rgba(220, 39, 67, 0.02); border-radius: 12px;">
+      <div class="cyber-card mito-card" style="padding: 1.5rem; border: 1px solid rgba(220, 39, 67, 0.25); background: linear-gradient(135deg, rgba(220, 39, 67, 0.06) 0%, rgba(220, 39, 67, 0.01) 100%); border-radius: 16px; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; background: rgba(220, 39, 67, 0.03); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: rgba(220, 39, 67, 0.08); font-weight: 900; font-family: sans-serif; pointer-events: none; user-select: none;">✕</div>
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; color: var(--neon-rose); font-family: var(--font-title); font-size: 0.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;">
           <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
-          <span>EL MITO</span>
+          <span>EL MITO DE REDES</span>
         </div>
-        <p style="font-size: 1.05rem; color: #ffffff; font-weight: 600; line-height: 1.5; margin: 0; font-style: italic;">
+        <p style="font-size: 1.1rem; color: #ffffff; font-weight: 600; line-height: 1.5; margin: 0; font-style: italic;">
           "{article.claim}"
         </p>
       </div>
 
       <!-- EL HECHO REAL (Borde Azul / Verde) -->
-      <div class="cyber-card" style="padding: 1.5rem; border: 1px solid rgba(0, 240, 255, 0.25); background: rgba(0, 240, 255, 0.02); border-radius: 12px;">
+      <div class="cyber-card hecho-card" style="padding: 1.5rem; border: 1px solid rgba(0, 240, 255, 0.25); background: linear-gradient(135deg, rgba(0, 240, 255, 0.06) 0%, rgba(0, 240, 255, 0.01) 100%); border-radius: 16px; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; background: rgba(0, 240, 255, 0.03); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: rgba(0, 240, 255, 0.08); font-weight: 900; font-family: sans-serif; pointer-events: none; user-select: none;">✓</div>
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; color: var(--neon-blue); font-family: var(--font-title); font-size: 0.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;">
           <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
-          <span>EL HECHO REAL</span>
+          <span>EL HECHO FACTUAL</span>
         </div>
-        <p style="font-size: 1.05rem; color: #ffffff; line-height: 1.5; margin: 0;">
+        <p style="font-size: 1.1rem; color: #ffffff; line-height: 1.5; margin: 0; font-weight: 500;">
           {article.what_is_true || "Los datos oficiales comparados desmienten las afirmaciones sin base."}
         </p>
       </div>
@@ -357,12 +417,12 @@ function renderMarkdown(md) {
     {article.infographic_svg && (
       <div style="margin-bottom: 2.5rem;">
         <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.1em; display: block; margin-bottom: 0.75rem; text-align: left;">Infografía de Auditoría Rápida</span>
-        
+
         <div class="cyber-card infographic-wrapper" style="padding: 1.25rem; background: rgba(18, 22, 41, 0.45); border-color: rgba(0, 240, 255, 0.15); border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 1rem;">
           <div id="infographic-container" style="width: 100%; max-width: 420px; display: block; filter: drop-shadow(0px 0px 10px rgba(0, 240, 255, 0.1));">
             <Fragment set:html={article.infographic_svg} />
           </div>
-          
+
           <div style="display: flex; width: 100%; justify-content: center; border-top: 1px dashed rgba(255,255,255,0.06); padding-top: 0.85rem;">
             <button id="download-png-btn" class="cyber-btn" style="padding: 0.5rem 1rem; font-size: 0.75rem; border-radius: 8px; font-weight: 800; display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; transition: all 0.2s;">
               <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -407,7 +467,7 @@ function renderMarkdown(md) {
     <!-- Fuentes y Evidencia -->
     <section style="margin-bottom: 2.5rem;">
       <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.1em; display: block; margin-bottom: 1rem;">Fuentes y Evidencia</span>
-      
+
       <div style="display: flex; flex-direction: column; gap: 0.75rem;">
         {sources.map(src => (
           <div class="cyber-card" style="padding: 0.85rem 1.25rem; display: flex; justify-content: space-between; align-items: center; background: rgba(18, 22, 41, 0.35); border-color: rgba(255,255,255,0.04); border-radius: 8px;">
@@ -419,7 +479,7 @@ function renderMarkdown(md) {
                 <strong style="color: var(--text-main); font-size: 0.88rem;">{src.title}</strong>
               </div>
             </div>
-            
+
             <a href={src.url} target="_blank" rel="noopener noreferrer" style="color: var(--neon-blue); display: flex; align-items: center; justify-content: center; padding: 0.25rem; margin-left: 1rem; transition: color 0.2s;" class="hover-link" title="Visitar documento oficial">
               <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
@@ -432,9 +492,9 @@ function renderMarkdown(md) {
 
     <!-- Barra de Compartir al Final (Card) -->
     <div style="margin-top: 3rem; margin-bottom: 3rem;">
-      <ShareBar 
-        title={article.title} 
-        text={`NEWNEWS califica de ${article.verdict.toLowerCase()} la declaración: "${article.claim}"`} 
+      <ShareBar
+        title={article.title}
+        text={`MATIZA califica de ${article.verdict.toLowerCase()} la declaración: "${article.claim}"`}
         variant="card"
         label="Difunde la Verdad"
       />
@@ -443,9 +503,9 @@ function renderMarkdown(md) {
     <!-- Artículos Relacionados (Siguiente lectura) -->
     <section style="margin-bottom: 3rem;">
       <span style="font-weight: 800; text-transform: uppercase; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.15em; display: block; padding-left: 0.25rem; margin-bottom: 1.25rem;">Casos e Informes Relacionados</span>
-      
+
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-        
+
         {relatedSameTopic.length > 0 && (
           <div>
             <h4 style="font-size: 0.8rem; font-weight: 800; color: var(--neon-blue); text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.4rem;">
@@ -517,7 +577,7 @@ function renderMarkdown(md) {
 
     const viewBox = svgEl.getAttribute('viewBox') || '0 0 390 1000';
     const [, , w, h] = viewBox.split(' ').map(Number);
-    
+
     // Escala 3x retina para Stories
     const scale = 3;
     const canvas = document.createElement('canvas');
@@ -530,18 +590,18 @@ function renderMarkdown(md) {
     const svgString = new XMLSerializer().serializeToString(svgEl);
     const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
     const blobUrl = URL.createObjectURL(svgBlob);
-    
+
     const img = new Image();
     img.onload = () => {
       // Fondo transparente
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      
+
       const link = document.createElement('a');
-      link.download = `newnews-auditoria-${Date.now()}.png`;
+      link.download = `matiza-auditoria-${Date.now()}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
-      
+
       URL.revokeObjectURL(blobUrl);
     };
     img.src = blobUrl;
@@ -551,5 +611,71 @@ function renderMarkdown(md) {
 <style>
   .nav-link:hover {
     color: var(--neon-blue) !important;
+  }
+
+  /* Efectos para la captura del post con Playwright */
+  .browser-frame:hover .scraped-image {
+    transform: scale(1.04);
+  }
+
+  .browser-frame:hover .zoom-overlay {
+    opacity: 1 !important;
+  }
+
+  /* Animación del scanner láser del veredicto */
+  .laser-scanner {
+    animation: scan 4s linear infinite;
+  }
+
+  @keyframes scan {
+    0% {
+      top: 0%;
+    }
+    50% {
+      top: 100%;
+    }
+    100% {
+      top: 0%;
+    }
+  }
+
+  /* Tag badges */
+  .tag-badge:hover {
+    border-color: rgba(0, 240, 255, 0.5) !important;
+    background: rgba(0, 240, 255, 0.1) !important;
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.15) !important;
+  }
+
+  /* Efecto pulse-red para simular radar de captura */
+  @keyframes pulse-red {
+    0% {
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+    70% {
+      transform: scale(1);
+      box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+    }
+    100% {
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+  }
+
+  /* Asegurar escalado responsivo del SVG de la infografía */
+  #infographic-container svg {
+    width: 100% !important;
+    height: auto !important;
+    display: block;
+  }
+
+  /* Responsive general */
+  @media (max-width: 600px) {
+    .origin-card-premium {
+      padding: 1.25rem !important;
+    }
+    h1 {
+      font-size: 2rem !important;
+    }
   }
 </style>

@@ -4,7 +4,7 @@ import Layout from '../layouts/Layout.astro';
 import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 
-const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/matiza.db');
 const db = new DatabaseSync(dbPath);
 
 // Cargar todas las declaraciones de patrimonio y bienes, con datos del partido asociado
@@ -97,7 +97,7 @@ db.close();
     <section class="cyber-card" style="margin-bottom: 4rem; background: var(--bg-card);">
       <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text-main);">📌 Sobre la exactitud de estos datos</h3>
       <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;">
-        Estas fichas corresponden exclusivamente a las declaraciones de bienes y rentas firmadas por los propios diputados al inicio de la legislatura, tal y como obliga la Ley Orgánica del Régimen Electoral General (LOREG) y el reglamento del Congreso. NEWNEWS se limita a transcribir y estructurar la información declarada en los boletines oficiales sin evaluar valoraciones comerciales privadas de inmuebles ni especulaciones periodísticas externas.
+        Estas fichas corresponden exclusivamente a las declaraciones de bienes y rentas firmadas por los propios diputados al inicio de la legislatura, tal y como obliga la Ley Orgánica del Régimen Electoral General (LOREG) y el reglamento del Congreso. MATIZA se limita a transcribir y estructurar la información declarada en los boletines oficiales sin evaluar valoraciones comerciales privadas de inmuebles ni especulaciones periodísticas externas.
       </p>
     </section>
 

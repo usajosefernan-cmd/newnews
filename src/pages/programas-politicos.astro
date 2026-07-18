@@ -4,7 +4,7 @@ import Layout from '../layouts/Layout.astro';
 import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 
-const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/matiza.db');
 const db = new DatabaseSync(dbPath);
 
 // Obtener partidos políticos y sus programas electorales
@@ -89,7 +89,7 @@ db.close();
     <section class="cyber-card purple" style="max-width: 800px; margin: 0 auto; background: linear-gradient(180deg, var(--bg-card), #120f26);">
       <h3 style="color: var(--neon-purple); font-size: 1.25rem; margin-bottom: 0.5rem; font-family: var(--font-title);"> Compromiso de Neutralidad Editorial</h3>
       <p style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 0.75rem;">
-        En NEWNEWS no juzgamos las propuestas políticas, ni recomendamos el voto. Nos limitamos a:
+        En MATIZA no juzgamos las propuestas políticas, ni recomendamos el voto. Nos limitamos a:
       </p>
       <ul style="margin-left: 1.5rem; font-size: 0.95rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 0.35rem;">
         <li>Citar el texto original del programa electoral para garantizar fidelidad.</li>

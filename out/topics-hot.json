@@ -1,0 +1,116 @@
+[
+  {
+    "topic_id": "t-autonomos-fiscalidad",
+    "slug": "fiscalidad-autonomos-y-carga-impositiva",
+    "title": "Autónomos, impuestos y percepción fiscal",
+    "public_concern_summary": "Se mantiene el malestar por la carga fiscal sobre autónomos y pymes, alimentado por un bulo muy extendido que asegura que el Gobierno obliga a pagar un 70% de impuestos fijos desde la primera cuota. A esto se suman claims sobre la caída de España al quinto peor sistema fiscal de la OCDE y las quejas reiteradas de empresarios y trabajadores por impuestos elevados, burocracia y coste de la vivienda.",
+    "why_it_matters": "Afecta a la creación de empleo, la supervivencia del tejido productivo y la confianza ciudadana en las estadísticas fiscales oficiales. La desinformación sobre cuotas fijas o tributación real puede bloquear la toma de decisiones empresariales y elevar el rechazo institucional.",
+    "main_confusions": [
+      "El supuesto 70% de impuestos fijos obligatorios para autónomos desde la primera cuota",
+      "La interpretación real de la tributación por tramos de rendimientos netos frente a propaganda de cuotas fijas",
+      "La comparación simplista del tipo medio de España con la OCDE sin distinguir por regímenes o bases imponibles"
+    ],
+    "source_map_status": "Requiere contraste continuo con BOE/leyes fiscales, Ministerio de Hacienda/AEAT, informes de la OCDE y sindicatos/patronales con datos agregados.",
+    "priority_score": 9.0,
+    "social_heat_score": 8.0,
+    "risk_score": 8.0,
+    "evergreen_score": 8.0,
+    "needs_new_vertical": false,
+    "merge_with_existing_topic": "t-autonomos"
+  },
+  {
+    "topic_id": "t-ley-de-vivienda-alquileres-y-emprendimiento",
+    "slug": "vivienda-alquiler-y-emprendimiento",
+    "title": "Vivienda, alquiler y dificultad para emprender",
+    "public_concern_summary": "El debate sobre la imposibilidad de acceder a vivienda y de emprender en España gana fuerza con claims virales que apuntan a la burocracia, los impuestos y la vivienda disparada como causas centrales del estancamiento. Convergen aquí inquietudes por el mercado alquiler, la okupación y la percepción de que las políticas no alivian el problema.",
+    "why_it_matters": "Impacta directamente en la formación de hogares, la movilidad laboral y la creación de empresas. Si la vivienda se percibe como un bien fuera de mercado, se amplifica la frustración generacional y el desapego institucional.",
+    "main_confusions": [
+      "Efectos reales del tope de alquiler versus incentivos a oferta/residencial",
+      "Distinción entre okupación, impago legal y grandes tenedores versus pequeños propietarios",
+      "Causalidad exacta entre tributación, burocracia y caída del emprendimiento"
+    ],
+    "source_map_status": "Requiere cruzar BOE/Ley de Vivienda, datos de alquiler turístico/residencial, informes del Banco de España, INE y sentencias sobre okupación.",
+    "priority_score": 9.0,
+    "social_heat_score": 8.0,
+    "risk_score": 7.0,
+    "evergreen_score": 8.0,
+    "needs_new_vertical": false,
+    "merge_with_existing_topic": "t-ley-de-vivienda-alquileres"
+  },
+  {
+    "topic_id": "t-migracion-menores-tutelados",
+    "slug": "inmigracion-menores-tutelados-y-convivencia",
+    "title": "Inmigración, menores tutelados y seguridad ciudadana",
+    "public_concern_summary": "Circulan claims sobre delincuencia de menores migrantes no acompañados, destacando un vídeo sobre un menor marroquí reincidente que presuntamente golpea a ancianos para robarles en Madrid. Este tipo de contenidos refuerzan el debate sobre ayudas a extranjeros y la reforma de la Ley de Extranjería en materia de reparto de menores.",
+    "why_it_matters": "Alta sensibilidad social y riesgo de estigmatización de colectivos vulnerables. Un manejo equivocado de la información puede aumentar la xenofobia, mientras que un análisis serio debe separar casos anecdóticos, estadísticas oficiales y política de protección de menores.",
+    "main_confusions": [
+      "Correlación entre inmigración/menas y delincuencia frente a datos oficiales de criminalidad",
+      "Diferenciación entre acogida de menores, expedientes de protección y redes delictivas organizadas",
+      "Alcance real de las ayudas asistenciales a extranjeros y su impacto en servicios públicos"
+    ],
+    "source_map_status": "Requiere datos de Fiscalía/Policía Nacional, estadísticas criminales, informes de entidades de protección de menores, BOE y comparecencias parlamentarias sobre reforma de extranjería.",
+    "priority_score": 9.0,
+    "social_heat_score": 7.0,
+    "risk_score": 9.0,
+    "evergreen_score": 7.0,
+    "needs_new_vertical": false,
+    "merge_with_existing_topic": "t-migracion"
+  },
+  {
+    "topic_id": "t-inflacion-coste-de-vida",
+    "slug": "inflacion-y-coste-de-vida",
+    "title": "Inflación y coste de la vida",
+    "public_concern_summary": "Persiste una amplia brecha entre el IPC oficial y la experiencia real en alimentos, energía y servicios básicos. Esta desconfianza en el INE y en los datos macro se combina con sensación de estancamiento salarial y precariedad laboral.",
+    "why_it_matters": "La credibilidad de las fuentes oficiales determina la gobernanza económica. Si los ciudadanos creen que los índices oficiales no recogen su realidad, aumentan el escepticismo hacia cualquier política económica posterior.",
+    "main_confusions": [
+      "Diferencia entre IPC, inflación subyacente y cesta de la compra doméstica",
+      "Factores estructurales versus coyunturales en alimentos y energía",
+      "Relación entre maquillaje estadístico y metodología oficial del INE"
+    ],
+    "source_map_status": "Requiere INE, Ministerio de Economía, Banco de España, Eurostat e informes de consumo/consumidores.",
+    "priority_score": 8.0,
+    "social_heat_score": 7.0,
+    "risk_score": 6.0,
+    "evergreen_score": 8.0,
+    "needs_new_vertical": false,
+    "merge_with_existing_topic": "t-inflacion"
+  },
+  {
+    "topic_id": "t-percepcion-estado-nacion",
+    "slug": "percepcion-situacion-espana",
+    "title": "Percepción de situación y malestar social en España",
+    "public_concern_summary": "Se consolidan narrativas de declive económico, político y social generalizado, donde convergen vivienda cara, inflación persistente, salarios estancados, corrupción en élites y desamparo institucional. El malestar se expresa como una pregunta retórica sobre si España va tan mal, funcionando como meta-narrativa transversal.",
+    "why_it_matters": "Aglutina múltiples frustraciones sectoriales y erosiona la confianza institucional. Puede alterar la participación electoral, la legitimidad de las reformas y la estabilidad social si no se aborda desde datos y relatos veraces.",
+    "main_confusions": [
+      "Diferenciar entre percepción subjetiva y agregados macroeconómicos oficiales",
+      "Descomponer el origen de cada frustración para no confundir causas diferentes",
+      "Separar casos judiciales en curso de narrativas cerradas de dominó de corrupción"
+    ],
+    "source_map_status": "Requiere datos CIS/barómetros, macroeconómicos oficiales, informes de instituciones europeas y judiciales, además de monitoreo continuo de RRSS.",
+    "priority_score": 8.0,
+    "social_heat_score": 8.0,
+    "risk_score": 5.0,
+    "evergreen_score": 8.0,
+    "needs_new_vertical": false,
+    "merge_with_existing_topic": "t-percepcion-estado-nacion"
+  },
+  {
+    "topic_id": "t-corrupcion-entorno-gobierno",
+    "slug": "corrupcion-entorno-gobierno",
+    "title": "Casos judiciales en el entorno del Gobierno",
+    "public_concern_summary": "La inhabilitación del hermano de Pedro Sánchez y la investigación abierta a Begoña Gómez alimentan una narrativa de uso de recursos públicos y privilegios institucionales. Estos casos mantienen alta la desconfianza hacia la clase dirigente, aunque conviven con bulos que distorsionan fases procesales.",
+    "why_it_matters": "La percepción de impunidad o nepotismo corroe la legitimidad democrática. Además, la desinformación sobre sentencias firmadas puede generar crispación injustificada cuando los casos están en instrucción.",
+    "main_confusions": [
+      "Estado procesal real de cada causa: instrucción, apelación o sentencia firme",
+      "Diferenciar entre hechos acreditados judicialmente y declaraciones políticas",
+      "Alcance real de cargos institucionales y recursos públicos implicados"
+    ],
+    "source_map_status": "Requiere seguimiento judicial, BOE, notas oficiales de tribunales, y fuentes contrastadas de prensa judicial.",
+    "priority_score": 7.0,
+    "social_heat_score": 6.0,
+    "risk_score": 7.0,
+    "evergreen_score": 7.0,
+    "needs_new_vertical": false,
+    "merge_with_existing_topic": "t-corrupcion-entorno-sanchez"
+  }
+]

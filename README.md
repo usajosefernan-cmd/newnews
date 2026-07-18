@@ -1,7 +1,7 @@
-# 📡 NEWNEWS: Portal de Verificación y Cortafuegos de Desinformación
+# 📡 MATIZA: Portal de Verificación y Cortafuegos de Desinformación
 
 > [!NOTE]
-> **NEWNEWS** es una plataforma autónoma e inteligente de auditoría de hechos, desmentidos y contrastación de información que actúa como cortafuegos contra la desinformación en España, contrastando noticias de manera dinámica con bases de datos públicas oficiales e institucionales de España y Europa de acuerdo con la naturaleza del tema analizado.
+> **MATIZA** es una plataforma autónoma e inteligente de auditoría de hechos, desmentidos y contrastación de información que actúa como cortafuegos contra la desinformación en España, contrastando noticias de manera dinámica con bases de datos públicas oficiales e institucionales de España y Europa de acuerdo con la naturaleza del tema analizado.
 
 ---
 
@@ -38,7 +38,7 @@ graph TD
 ## 🌐 Producción y Acceso Web
 
 El sitio web oficial en producción está alojado en una **VPS de Oracle Cloud** y se puede acceder a través de:
-🔗 **[NEWNEWS Producción VPS](https://143-47-35-167.sslip.io/pro/newnews/)**
+🔗 **[MATIZA Producción VPS](https://143-47-35-167.sslip.io/pro/matiza/)**
 
 > [!WARNING]
 > **Nota de Inestabilidad:** El portal en producción es altamente experimental y puede fallar o mostrar errores con frecuencia. Esto se debe principalmente a:
@@ -53,23 +53,23 @@ El proyecto está estructurado con el siguiente ecosistema técnico:
 * **Framework Web:** [Astro v4](https://astro.build/) configurado en modo híbrido (SSR para APIs en caliente y SSG para páginas de artículos estáticas e instantáneas).
 * **Motor de Base de Datos:** [SQLite 3](https://sqlite.org/) configurado en modo **WAL** (Write-Ahead Logging) para permitir lecturas y escrituras concurrentes sin bloqueos permanentes.
 * **Motor de Inferencia:** APIs de **Gemini 2.5 Flash** para redacción estructurada.
-* **Orquestación en Servidor:** Nginx (Proxy inverso en el subpath `/pro/newnews/`) y PM2 como administrador de procesos daemon del backend de Astro.
+* **Orquestación en Servidor:** Nginx (Proxy inverso en el subpath `/pro/matiza/`) y PM2 como administrador de procesos daemon del backend de Astro.
 
 ---
 
 ## 📁 Estructura del Repositorio
 * **`src/pages/`**: Vistas principales en Astro.
-  * [index.astro](file:///c:/Users/yo/Desktop/WORKSPACE/projects/newnews/src/pages/index.astro): Portada con feed, "Confusómetro" y Código Deontológico.
-  * [interceptor.astro](file:///c:/Users/yo/Desktop/WORKSPACE/projects/newnews/src/pages/interceptor.astro): Buzón de reporte público con radar y barrido láser en CSS.
-  * [admin.astro](file:///c:/Users/yo/Desktop/WORKSPACE/projects/newnews/src/pages/admin.astro): Panel de control editorial, aprobación de borradores y terminal de logs en vivo.
+  * [index.astro](file:///c:/Users/yo/Desktop/WORKSPACE/projects/matiza/src/pages/index.astro): Portada con feed, "Confusómetro" y Código Deontológico.
+  * [interceptor.astro](file:///c:/Users/yo/Desktop/WORKSPACE/projects/matiza/src/pages/interceptor.astro): Buzón de reporte público con radar y barrido láser en CSS.
+  * [admin.astro](file:///c:/Users/yo/Desktop/WORKSPACE/projects/matiza/src/pages/admin.astro): Panel de control editorial, aprobación de borradores y terminal de logs en vivo.
   * `noticia/[slug].astro`: Ficha detallada del hilo de verificación y evidencias multimedia.
 * **`src/pages/api/`**: Endpoints de procesamiento del servidor.
-  * [report.js](file:///c:/Users/yo/Desktop/WORKSPACE/projects/newnews/src/pages/api/report.js): Recibe reportes, detecta duplicados y calcula métricas de impacto en streaming NDJSON.
+  * [report.js](file:///c:/Users/yo/Desktop/WORKSPACE/projects/matiza/src/pages/api/report.js): Recibe reportes, detecta duplicados y calcula métricas de impacto en streaming NDJSON.
   * `run-job.js`: Permite arrancar scripts en caliente a través de la terminal web de administración.
 * **`scripts/`**: Scripts de automatización y orquestación de Hermes.
-  * [hermes-cron.js](file:///c:/Users/yo/Desktop/WORKSPACE/projects/newnews/scripts/hermes-cron.js): Orquestador principal que coordina todo el flujo de trabajo.
-  * [ai-pipeline.js](file:///c:/Users/yo/Desktop/WORKSPACE/projects/newnews/scripts/ai-pipeline.js): Lógica de análisis de veracidad de noticias e integración con modelos de IA.
-  * [check-url.js](file:///c:/Users/yo/Desktop/WORKSPACE/projects/newnews/scripts/check-url.js): Validador de urls y extractor de transcripciones de YouTube.
+  * [hermes-cron.js](file:///c:/Users/yo/Desktop/WORKSPACE/projects/matiza/scripts/hermes-cron.js): Orquestador principal que coordina todo el flujo de trabajo.
+  * [ai-pipeline.js](file:///c:/Users/yo/Desktop/WORKSPACE/projects/matiza/scripts/ai-pipeline.js): Lógica de análisis de veracidad de noticias e integración con modelos de IA.
+  * [check-url.js](file:///c:/Users/yo/Desktop/WORKSPACE/projects/matiza/scripts/check-url.js): Validador de urls y extractor de transcripciones de YouTube.
 
 ---
 
@@ -85,12 +85,12 @@ Duplica o crea un archivo `.env` en la raíz del proyecto:
 GEMINI_API_KEY=tu_clave_de_gemini_aqui
 
 # Rutas del Proyecto
-SQLITE_DB_PATH=data/newnews.db
-PUBLIC_BASE_PATH=/pro/newnews
+SQLITE_DB_PATH=data/matiza.db
+PUBLIC_BASE_PATH=/pro/matiza
 ```
 
 > [!IMPORTANT]
-> **Base de Datos en Producción (VPS)**: Para evitar bloqueos y corrupción de datos de Syncthing al sincronizar en caliente, la base de datos de producción física se almacena de forma centralizada fuera del workspace compartido, en `/home/ubuntu/db/newnews/newnews.db`. En la VPS, se crea un enlace simbólico de Linux en `data/newnews.db` apuntando a esta ruta. Dado que Syncthing no sigue enlaces simbólicos externos, la base de datos se mantiene totalmente aislada del canal de sincronización en tiempo real de forma natural, sin necesidad de modificar el código del proyecto.
+> **Base de Datos en Producción (VPS)**: Para evitar bloqueos y corrupción de datos de Syncthing al sincronizar en caliente, la base de datos de producción física se almacena de forma centralizada fuera del workspace compartido, en `/home/ubuntu/db/matiza/matiza.db`. En la VPS, se crea un enlace simbólico de Linux en `data/matiza.db` apuntando a esta ruta. Dado que Syncthing no sigue enlaces simbólicos externos, la base de datos se mantiene totalmente aislada del canal de sincronización en tiempo real de forma natural, sin necesidad de modificar el código del proyecto.
 
 ### 3. Instalación de Dependencias
 ```bash

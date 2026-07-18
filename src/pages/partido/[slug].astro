@@ -4,7 +4,7 @@ import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 
 export async function getStaticPaths() {
-  const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
+  const dbPath = process.env.SQLITE_DB_PATH || process.env.MATIZA_DB_PATH || process.env.MATIZA_DB_PATH || path.resolve('data/matiza.db');
   const db = new DatabaseSync(dbPath);
   const parties = db.prepare("SELECT slug FROM parties").all() as any[];
   db.close();
@@ -16,7 +16,7 @@ export async function getStaticPaths() {
 
 const { slug } = Astro.params;
 
-const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || process.env.MATIZA_DB_PATH || process.env.MATIZA_DB_PATH || path.resolve('data/matiza.db');
 const db = new DatabaseSync(dbPath);
 
 // Cargar información del partido
@@ -24,7 +24,7 @@ const party = db.prepare("SELECT * FROM parties WHERE slug = ?").get(slug) as an
 
 // Cargar medidas del programa
 const measures = db.prepare(`
-  SELECT pm.*, ep.election_name 
+  SELECT pm.*, ep.election_name
   FROM policy_measures pm
   LEFT JOIN electoral_programs ep ON pm.program_id = ep.id
   WHERE pm.party_id = ?
@@ -41,7 +41,7 @@ db.close();
 
 <Layout title={`Propuestas de ${party.name}`} description={`Análisis detallado de las medidas, promesas y bienes declarados del partido ${party.name}.`}>
   <div class="container">
-    
+
     <!-- Miga de Pan -->
     <div style="margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
       <a href="/" class="nav-link">Portada</a> / <a href="/programas-politicos" class="nav-link">Partidos</a> / <span style="color: var(--neon-blue);">{party.name}</span>
@@ -91,7 +91,7 @@ db.close();
             </div>
 
             <h3 style="font-size: 1.3rem; margin-bottom: 0.5rem; color: var(--text-main);">{m.title}</h3>
-            
+
             <div style="background: rgba(0,0,0,0.1); padding: 0.75rem; border-left: 3px solid var(--border-color); font-size: 0.85rem; font-style: italic; color: var(--text-muted); margin-bottom: 1rem;">
               <strong>Cita original:</strong> "{m.original_text}"
             </div>
@@ -129,7 +129,7 @@ db.close();
             if (s.includes('bloqueado') || s.includes('incumplido')) return 'rose';
             return 'amber';
           };
-          
+
           return (
             <div class={`cyber-card ${getStatusColor(p.status)}`} style="padding: 1.5rem;">
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">

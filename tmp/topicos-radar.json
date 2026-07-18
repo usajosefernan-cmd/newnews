@@ -1,0 +1,97 @@
+[
+  {
+    "topic_id": "t-autonomos",
+    "slug": "autonomos-y-crisis-fiscal",
+    "title": "Autonomos y Extorsion Tributaria Percibida",
+    "public_concern_summary": "La narrativa de estrangulamiento emprendedor escala: Jose Elias denuncia que Espana traiciona a su juventud por burocracia, impuestos y vivienda, mientras circula un bulo viral sobre un 70 % de impuestos fijos para autonomos desde la primera cuota. En paralelo, Espana cae al quinto peor sistema fiscal de la OCDE y se producen quejas publicas de alto nivel (Sonsoles Onega) sobre la relation calidad-precio de los impuestos. La desconfianza hacia la carga tributaria y el marco regulatorio para pequenos operadores se convierte en tema transversal de frustracion generacional.",
+    "why_it_matters": "El colectivo autonomo supera los 3,3 millones; cualquier percepcion de confiscatoriedad o cambio reglamentario brusco impacta en creacion de empleo, recaudacion futura y competitividad. Ademas, la brecha entre la presion fiscal real y la vivida alimenta el escepticismo institucional que erosiona la gobernanza economica.",
+    "main_confusions": [
+      "El bulo del 70 % fijo para autonomos (falso: no existe cuota fija del 70 % desde la primera facturacion).",
+      "Confusion entre regimenes de atribucion de renta, tramos por rendimientos netos y cuotas minimas.",
+      "Interpretacion erronea de rankings OCDE sin distinguir entre carga total, progresividad o tipos marginales."
+    ],
+    "source_map_status": "AEAT, BOE (Ley 1/2023 y actualizaciones de tramos), OCDE Tax Database, informes del Ministerio de Hacienda, explicaciones tecnicas de UPTA y ATA.",
+    "priority_score": 9.0,
+    "social_heat_score": 9.0,
+    "risk_score": 8.0,
+    "evergreen_score": 8.0,
+    "needs_new_vertical": false,
+    "merge_with_existing_topic": "t-autonomos"
+  },
+  {
+    "topic_id": "ley-de-vivienda-alquileres",
+    "slug": "vivienda-alquiler-ocupacion",
+    "title": "Vivienda Inasequible y Complicidad Judicial",
+    "public_concern_summary": "El debate sobre vivienda salta de lo coyuntural a lo estructural: Jose Elias apunta a precios disparados como sintoma del mal funcionamiento del pais, y se viraliza el analisis de Javier Prudencio sobre la realidad de desahucios, okupas y propietarios atrapados. La Ley 12/2023 de vivienda no consigue desactivar la percepcion de un mercado injusto entre pequenos duenos y grandes tenedores.",
+    "why_it_matters": "El acceso a vivienda es un determinante estructural de desigualdad y movilidad social. La tension entre derechos del inquilino, seguridad juridica del propietario y stock de oferta define salud politica y cohesion territorial.",
+    "main_confusions": [
+      "Diferenciar entre okupasion pacifica, ocupacion ilegal y situaciones de impago legal prolongado.",
+      "Confundir precios de mercado con especulacion sin perspectiva de costes de mantenimiento, financiacion o stock.",
+      "Creer que limites de precio unicos resuelven escasez en zonas tensionadas sin incentivos a la oferta."
+    ],
+    "source_map_status": "BOE (Ley 12/2023, Ley de Propiedad Horizontal art. 7.2), datos del INE sobre precios y contratos, Ministerio de Vivienda, sentencias del TS y audiencias provinciales, informes de Colegios de Abogados sobre desahucios.",
+    "priority_score": 9.0,
+    "social_heat_score": 9.0,
+    "risk_score": 7.0,
+    "evergreen_score": 9.0,
+    "needs_new_vertical": false,
+    "merge_with_existing_topic": "ley-de-vivienda-alquileres"
+  },
+  {
+    "topic_id": "t-corrupcion-entorno-sanchez",
+    "slug": "corrupcion-entorno-sanchez",
+    "title": "Dominio de Corrupcion y Nepotismo Proximo al Poder",
+    "public_concern_summary": "Se acumulan los acontecimientos judiciales en la orbita de Pedro Sanchez: condena e inhabilitacion de David Sanchez, denuncia de Podemos por un cargo en la Diputacion de Badajoz para el hermano, declaraciones de la presidenta del PSOE y fiscales sobre la reunion con Leire Diez, y la confesion del exnumero dos de la Fiscalia sobre la reunion con la 'cloaca del PSOE'. A ello se suma la instruccion abierta contra Begona Gomez, cerrando un cuadro de percepcion de impunidad y uso privado de recursos publicos.",
+    "why_it_matters": "La erosion de la confianza en la neutralidad de la fiscalia y la percepcion de redes clientelares cercanas al ejecutivo afectan la legitimidad democratica, la seguridad juridica y la gobernanza a medio plazo.",
+    "main_confusions": [
+      "Confundir fase de instruccion con condena firme en casos judiciales mediaticos.",
+      "Atribuir 'aforamiento automatico' sin distinguir entre tipos de aforados y competencias judiciales.",
+      "Mezclar casos de legitima investigacion con campaas de desprestigio sin analisis de evidencias publicas."
+    ],
+    "source_map_status": "CGPJ, Tribunal Supremo, Audiencia Nacional, auto del juez Peinado, declaraciones judiciales disponibles, informacion contrastada de medios con procedimientos oficiales.",
+    "priority_score": 8.0,
+    "social_heat_score": 7.0,
+    "risk_score": 7.0,
+    "evergreen_score": 8.0,
+    "needs_new_vertical": false,
+    "merge_with_existing_topic": "t-corrupcion-entorno-sanchez"
+  },
+  {
+    "topic_id": "t-migracion",
+    "slug": "inmigracion-delincuencia-menores",
+    "title": "Inmigracion, Menores Tutelados y Sensacion de Inseguridad",
+    "public_concern_summary": "La viralizacion de un video de seguridad en el que un menor marroqui reincidente golpea a ancianos para robar en Madrid reactiva el debate sobre menores extranjeros no acompanados, tutelas publicas y sesgo de impunidad. El tema se amplifica porque coincide con la negociacion de la reforma del articulo 35 de la Ley de Extranjeria sobre reparto de menores.",
+    "why_it_matters": "Las politicas sobre extranjeria y tutela de menores tienen impacto directo en la convivencia vecinal, la seguridad ciudadana y los derechos humanos. La desinformacion en este ambito puede generar estigmatizacion y presion politica hacia respuestas punitivas sin solucion estructural.",
+    "main_confusions": [
+      "Creer que los menores tutelados estan exentos automaticamente de toda responsabilidad penal hasta los 18 anos.",
+      "Confundir estadisticas de delincuencia general con delincuencia de menores migrantes sin datos diferenciados.",
+      "Atribuir a toda la comunidad inmigrante los actos de individuos reincidentes sin contexto."
+    ],
+    "source_map_status": "BOE (Ley Organica 1/2015, Ley de Extranjeria art. 35), informes de la Fiscalia de Menores, datos de la Delegacion del Gobierno contra la Violencia de Genero y Delincuencia, ayuntamientos y cuerpos de seguridad.",
+    "priority_score": 8.0,
+    "social_heat_score": 6.0,
+    "risk_score": 8.0,
+    "evergreen_score": 8.0,
+    "needs_new_vertical": false,
+    "merge_with_existing_topic": "t-migracion"
+  },
+  {
+    "topic_id": "t-inflacion",
+    "slug": "inflacion-y-desconfianza-oficial",
+    "title": "Inflacion Percibida y Credibilidad de las Estadisticas",
+    "public_concern_summary": "El dato oficial del IPC se mantiene en el 3,2 % en junio y la inflacion subyacente modera al 2,9 %, pero la percepcion ciudadana sigue apuntando a un encarecimiento superior de alimentos, energia y servicios. La brecha entre la estadistica oficial y la realidad doméstica sigue alimentando la desconfianza en el INE y el Ministerio de Economia.",
+    "why_it_matters": "La credibilidad del INE es un activo institucional basico. Cuando la percepcion inflacionaria difiere de la oficial, se distorsionan negociaciones salariales, politicas monetarias implicitas y expectativas de consumo, generando inestabilidad economica latente.",
+    "main_confusions": [
+      "Mezclar IPC general con inflacion subyacente sin explicar exclusion de energia y alimentos no elaborados.",
+      "Atribuir la diferencia entre IPC y percepcion exclusivamente a manipulacion estadistica sin considerar la composicion del gasto por hogares.",
+      "Confundir datos adelantados del IPCA con IPC armonizado definitivo y comparaciones homogeneas."
+    ],
+    "source_map_status": "INE, Eurostat, Banco de Espana, informes del Ministerio de Economia, Comision Europea, encuestas de percepcion del CIS.",
+    "priority_score": 8.0,
+    "social_heat_score": 6.0,
+    "risk_score": 6.0,
+    "evergreen_score": 9.0,
+    "needs_new_vertical": false,
+    "merge_with_existing_topic": "t-inflacion"
+  }
+]

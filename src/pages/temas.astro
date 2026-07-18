@@ -4,7 +4,7 @@ import Layout from '../layouts/Layout.astro';
 import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 
-const dbPath = process.env.SQLITE_DB_PATH || import.meta.env.SQLITE_DB_PATH || path.resolve('data/newnews.db');
+const dbPath = process.env.SQLITE_DB_PATH || process.env.MATIZA_DB_PATH || process.env.MATIZA_DB_PATH || path.resolve('data/matiza.db');
 const db = new DatabaseSync(dbPath);
 
 // Obtener todos los temas activos con el conteo de artículos publicados e indicadores dinámicos
@@ -38,7 +38,7 @@ function getCategoryInitials(category) {
 <Layout title="Expedientes Vivos - Dossier de Contraste" description="Navega por los grandes expedientes de debate social y confusión informativa en España. Expedientes vivos con desmentidos.">
 
   <div class="container" style="padding-top: 2rem; padding-bottom: 5rem;">
-    
+
     <div style="margin-bottom: 3rem; text-align: center; max-width: 600px; margin-left: auto; margin-right: auto;">
       <span style="background: rgba(0, 240, 255, 0.1); color: var(--neon-blue); font-weight: 800; font-size: 0.7rem; padding: 0.25rem 0.6rem; text-transform: uppercase; border-radius: 4px; border: 1px solid rgba(0, 240, 255, 0.2); letter-spacing: 0.05em;">
         ÍNDICE GENERAL
@@ -92,7 +92,7 @@ function getCategoryInitials(category) {
                 <div style={`background: linear-gradient(90deg, var(--neon-purple), var(--neon-rose)); width: ${topic.noise_level}%; height: 100%;`}></div>
               </div>
             </div>
-            
+
             <div style="background: rgba(255, 255, 255, 0.015); border: 1px dashed rgba(255, 255, 255, 0.08); padding: 1rem; border-radius: 12px; font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">
               <strong style="color: var(--text-main); display: block; margin-bottom: 0.25rem;">Resumen de claves:</strong>
               {topic.verdict_summary || "Análisis oficial en proceso."}

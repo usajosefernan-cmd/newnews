@@ -1,0 +1,20 @@
+{
+  "meta": {
+    "claim": "José Elías: La vivienda está disparada, emprender es muy difícil y España ha traicionado a su juventud.",
+    "generated_at": "2026-07-17T19:12:38.595Z",
+    "sources_used": [
+      "INE",
+      "MIVAU",
+      "AEAT/SS"
+    ]
+  },
+  "fact_check": {
+    "verdict": "Engañoso",
+    "confidence": "Media",
+    "verdict_reasoning": "",
+    "what_is_true": "- La carga tributaria total en España es elevada en términos de ingresos tributarios sobre PIB según los datos agregados publicados por la AEAT.\n- Los costes de cotización para trabajadores por cuenta propia (RETA / Seguridad Social) suponen una carga mensual relevante y pueden disuadir el autoempleo inicial.\n- Los índices oficiales de vivienda muestran una tendencia general de precios elevada y dinámica al alza en muchos periodos recientes, especialmente en áreas de alta demanda.",
+    "what_is_false": "- No hay demostración oficial en las fuentes dadas de que exista una 'traición' a la juventud como acto político deliberado; es una interpretación valorativa y no un hecho documentado.\n- No es exacto afirmar que sea 'muy difícil emprender por la burocracia' sin más: existen regímenes simplificados, ayudas públicas y facturación electrónica obligatoria que reducen carga administrativa en ciertos trámites.\n- No se ha demostrado que la vivienda esté 'disparada' de forma uniforme en todo el país, sin matizaciones territoriales ni periódicas que muestra la metodología del INE.",
+    "what_lacks_context": "- Datos oficiales de paro juvenil (EPA/SEPE) y de creación de empresas por edad, necesarios para calificar el supuesto efecto sobre la juventud.\n- Desglose de IRPF por tramos, deducciones por familia, ayudas a emprendedores y comparativa internacional de fiscalidad.\n- Datos de plazo real de tramitación administrativa para crear una empresa en España, y evolución histórica de ese plazo.\n- Contexto territorial del precio de la vivienda: zonas con subidas muy altas y zonas con descensos o estabilidad en el mismo periodo.",
+    "what_is_not_proven": "- La afirmación causativa de que la burocracia y los impuestos son la causa principal del bajo emprendimiento juvenil respecto a otros factores.\n- La afirmación absolutista sobre la vivienda 'disparada' sin periodo, territorio ni tipo de inmueble acotado.\n- El término 'traición' y la intencionalidad política atribuida; no existe evidencia probatoria en los portales oficiales indicados sobre la voluntad deliberada de perjudicar a la juventud."
+  }
+}
